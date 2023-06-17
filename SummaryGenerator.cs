@@ -20,8 +20,9 @@ namespace LLOR
             List<string> lines = new List<string>();
             foreach(string barrierName in assignments.Where(x => x.Value).Select(x => x.Key))
             {
+                // an existing barrier at the right place will be at line-1
                 int line = instrumentor.Barriers[barrierName].Location.Line;
-                if (!instrumentor.Existing.Any(x => x.Line == line))
+                if (!instrumentor.Existing.Any(x => x.Line == line-1))
                     lines.Add($"Add a barrier at line number {line}.");
             }
 
@@ -30,8 +31,9 @@ namespace LLOR
                 bool keepExisting = false;
                 foreach(string barrierName in assignments.Where(x => x.Value).Select(x => x.Key))
                 {
+                    // an existing barrier at the right place will be at line-1
                     int line = instrumentor.Barriers[barrierName].Location.Line;
-                    if (line == location.Line)
+                    if (location.Line == line-1)
                     {
                         keepExisting = true;
                         break;
