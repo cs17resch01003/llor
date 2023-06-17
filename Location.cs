@@ -16,7 +16,8 @@ namespace LLOR
         {
             if (Line == first.Line && Line == second.Line)
                 // LLVM evaluates the right-side operation before the left-side
-                return first.Column >= Column && Column >= second.Column;
+                // LLOV gives the column number of the assignment operator
+                return first.Column >= Column && second.Column >= Column;
             return second.Line >= Line && Line > first.Line;
         }
     }

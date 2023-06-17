@@ -10,7 +10,9 @@ namespace LLOR
 
         private string instrumentationPath;
 
-        public Dictionary<string, Barrier> Barriers { get; set; }
+        public Dictionary<string, Barrier> Barriers { get; set; } = new Dictionary<string, Barrier>();
+
+        public List<Location> Existing { get; set; } = new List<Location>();
 
         public Instrumentor(string llovPath, string inputFile)
         {
@@ -23,13 +25,11 @@ namespace LLOR
             optPath = binPath + "opt";
             instrumentationPath = libPath + "OpenMPRepair.so";
 
-            Barriers = Instrument();
+            Instrument();
         }
 
-        private Dictionary<string, Barrier> Instrument()
+        private void Instrument()
         {
-            Dictionary<string, Barrier> barriers = new Dictionary<string, Barrier>();
-
             string sourcePath = inputFile.FullName;
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
@@ -44,16 +44,22 @@ namespace LLOR
             foreach (string line in result)
             {
                 string[] parts = line.Split(',');
-                Barrier barrier = new Barrier(
-                    parts[0],
-                    int.Parse(parts[1]),
-                    int.Parse(parts[2])
-                );
-
-                barriers.Add(parts[0], barrier);
+                if (parts[0] == "existing")
+                {
+                    Existing.Add(new Location(
+                        int.Parse(parts[1]),
+                        int.Parse(parts[2])
+                    ));
+                }
+                else
+                {
+                    Barriers.Add(parts[0], new Barrier(
+                        parts[0],
+                        int.Parse(parts[1]),
+                        int.Parse(parts[2])
+                    ));
+                }
             }
-
-            return barriers;
         }
 
         public void Update(Dictionary<string, bool> assignments)

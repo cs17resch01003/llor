@@ -21,11 +21,29 @@ namespace LLOR
             foreach(string barrierName in assignments.Where(x => x.Value).Select(x => x.Key))
             {
                 int line = instrumentor.Barriers[barrierName].Location.Line;
-                lines.Add($"Add a barrier at line number {line}.");
+                if (!instrumentor.Existing.Any(x => x.Line == line))
+                    lines.Add($"Add a barrier at line number {line}.");
+            }
+
+            foreach (Location location in instrumentor.Existing)
+            {
+                bool keepExisting = false;
+                foreach(string barrierName in assignments.Where(x => x.Value).Select(x => x.Key))
+                {
+                    int line = instrumentor.Barriers[barrierName].Location.Line;
+                    if (line == location.Line)
+                    {
+                        keepExisting = true;
+                        break;
+                    }
+                }
+
+                if (!keepExisting)
+                    lines.Add($"Remove the barrier at line number {location.Line}.");
             }
 
             string summary_path = basePath + Path.DirectorySeparatorChar + baseName + ".summary";
-            File.WriteAllLines(summary_path, lines);
+            File.WriteAllLines(summary_path, lines.Distinct());
 
             return lines;
         }
