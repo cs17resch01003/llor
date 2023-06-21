@@ -17,7 +17,7 @@ namespace LLOR.Solvers
             return string.Format("{0}{1}", Value ? string.Empty : "-", Variable);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             Literal? literal = obj as Literal;
             if (literal == null)

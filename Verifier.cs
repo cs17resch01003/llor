@@ -78,7 +78,7 @@ namespace LLOR
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
-            // generate <input>.sb.ll
+            // generate <input>.inst.ll
             string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
             string command = optPath;
             string arguments = $"-load {verifierPath} -disable-output -openmp-verify-mhp {inst_path}";
@@ -87,22 +87,22 @@ namespace LLOR
             DataRace? current = null;
             foreach(string line in result)
             {
+                if (line == "Data Race detected.")
+                {
+                    current = new DataRace();
+                    races.Add(current);
+                }
+
                 if (line.StartsWith("Source") || line.StartsWith("Sink"))
                 {
+                    if (current == null)
+                        throw new ExecutionException(result);
+
                     string[] parts = line.Split(":");
                     if (line.StartsWith("Source"))
-                    {
-                        current = new DataRace();
                         current.Source = new Location(int.Parse(parts[2]), int.Parse(parts[3]));
-                    }
                     else
-                    {
-                        if (current == null)
-                            throw new ExecutionException(result);
-
                         current.Sink = new Location(int.Parse(parts[2]), int.Parse(parts[3]));
-                        races.Add(current);
-                    }
                 }
             }
 

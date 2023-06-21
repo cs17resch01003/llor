@@ -14,6 +14,9 @@ namespace LLOR
 
         public IEnumerable<string> GenerateSummary(Dictionary<string, bool> assignments)
         {
+            if (inputFile.Directory == null)
+                throw new ArgumentNullException(nameof(inputFile.Directory));
+                
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
@@ -22,18 +25,18 @@ namespace LLOR
             {
                 // an existing barrier at the right place will be at line-1
                 int line = instrumentor.Barriers[barrierName].Location.Line;
-                if (!instrumentor.Existing.Any(x => x.Line == line-1))
+                if (!instrumentor.Existing.Any(x => x.Location.Line == line-1))
                     lines.Add($"Add a barrier at line number {line}.");
             }
 
-            foreach (Location location in instrumentor.Existing)
+            foreach (ExistingBarrier existing in instrumentor.Existing)
             {
                 bool keepExisting = false;
                 foreach(string barrierName in assignments.Where(x => x.Value).Select(x => x.Key))
                 {
                     // an existing barrier at the right place will be at line-1
                     int line = instrumentor.Barriers[barrierName].Location.Line;
-                    if (location.Line == line-1)
+                    if (existing.Location.Line == line-1)
                     {
                         keepExisting = true;
                         break;
@@ -41,7 +44,7 @@ namespace LLOR
                 }
 
                 if (!keepExisting)
-                    lines.Add($"Remove the barrier at line number {location.Line}.");
+                    lines.Add($"Remove the barrier at line number {existing.Location.Line}.");
             }
 
             string summary_path = basePath + Path.DirectorySeparatorChar + baseName + ".summary";

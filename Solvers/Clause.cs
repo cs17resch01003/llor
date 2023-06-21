@@ -25,7 +25,7 @@ namespace LLOR.Solvers
                 .ThenBy(x => int.Parse(x.Variable.Replace("b", string.Empty))).Select(x => x.ToString()));
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             Clause? clause = obj as Clause;
             if (clause == null)

@@ -12,7 +12,7 @@ namespace LLOR
 
         public Dictionary<string, Barrier> Barriers { get; set; } = new Dictionary<string, Barrier>();
 
-        public List<Location> Existing { get; set; } = new List<Location>();
+        public List<ExistingBarrier> Existing { get; set; } = new List<ExistingBarrier>();
 
         public Instrumentor(string llovPath, string inputFile)
         {
@@ -30,6 +30,9 @@ namespace LLOR
 
         private void Instrument()
         {
+            if (inputFile.Directory == null)
+                throw new ArgumentNullException(nameof(inputFile.Directory));
+
             string sourcePath = inputFile.FullName;
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
@@ -46,17 +49,19 @@ namespace LLOR
                 string[] parts = line.Split(',');
                 if (parts[0] == "existing")
                 {
-                    Existing.Add(new Location(
-                        int.Parse(parts[1]),
-                        int.Parse(parts[2])
+                    Existing.Add(new ExistingBarrier(
+                        parts[1],
+                        int.Parse(parts[2]),
+                        int.Parse(parts[3])
                     ));
                 }
                 else
                 {
                     Barriers.Add(parts[0], new Barrier(
                         parts[0],
-                        int.Parse(parts[1]),
-                        int.Parse(parts[2])
+                        parts[1],
+                        int.Parse(parts[2]),
+                        int.Parse(parts[3])
                     ));
                 }
             }
@@ -64,6 +69,9 @@ namespace LLOR
 
         public void Update(Dictionary<string, bool> assignments)
         {
+            if (inputFile.Directory == null)
+                throw new ArgumentNullException(nameof(inputFile.Directory));
+                
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
@@ -100,19 +108,21 @@ namespace LLOR
             foreach (string line in lines)
             {
                 string output = line;
-                if (Regex.IsMatch(output, @"!b\d+\.(true|false)"))
+                if (Regex.IsMatch(output, @"!b\d+\.(barrier|ordered)\.(true|false)"))
                 {
-                    Match match = Regex.Match(output, @"!(?<barrierName>b\d+?)\.(?<enabled>(true|false)?)");
+                    Match match = Regex.Match(output,
+                        @"!(?<barrierName>b\d+?)\.(?<barrierType>(barrier|ordered))\.(?<enabled>(true|false)?)");
 
                     string barrierName = match.Groups["barrierName"].Value;
+                    string barrierType = match.Groups["barrierType"].Value;
                     bool enabled = bool.Parse(match.Groups["enabled"].Value);
-                    bool value = Barriers[barrierName].Enabled;
 
+                    bool value = Barriers[barrierName].Enabled;
                     if (enabled != value)
                     {
                         output = output.Replace(
-                            $"!{barrierName}.{enabled.ToString().ToLowerInvariant()}",
-                            $"!{barrierName}.{value.ToString().ToLowerInvariant()}");
+                            $"!{barrierName}.{barrierType}.{enabled.ToString().ToLowerInvariant()}",
+                            $"!{barrierName}.{barrierType}.{value.ToString().ToLowerInvariant()}");
                     }
                 }
 
