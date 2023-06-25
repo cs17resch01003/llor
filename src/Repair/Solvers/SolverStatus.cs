@@ -1,4 +1,4 @@
-namespace LLOR.Solvers
+namespace Repair.Solvers
 {
     public enum SolverStatus
     {

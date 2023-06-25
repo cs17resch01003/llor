@@ -1,7 +1,7 @@
-namespace LLOR
+namespace Repair
 {
-    using LLOR.Solvers;
-    using LLOR.Exceptions;
+    using Repair.Solvers;
+    using Repair.Exceptions;
 
     public class Solver
     {

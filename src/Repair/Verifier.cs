@@ -1,6 +1,6 @@
-namespace LLOR
+namespace Repair
 {
-    using LLOR.Exceptions;
+    using Repair.Exceptions;
     
     public class Verifier
     {

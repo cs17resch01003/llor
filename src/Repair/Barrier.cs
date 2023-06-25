@@ -1,4 +1,4 @@
-namespace LLOR
+namespace Repair
 {
     public class Barrier
     {

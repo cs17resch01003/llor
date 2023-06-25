@@ -1,4 +1,4 @@
-namespace LLOR.Exceptions
+namespace Repair.Exceptions
 {
     public class RepairException : Exception
     {

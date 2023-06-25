@@ -1,4 +1,4 @@
-namespace LLOR.Solvers
+namespace Repair.Solvers
 {
     using Microsoft.Z3;
 

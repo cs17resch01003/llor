@@ -1,7 +1,7 @@
-namespace LLOR
+namespace Repair
 {
     using System.Diagnostics;
-    using LLOR.Exceptions;
+    using Repair.Exceptions;
 
     public static class CommandRunner
     {

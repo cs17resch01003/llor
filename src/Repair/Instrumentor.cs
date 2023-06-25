@@ -1,7 +1,7 @@
-using System.Text.RegularExpressions;
-
-namespace LLOR
+namespace Repair
 {
+    using System.Text.RegularExpressions;
+    
     public class Instrumentor
     {
         private FileInfo inputFile;
