@@ -10,11 +10,11 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/bin/Debug/net6.0/Repairer.dll",
+            "program": "${workspaceFolder}/bin/Debug/net6.0/TestRunner.dll",
             "args": [
                 "/devel/llov/build",
                 "/usr/lib/gcc/x86_64-linux-gnu/11/include/",
-                "/devel/llor_testsuite/01_simple_race.c"
+                "/devel/llor_testsuite"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
