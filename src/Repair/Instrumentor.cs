@@ -1,5 +1,8 @@
 namespace Repair
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
     using System.Text.RegularExpressions;
     
     public class Instrumentor

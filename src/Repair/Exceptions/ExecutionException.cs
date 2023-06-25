@@ -1,5 +1,8 @@
 namespace Repair.Exceptions
 {
+    using System;
+    using System.Collections.Generic;
+
     public class ExecutionException : Exception
     {
         public List<string> ErrorData;

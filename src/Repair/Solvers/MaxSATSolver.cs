@@ -1,5 +1,7 @@
 namespace Repair.Solvers
 {
+    using System.Collections.Generic;
+    using System.Linq;
     using Microsoft.Z3;
 
     public class MaxSATSolver : Z3Solver

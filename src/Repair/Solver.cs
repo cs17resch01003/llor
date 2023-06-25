@@ -2,6 +2,8 @@ namespace Repair
 {
     using Repair.Solvers;
     using Repair.Exceptions;
+    using System.Collections.Generic;
+    using System.Linq;
 
     public class Solver
     {

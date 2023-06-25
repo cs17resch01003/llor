@@ -1,5 +1,7 @@
 namespace Repair
 {
+    using System.Collections.Generic;
+    using System.IO;
     using Repair.Exceptions;
     
     public class Verifier

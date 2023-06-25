@@ -1,10 +1,13 @@
 ﻿namespace Repair
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
     using CommandLine;
 
     public class Program
     {
-        public static void Main(String[] args)
+        public static void Main(string[] args)
         {
             Options options = new Options();
             Parser.Default.ParseArguments<Options>(args)

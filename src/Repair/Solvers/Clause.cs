@@ -1,5 +1,8 @@
 namespace Repair.Solvers
 {
+    using System.Collections.Generic;
+    using System.Linq;
+
     public class Clause
     {
         public List<Literal> Literals { get; set; }
