@@ -1,3 +1,6 @@
+//; pass
+//; Add a barrier at line number 20.
+
 #include "omp.h"
 #define NUM_THREADS 10
 

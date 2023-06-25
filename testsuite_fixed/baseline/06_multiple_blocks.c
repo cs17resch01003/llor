@@ -21,6 +21,7 @@ int main()
 		int id = omp_get_thread_num();
 		
 		int temp = data_a[id+1];
+		#pragma omp barrier
 		data_a[id] = temp;
 	}
 
@@ -29,6 +30,7 @@ int main()
 		int id = omp_get_thread_num();
 		
 		int temp = data_b[id+1];
+		#pragma omp barrier
 		data_b[id] = temp;
 	}
 }

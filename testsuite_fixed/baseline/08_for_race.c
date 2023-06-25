@@ -10,11 +10,12 @@ int main()
 	for (int i = 0; i < NUM_THREADS+1; i++)
 		data[i] = i;
 
-	#pragma omp parallel for
+	#pragma omp parallel for ordered
 	for (int i = 0; i < NUM_THREADS; i++)
 	{
 		int temp = data[i+1];
-		data[i] = temp;
+		#pragma omp ordered
+			data[i] = temp;
 	}
 
 	return 0;

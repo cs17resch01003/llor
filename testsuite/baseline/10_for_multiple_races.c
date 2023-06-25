@@ -1,3 +1,6 @@
+//; pass
+//; Create an ordered region covering lines 17 to 20.
+
 #define NUM_THREADS 10
 
 int main()
