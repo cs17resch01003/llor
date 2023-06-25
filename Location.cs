@@ -20,5 +20,24 @@ namespace LLOR
                 return first.Column >= Column && second.Column >= Column;
             return second.Line >= Line && Line > first.Line;
         }
+
+        public override string ToString()
+        {
+            return $"{Line},{Column}";
+        }
+
+        public override bool Equals(object? obj)
+        {
+            Location? location = obj as Location;
+            if (location == null)
+                return false;
+
+            return location.Line == Line && location.Column == Column;
+        }
+
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
+        }
     }
 }

@@ -1,3 +1,5 @@
+using LLOR.Exceptions;
+
 namespace LLOR
 {
     public class Repairer
@@ -17,10 +19,14 @@ namespace LLOR
             Dictionary<string, bool> assignments = new Dictionary<string, bool>();
             while (true)
             {
-                List<DataRace> races = verifier.Verify();
+                IEnumerable<DataRace> races = verifier.Verify();
                 if (!races.Any())
                     return assignments;
 
+                if (races.All(x => x.Sink == x.Source))
+                    throw new RepairException("Encountered a write-write race on the same line.");
+
+                races = races.Where(x => x.Sink != null && !x.Sink.Equals(x.Source));
                 foreach (DataRace race in races)
                     race.PopulateBarriers(instrumentor.Barriers.Values);
 

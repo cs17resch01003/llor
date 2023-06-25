@@ -10,12 +10,18 @@ namespace LLOR
 
         public void PopulateBarriers(IEnumerable<Barrier> barriers)
         {
-            if (Source == null || Sink == null)
-                throw new Exception("Invalid data race!");
+            if (Source != null && Sink != null)
+            {
+                foreach(Barrier barrier in barriers)
+                    if (barrier.Location.IsBetween(Source, Sink))
+                        Barriers.Add(barrier);
+            }
 
-            foreach(Barrier barrier in barriers)
-                if (barrier.Location.IsBetween(Source, Sink))
+            if (!Barriers.Any())
+            {
+                foreach(Barrier barrier in barriers)
                     Barriers.Add(barrier);
+            }
         }
     }
 }

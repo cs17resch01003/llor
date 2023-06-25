@@ -61,7 +61,8 @@ namespace LLOR
                         parts[0],
                         parts[1],
                         int.Parse(parts[2]),
-                        int.Parse(parts[3])
+                        int.Parse(parts[3]),
+                        parts[4]
                     ));
                 }
             }
@@ -108,10 +109,10 @@ namespace LLOR
             foreach (string line in lines)
             {
                 string output = line;
-                if (Regex.IsMatch(output, @"!b\d+\.(barrier|ordered)\.(true|false)"))
+                if (Regex.IsMatch(output, "!\"b\\d+\\.(barrier|ordered)\\.(true|false)\""))
                 {
                     Match match = Regex.Match(output,
-                        @"!(?<barrierName>b\d+?)\.(?<barrierType>(barrier|ordered))\.(?<enabled>(true|false)?)");
+                        "!\"(?<barrierName>b\\d+?)\\.(?<barrierType>(barrier|ordered))\\.(?<enabled>(true|false)?)\"");
 
                     string barrierName = match.Groups["barrierName"].Value;
                     string barrierType = match.Groups["barrierType"].Value;
@@ -121,8 +122,8 @@ namespace LLOR
                     if (enabled != value)
                     {
                         output = output.Replace(
-                            $"!{barrierName}.{barrierType}.{enabled.ToString().ToLowerInvariant()}",
-                            $"!{barrierName}.{barrierType}.{value.ToString().ToLowerInvariant()}");
+                            $"!\"{barrierName}.{barrierType}.{enabled.ToString().ToLowerInvariant()}\"",
+                            $"!\"{barrierName}.{barrierType}.{value.ToString().ToLowerInvariant()}\"");
                     }
                 }
 
