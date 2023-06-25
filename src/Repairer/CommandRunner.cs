@@ -3,7 +3,7 @@ namespace LLOR
     using System.Diagnostics;
     using LLOR.Exceptions;
 
-    public static class CommandLine
+    public static class CommandRunner
     {
         public static List<string> RunCommand(string command, string arguments)
         {

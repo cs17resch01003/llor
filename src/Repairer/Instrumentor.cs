@@ -42,7 +42,7 @@ namespace LLOR
             string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
             string command = optPath;
             string arguments = $"-load {instrumentationPath} -openmp-repair {sb_path} -S -o {inst_path} -initialize";
-            List<string> result = CommandLine.RunCommand(command, arguments);
+            List<string> result = CommandRunner.RunCommand(command, arguments);
 
             foreach (string line in result)
             {
@@ -82,7 +82,7 @@ namespace LLOR
 
             string command = optPath;
             string arguments = $"-load {instrumentationPath} -openmp-repair {inst_path} -S -o {inst_path}";
-            CommandLine.RunCommand(command, arguments);
+            CommandRunner.RunCommand(command, arguments);
         }
 
         private void ResetBarriers(string filePath)
