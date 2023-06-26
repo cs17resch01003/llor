@@ -1,46 +1,15 @@
 namespace LLOR.TestRunner
 {
-    using System.Collections.Generic;
-    using System.IO;
-    
-    public class StatusCode
+    public enum StatusCode
     {
-        public static List<StatusCode> StatusCodes = new List<StatusCode>();
+        Unsupported = -1,
 
-        public static StatusCode Pass;
+        XFail = -2,
 
-        public int Code { get; set; }
+        Pass = 0,
 
-        public string Description { get; set; }
+        Fail = 1,
 
-        static StatusCode()
-        {
-            Pass = new StatusCode(0, "pass");
-            StatusCodes.Add(Pass);
-        }
-
-        private StatusCode(int statusCode, string description)
-        {
-            Code = statusCode;
-            Description = description;
-        }
-
-        public static StatusCode GetStatusCode(int statusCode)
-        {
-            foreach (StatusCode status in StatusCodes)
-                if (status.Code == statusCode)
-                    return status;
-            
-            throw new InvalidDataException(statusCode.ToString());
-        }
-
-        public static StatusCode GetStatusCode(string description)
-        {
-            foreach (StatusCode status in StatusCodes)
-                if (status.Description == description)
-                    return status;
-            
-            throw new InvalidDataException(description);
-        }
+        Error = 254,
     }
 }

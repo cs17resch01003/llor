@@ -13,7 +13,10 @@ namespace LLOR.TestRunner
         [Option('i', "include", Required = false, HelpText = "Include path for LLOV.")]
         public string IncludePath { get; set; } = "/usr/lib/gcc/x86_64-linux-gnu/11/include/";
 
-        [Option('t', "verifyonly", Required = false, HelpText = "Run only the verifier.")]
+        [Option('t', "threads", Required = false, HelpText = "Number of threads.")]
+        public int Threads { get; set; } = 1;
+
+        [Option('o', "verifyonly", Required = false, HelpText = "Run only the verifier.")]
         public bool VerifyOnly { get; set; } = false;
 
         [Option('f', "folder", Required = true, HelpText = "The folder containing the tests.")]
