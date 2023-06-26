@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "TestRunner"
+		},
+		{
+			"path": "Common"
 		}
 	],
 	"settings": {}
