@@ -1,4 +1,4 @@
-namespace TestRunner
+namespace LLOR.TestRunner
 {
     using System.Collections.Generic;
     using System.Linq;

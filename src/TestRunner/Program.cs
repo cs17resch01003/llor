@@ -1,10 +1,11 @@
-namespace TestRunner
+namespace LLOR.TestRunner
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using CommandLine;
+    using LLOR.Common;
 
     public class Program
     {
@@ -42,8 +43,12 @@ namespace TestRunner
                 .Select(x => x.Replace("//;", string.Empty).Trim()).ToList();
             
             string arguments = $"--file {file.FullName} --testonly";
-            Output actual =
+            CommandOutput output =
                 CommandRunner.RunCommand(options.LLORBinariesPath, arguments);
+
+            Output actual = new Output(
+                StatusCode.GetStatusCode(output.ExitCode),
+                output.StandardOutput);
 
             bool result = expected.Equals(actual);
             Console.WriteLine(
@@ -52,12 +57,17 @@ namespace TestRunner
 
         private static void AssertVerify(Options options, FileInfo file)
         {
-            Output expected = new Output(StatusCode.Fail);
-
+            Output expected = new Output(StatusCode.Pass);
             string arguments = $"-Xclang -disable-O0-optnone -Xclang -load -Xclang "
-                + $"../lib/OpenMPVerify.so -I{options.IncludePath} -fopenmp -g {file.FullName}";
-            Output actual =
-                CommandRunner.RunCommand(options.LLOVBinariesPath, arguments);
+                + $"{options.LLOVBinariesPath}/lib/OpenMPVerify.so "
+                + $"-I{options.IncludePath} -fopenmp -g {file.FullName}";
+                
+            CommandOutput output = CommandRunner.RunCommand(
+                $"{options.LLOVBinariesPath}/bin/clang", arguments);
+
+            Output actual = new Output(
+                StatusCode.GetStatusCode(output.ExitCode),
+                output.StandardError);
 
             bool result = expected.Equals(actual);
             Console.WriteLine(

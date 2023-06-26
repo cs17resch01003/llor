@@ -1,4 +1,4 @@
-namespace TestRunner
+namespace LLOR.TestRunner
 {
     using System.Collections.Generic;
     using System.IO;
@@ -9,8 +9,6 @@ namespace TestRunner
 
         public static StatusCode Pass;
 
-        public static StatusCode Fail;
-
         public int Code { get; set; }
 
         public string Description { get; set; }
@@ -18,10 +16,7 @@ namespace TestRunner
         static StatusCode()
         {
             Pass = new StatusCode(0, "pass");
-            Fail = new StatusCode(1, "fail");
-
             StatusCodes.Add(Pass);
-            StatusCodes.Add(Fail);
         }
 
         private StatusCode(int statusCode, string description)

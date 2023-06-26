@@ -1,4 +1,4 @@
-namespace TestRunner
+namespace LLOR.TestRunner
 {
     using CommandLine;
 
@@ -8,7 +8,7 @@ namespace TestRunner
         public string LLORBinariesPath { get; set; } = "/devel/llor/src/Repair/bin/Debug/net6.0/Repair";
 
         [Option('v', "llov", Required = false, HelpText = "Path to LLOV binaries.")]
-        public string LLOVBinariesPath { get; set; } = "/devel/llov/build/bin/clang";
+        public string LLOVBinariesPath { get; set; } = "/devel/llov/build/";
 
         [Option('i', "include", Required = false, HelpText = "Include path for LLOV.")]
         public string IncludePath { get; set; } = "/usr/lib/gcc/x86_64-linux-gnu/11/include/";
