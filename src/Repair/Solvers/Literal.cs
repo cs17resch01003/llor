@@ -1,4 +1,4 @@
-namespace Repair.Solvers
+namespace LLOR.Repair.Solvers
 {
     public class Literal
     {

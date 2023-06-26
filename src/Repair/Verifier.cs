@@ -1,8 +1,9 @@
-namespace Repair
+namespace LLOR.Repair
 {
     using System.Collections.Generic;
     using System.IO;
-    using Repair.Exceptions;
+    using LLOR.Common;
+    using LLOR.Repair.Exceptions;
     
     public class Verifier
     {
@@ -84,10 +85,11 @@ namespace Repair
             string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
             string command = optPath;
             string arguments = $"-load {verifierPath} -disable-output -openmp-verify-mhp {inst_path}";
-            List<string> result = CommandRunner.RunCommand(command, arguments);
+
+            CommandOutput output = CommandRunner.RunCommand(command, arguments);
 
             DataRace? current = null;
-            foreach(string line in result)
+            foreach(string line in output.StandardError)
             {
                 if (line == "Data Race detected.")
                 {
@@ -98,7 +100,7 @@ namespace Repair
                 if (line.StartsWith("Source") || line.StartsWith("Sink"))
                 {
                     if (current == null)
-                        throw new ExecutionException(result);
+                        throw new ExecutionException(output.StandardError);
 
                     string[] parts = line.Split(":");
                     if (line.StartsWith("Source"))

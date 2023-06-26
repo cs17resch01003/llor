@@ -1,5 +1,7 @@
-namespace Repair
+namespace LLOR.Repair
 {
+    using LLOR.Common;
+    
     public class ExistingBarrier
     {
         public string BarrierType { get; set; }

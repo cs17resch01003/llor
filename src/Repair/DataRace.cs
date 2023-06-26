@@ -1,14 +1,10 @@
-namespace Repair
+namespace LLOR.Repair
 {
     using System.Collections.Generic;
     using System.Linq;
 
-    public class DataRace
+    public class DataRace : LLOR.Common.DataRace
     {
-        public Location? Source { get; set; }
-
-        public Location? Sink { get; set; }
-
         public List<Barrier> Barriers { get; set; } = new List<Barrier>();
 
         public void PopulateBarriers(IEnumerable<Barrier> barriers)

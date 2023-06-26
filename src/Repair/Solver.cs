@@ -1,9 +1,9 @@
-namespace Repair
+namespace LLOR.Repair
 {
-    using Repair.Solvers;
-    using Repair.Exceptions;
     using System.Collections.Generic;
     using System.Linq;
+    using LLOR.Repair.Exceptions;
+    using LLOR.Repair.Solvers;
 
     public class Solver
     {

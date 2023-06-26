@@ -1,4 +1,4 @@
-namespace Repair.Exceptions
+namespace LLOR.Repair.Exceptions
 {
     using System;
     

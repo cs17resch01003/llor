@@ -1,9 +1,10 @@
-namespace Repair
+namespace LLOR.Repair
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Text.RegularExpressions;
+    using LLOR.Common;
     
     public class Instrumentor
     {
@@ -45,9 +46,9 @@ namespace Repair
             string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
             string command = optPath;
             string arguments = $"-load {instrumentationPath} -openmp-repair {sb_path} -S -o {inst_path} -initialize";
-            List<string> result = CommandRunner.RunCommand(command, arguments);
 
-            foreach (string line in result)
+            CommandOutput output = CommandRunner.RunCommand(command, arguments);
+            foreach (string line in output.StandardError)
             {
                 string[] parts = line.Split(',');
                 if (parts[0] == "existing")

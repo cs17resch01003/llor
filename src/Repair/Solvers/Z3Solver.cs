@@ -1,4 +1,4 @@
-namespace Repair.Solvers
+namespace LLOR.Repair.Solvers
 {
     using System.Collections.Generic;
     using System.Linq;

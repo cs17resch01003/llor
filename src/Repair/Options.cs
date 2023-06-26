@@ -1,4 +1,4 @@
-namespace Repair
+namespace LLOR.Repair
 {
     using CommandLine;
 

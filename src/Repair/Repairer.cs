@@ -1,8 +1,8 @@
-namespace Repair
+namespace LLOR.Repair
 {
     using System.Collections.Generic;
     using System.Linq;
-    using Repair.Exceptions;
+    using LLOR.Repair.Exceptions;
     
     public class Repairer
     {
