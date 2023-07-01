@@ -25,10 +25,9 @@ namespace LLOR.Repair
                 if (!races.Any())
                     return assignments;
 
-                if (races.All(x => x.Sink == x.Source))
+                if (races.All(x => x.Sink != null && x.Sink == x.Source))
                     throw new RepairException("Encountered a write-write race on the same line.");
 
-                races = races.Where(x => x.Sink != null && !x.Sink.Equals(x.Source));
                 foreach (DataRace race in races)
                     race.PopulateBarriers(instrumentor.Barriers.Values);
 

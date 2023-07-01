@@ -39,13 +39,13 @@
             foreach (string change in changes)
                 Console.WriteLine(change);
 
-            if (options.TestOnly)
-                CleanFiles(options.FilePath);
+            if (options.TestOnly || options.SummaryOnly)
+                CleanFiles(options);
         }
 
-        private static void CleanFiles(string inputPath)
+        private static void CleanFiles(Options options)
         {
-            FileInfo inputFile = new FileInfo(inputPath);
+            FileInfo inputFile = new FileInfo(options.FilePath);
 
             if (inputFile.Directory == null)
                 throw new ArgumentNullException(nameof(inputFile.Directory));
@@ -60,7 +60,8 @@
 
             File.Delete(sb_path);
             File.Delete(inst_path);
-            File.Delete(summary_path);
+            if (!options.SummaryOnly)
+                File.Delete(summary_path);
         }
     }
 }

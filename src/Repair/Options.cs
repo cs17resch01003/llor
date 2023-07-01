@@ -13,6 +13,9 @@ namespace LLOR.Repair
         [Option('t', "testonly", Required = false, HelpText = "Run the repairer without generating files.")]
         public bool TestOnly { get; set; } = false;
 
+        [Option('s', "summaryonly", Required = false, HelpText = "Keep only the summary file.")]
+        public bool SummaryOnly { get; set; } = false;
+
         [Option('f', "file", Required = true, HelpText = "The program to repair.")]
         public string FilePath { get; set; } = string.Empty;
     }

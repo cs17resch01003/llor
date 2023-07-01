@@ -22,43 +22,27 @@ namespace LLOR.TestRunner
             if (options == null) return;
 
             DirectoryInfo directory = new DirectoryInfo(options.FolderPath);
-            IEnumerable<FileInfo> files = directory.GetFiles().OrderBy(x => x.Name);
+            IEnumerable<FileInfo> files = directory.GetFiles()
+                .Where(x => !x.Name.EndsWith(".summary")).OrderBy(x => x.Name);
 
             Parallel.ForEach(
                 files,
                 new ParallelOptions { MaxDegreeOfParallelism = options.Threads },
                 file =>
                 {
-                    if (!options.VerifyOnly)
-                        AssertRepair(options, file);
-                    else
+                    if (options.SummaryOnly)
+                        RunRepair(options, file);
+                    else if (options.Verify)
                         AssertVerify(options, file);
+                    else
+                        AssertRepair(options, file);
                 });
         }
 
-        private static void AssertRepair(Options options, FileInfo file)
+        private static void RunRepair(Options options, FileInfo file)
         {
-            Output expected = new Output(StatusCode.Pass);
-
-            List<string> lines = File.ReadLines(file.FullName).ToList();
-            expected.StatusCode = Enum.Parse<StatusCode>(
-                lines[0].Replace("//;", string.Empty).Trim());
-
-            lines.RemoveAt(0);
-            expected.Result = lines.Where(x => x.StartsWith("//;"))
-                .Select(x => x.Replace("//;", string.Empty).Trim()).ToList();
-            
-            string arguments = $"--file {file.FullName} --testonly";
-            CommandOutput output =
-                CommandRunner.RunCommand(options.LLORBinariesPath, arguments);
-
-            Output actual = new Output(
-                (StatusCode)output.ExitCode,
-                output.StandardOutput);
-
-            bool result = expected.Equals(actual);
-            Console.WriteLine(
-                (result ? "PASS" : "FAIL") + ": " + file.FullName);
+            string arguments = $"--file {file.FullName} --summaryonly";
+            CommandRunner.RunCommand(options.LLORBinariesPath, arguments);
         }
 
         private static void AssertVerify(Options options, FileInfo file)
@@ -86,6 +70,31 @@ namespace LLOR.TestRunner
                 statement += $"({parsed.Races.Count})";
             
             Console.WriteLine(statement);
+        }
+
+        private static void AssertRepair(Options options, FileInfo file)
+        {
+            Output expected = new Output(StatusCode.Pass);
+
+            List<string> lines = File.ReadLines(file.FullName).ToList();
+            expected.StatusCode = Enum.Parse<StatusCode>(
+                lines[0].Replace("//;", string.Empty).Trim());
+
+            lines.RemoveAt(0);
+            expected.Result = lines.Where(x => x.StartsWith("//;"))
+                .Select(x => x.Replace("//;", string.Empty).Trim()).ToList();
+            
+            string arguments = $"--file {file.FullName} --testonly";
+            CommandOutput output =
+                CommandRunner.RunCommand(options.LLORBinariesPath, arguments);
+
+            Output actual = new Output(
+                (StatusCode)output.ExitCode,
+                output.StandardOutput);
+
+            bool result = expected.Equals(actual);
+            Console.WriteLine(
+                (result ? "pass" : "fail") + ": " + file.FullName);
         }
 
         private static ParsedOutput ParseErrorOutput(List<string> output)

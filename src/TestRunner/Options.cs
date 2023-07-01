@@ -16,8 +16,11 @@ namespace LLOR.TestRunner
         [Option('t', "threads", Required = false, HelpText = "Number of threads.")]
         public int Threads { get; set; } = 1;
 
-        [Option('o', "verifyonly", Required = false, HelpText = "Run only the verifier.")]
-        public bool VerifyOnly { get; set; } = false;
+        [Option('o', "verify", Required = false, HelpText = "Run the verifier.")]
+        public bool Verify { get; set; } = false;
+
+        [Option('s', "summaryonly", Required = false, HelpText = "Keep only the summary file.")]
+        public bool SummaryOnly { get; set; } = false;
 
         [Option('f', "folder", Required = true, HelpText = "The folder containing the tests.")]
         public string FolderPath { get; set; } = string.Empty;
