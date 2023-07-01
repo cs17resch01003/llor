@@ -1,4 +1,4 @@
-//; pass
+//; Pass
 //; Add a barrier at line number 18.
 
 #include "omp.h"

@@ -1,4 +1,4 @@
-//; pass
+//; Pass
 //; Create an ordered region covering line 17.
 
 #define NUM_THREADS 10

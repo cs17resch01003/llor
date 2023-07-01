@@ -1,4 +1,4 @@
-//; pass
+//; Pass
 //; Remove the barrier at line number 20.
 
 #include "omp.h"

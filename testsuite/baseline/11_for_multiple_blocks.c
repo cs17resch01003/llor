@@ -1,4 +1,4 @@
-//; pass
+//; Pass
 //; Create an ordered region covering line 21.
 //; Create an ordered region covering line 28.
 
