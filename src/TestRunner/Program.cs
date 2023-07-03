@@ -92,9 +92,15 @@ namespace LLOR.TestRunner
                 (StatusCode)output.ExitCode,
                 output.StandardOutput);
 
-            bool result = expected.Equals(actual);
+            bool result = false;
+            if (actual.StatusCode == StatusCode.Pass)
+                result = expected.Equals(actual);
+            else
+                result = expected.StatusCode == actual.StatusCode;
+
             Console.WriteLine(
-                (result ? "pass" : "fail") + ": " + file.FullName);
+                $"{actual.StatusCode.ToString().ToLower()} ("
+                + $"{result.ToString().ToLower()}): {file.FullName}");
         }
     }
 }

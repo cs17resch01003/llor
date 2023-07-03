@@ -48,8 +48,7 @@
             catch (RepairException ex)
             {
                 Console.WriteLine(ex.Message);
-                if (options.TestOnly || options.SummaryOnly)
-                    CleanFiles(options);
+                CleanFiles(options);
 
                 Environment.Exit((int)ex.StatusCode);
             }
