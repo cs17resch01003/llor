@@ -13,4 +13,3 @@ rm $1.ll
 rm $1.ssa.ll
 rm $1.rb.ll
 rm $1.in.ll
-rm $1.sb.ll

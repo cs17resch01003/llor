@@ -86,9 +86,43 @@ namespace LLOR.Repair
                 int min = barriers.Where(x => x.Function == function).Min(x => x.Location.Line);
                 int max = barriers.Where(x => x.Function == function).Max(x => x.Location.Line);
 
-                lines.Add("Create an ordered region covering line"
-                    + (min == max ? " " : "s ")
-                    + (min == max ? min : $"{min} to {max}") + ".");
+                if (min == max)
+                {
+                    // an existing ordered region at the right place will be at line-1
+                    bool check = !instrumentor.Existing
+                        .Where(x => x.BarrierType == "ordered")
+                        .Any(x => x.Location.Line == max-1);
+                    
+                    if (check)
+                        lines.Add($"Create an ordered region covering line {max}.");
+                }
+                else
+                {
+                    lines.Add($"Create an ordered region covering lines {min} to {max}.");
+                }
+            }
+
+            IEnumerable<ExistingBarrier> existingBarriers =
+                instrumentor.Existing.Where(x => x.BarrierType == "ordered");
+            foreach (ExistingBarrier existing in existingBarriers)
+            {
+                bool keepExisting = false;
+                barriers = assignments.Where(x => x.Value)
+                    .Select(x => instrumentor.Barriers[x.Key])
+                    .Where(x => x.BarrierType == "ordered");
+                foreach(Barrier barrier in barriers)
+                {
+                    // an existing barrier at the right place will be at line-1
+                    int line = barrier.Location.Line;
+                    if (existing.Location.Line == line-1)
+                    {
+                        keepExisting = true;
+                        break;
+                    }
+                }
+
+                if (!keepExisting)
+                    lines.Add($"Remove the ordered region at line number {existing.Location.Line}.");
             }
         }
     }
