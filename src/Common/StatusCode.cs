@@ -1,14 +1,16 @@
-namespace LLOR.TestRunner
+namespace LLOR.Common
 {
     public enum StatusCode
     {
-        Unsupported = -1,
-
         XFail = -2,
 
         Pass = 0,
 
         Fail = 1,
+
+        Unsupported = 100,
+
+        RepairError = 101,
 
         Error = 254,
     }

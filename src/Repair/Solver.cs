@@ -2,6 +2,7 @@ namespace LLOR.Repair
 {
     using System.Collections.Generic;
     using System.Linq;
+    using LLOR.Common;
     using LLOR.Repair.Exceptions;
     using LLOR.Repair.Solvers;
 
@@ -41,7 +42,9 @@ namespace LLOR.Repair
             solution = solver.Solve(out status);
 
             if (status == SolverStatus.Unsatisfiable || solution == null)
-                throw new RepairException("The program could not be repaired because of unsatisfiable clauses!");
+                throw new RepairException(
+                    StatusCode.RepairError,
+                    "The program could not be repaired because of unsatisfiable clauses!");
 
             return solution;
         }

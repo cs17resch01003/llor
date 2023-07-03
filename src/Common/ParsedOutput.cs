@@ -1,7 +1,6 @@
-namespace LLOR.TestRunner
+namespace LLOR.Common
 {
     using System.Collections.Generic;
-    using LLOR.Common;
 
     public class ParsedOutput
     {

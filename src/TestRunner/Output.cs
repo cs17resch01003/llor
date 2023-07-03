@@ -2,6 +2,7 @@ namespace LLOR.TestRunner
 {
     using System.Collections.Generic;
     using System.Linq;
+    using LLOR.Common;
     
     public class Output
     {

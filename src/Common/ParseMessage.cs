@@ -1,4 +1,4 @@
-namespace LLOR.TestRunner
+namespace LLOR.Common
 {
     public class ParseMessage
     {

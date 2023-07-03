@@ -87,30 +87,25 @@ namespace LLOR.Repair
             string arguments = $"-load {verifierPath} -disable-output -openmp-verify-mhp {inst_path}";
 
             CommandOutput output = CommandRunner.RunCommand(command, arguments);
+            ParsedOutput result = ErrorParser.ParseErrorOutput(output.StandardError);
 
-            DataRace? current = null;
-            foreach(string line in output.StandardError)
+            if (result.StatusCode == StatusCode.Pass)
             {
-                if (line == "Data Race detected.")
-                {
-                    current = new DataRace();
-                    races.Add(current);
-                }
+                foreach (Common.DataRace race in result.Races)
+                    races.Add(new DataRace
+                    {
+                       Source = race.Source,
+                       Sink = race.Sink, 
+                    });
 
-                if (line.StartsWith("Source") || line.StartsWith("Sink"))
-                {
-                    if (current == null)
-                        throw new ExecutionException(output.StandardError);
-
-                    string[] parts = line.Split(":");
-                    if (line.StartsWith("Source"))
-                        current.Source = new Location(int.Parse(parts[2]), int.Parse(parts[3]));
-                    else
-                        current.Sink = new Location(int.Parse(parts[2]), int.Parse(parts[3]));
-                }
+                return races;
             }
-
-            return races;
+            else
+            {
+                throw new RepairException(
+                    result.StatusCode,
+                    string.Join('\n', output.StandardError));
+            }
         }
     }
 }

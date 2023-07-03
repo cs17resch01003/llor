@@ -2,6 +2,7 @@ namespace LLOR.Repair
 {
     using System.Collections.Generic;
     using System.Linq;
+    using LLOR.Common;
     using LLOR.Repair.Exceptions;
     
     public class Repairer
@@ -26,7 +27,9 @@ namespace LLOR.Repair
                     return assignments;
 
                 if (races.All(x => x.Sink != null && x.Sink == x.Source))
-                    throw new RepairException("Encountered a write-write race on the same line.");
+                    throw new RepairException(
+                        StatusCode.RepairError,
+                        "Encountered a write-write race on the same line.");
 
                 foreach (DataRace race in races)
                     race.PopulateBarriers(instrumentor.Barriers.Values);

@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.IO;
     using CommandLine;
+    using LLOR.Repair.Exceptions;
 
     public class Program
     {
@@ -29,18 +30,29 @@
                 options.FilePath);
             Repairer repairer = new Repairer(verifier, instrumentor);
 
-            Dictionary<string, bool> assignments = repairer.Repair();
+            try
+            {
+                Dictionary<string, bool> assignments = repairer.Repair();
 
-            SummaryGenerator generator = new SummaryGenerator(
-                options.FilePath,
-                instrumentor);
-            IEnumerable<string> changes = generator.GenerateSummary(assignments);
+                SummaryGenerator generator = new SummaryGenerator(
+                    options.FilePath,
+                    instrumentor);
+                IEnumerable<string> changes = generator.GenerateSummary(assignments);
 
-            foreach (string change in changes)
-                Console.WriteLine(change);
+                foreach (string change in changes)
+                    Console.WriteLine(change);
+                
+                if (options.TestOnly || options.SummaryOnly)
+                    CleanFiles(options);
+            }
+            catch (RepairException ex)
+            {
+                Console.WriteLine(ex.Message);
+                if (options.TestOnly || options.SummaryOnly)
+                    CleanFiles(options);
 
-            if (options.TestOnly || options.SummaryOnly)
-                CleanFiles(options);
+                Environment.Exit((int)ex.StatusCode);
+            }
         }
 
         private static void CleanFiles(Options options)
