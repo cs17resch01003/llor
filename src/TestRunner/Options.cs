@@ -13,9 +13,6 @@ namespace LLOR.TestRunner
         [Option('i', "include", Required = false, HelpText = "Include path for LLOV.")]
         public string IncludePath { get; set; } = "/usr/lib/gcc/x86_64-linux-gnu/11/include/";
 
-        [Option('t', "threads", Required = false, HelpText = "Number of threads.")]
-        public int Threads { get; set; } = 1;
-
         [Option('o', "verify", Required = false, HelpText = "Run the verifier.")]
         public bool Verify { get; set; } = false;
 

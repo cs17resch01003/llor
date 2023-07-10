@@ -4,6 +4,7 @@ namespace LLOR.Repair
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text.RegularExpressions;
 
     public class SummaryGenerator
     {
@@ -11,10 +12,14 @@ namespace LLOR.Repair
 
         private Instrumentor instrumentor;
 
+        private string[] fileContent;
+
         public SummaryGenerator(string inputFile, Instrumentor instrumentor)
         {
             this.inputFile = new FileInfo(inputFile);
             this.instrumentor = instrumentor;
+
+            fileContent = File.ReadAllLines(inputFile);
         }
 
         public IEnumerable<string> GenerateSummary(Dictionary<string, bool> assignments)
@@ -30,7 +35,8 @@ namespace LLOR.Repair
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
             string summary_path = basePath + Path.DirectorySeparatorChar + baseName + ".summary";
-            File.WriteAllLines(summary_path, lines.Distinct());
+            if (lines.Any())
+                File.WriteAllLines(summary_path, lines.Distinct());
 
             return lines;
         }
@@ -72,7 +78,14 @@ namespace LLOR.Repair
                 }
 
                 if (!keepExisting)
-                    lines.Add($"Remove the barrier at line number {existing.Location.Line}.");
+                {
+                    string line = fileContent[existing.Location.Line-1];
+                    line = Regex.Replace(line, @"\s+", " ").Trim();
+
+                    // avoid removing implicit barriers
+                    if (line.Contains("pragma omp barrier"))
+                        lines.Add($"Remove the barrier at line number {existing.Location.Line}.");
+                }
             }
         }
         

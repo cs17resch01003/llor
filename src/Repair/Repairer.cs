@@ -20,25 +20,40 @@ namespace LLOR.Repair
         public Dictionary<string, bool> Repair()
         {
             Dictionary<string, bool> assignments = new Dictionary<string, bool>();
-            while (true)
+            try
             {
-                IEnumerable<DataRace> races = verifier.Verify();
-                if (!races.Any())
-                    return assignments;
+                List<DataRace> races = new List<DataRace>();
+                while (true)
+                {
+                    IEnumerable<DataRace> current_races = verifier.Verify();
+                    if (!current_races.Any())
+                        return assignments;
 
-                if (races.All(x => x.Sink != null && x.Sink == x.Source))
-                    throw new RepairException(
-                        StatusCode.RepairError,
-                        "Encountered a write-write race on the same line.");
+                    if (current_races.All(x => x.Sink != null && x.Sink == x.Source))
+                        throw new RepairException(
+                            StatusCode.RepairError,
+                            "Encountered a write-write race on the same line.");
 
-                foreach (DataRace race in races)
-                    race.PopulateBarriers(instrumentor.Barriers.Values);
+                    foreach (DataRace race in current_races)
+                        race.PopulateBarriers(instrumentor.Barriers.Values);
+                    races.AddRange(current_races);
 
-                Solver solver = new Solver();
-                assignments = solver.Solve(races);
+                    Solver solver = new Solver();
+                    assignments = solver.Solve(races);
 
-                instrumentor.Update(assignments);
+                    instrumentor.Update(assignments);
+                }
             }
+            catch (RepairException)
+            {
+                IEnumerable<DataRace> races = verifier.VerifySource();
+                if (races.Any())
+                    throw;
+
+                assignments.Clear();
+            }
+
+            return assignments;
         }
     }
 }

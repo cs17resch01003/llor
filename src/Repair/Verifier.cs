@@ -81,12 +81,35 @@ namespace LLOR.Repair
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
-            // generate <input>.inst.ll
+            // verify <input>.inst.ll
             string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
             string command = optPath;
             string arguments = $"-load {verifierPath} -disable-output -openmp-verify-mhp {inst_path}";
 
             CommandOutput output = CommandRunner.RunCommand(command, arguments);
+            return GetDataRaces(output);
+        }
+
+        public List<DataRace> VerifySource()
+        {
+            List<DataRace> races = new List<DataRace>();
+            if (inputFile.Directory == null)
+                return races;
+
+            string basePath = inputFile.Directory.FullName;
+            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+
+            // verify <input>
+            string command = clangPath;
+            string arguments = $"-Xclang -disable-O0-optnone -Xclang -load -Xclang {verifierPath} -I{includePath} -fopenmp -g {inputFile.FullName}";
+
+            CommandOutput output = CommandRunner.RunCommand(command, arguments);
+            return GetDataRaces(output);
+        }
+
+        private List<DataRace> GetDataRaces(CommandOutput output)
+        {
+            List<DataRace> races = new List<DataRace>();
             ParsedOutput result = ErrorParser.ParseErrorOutput(output.StandardError);
 
             if (result.StatusCode == StatusCode.Pass)

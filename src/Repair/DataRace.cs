@@ -11,14 +11,14 @@ namespace LLOR.Repair
         {
             if (Source != null && Sink != null)
             {
-                foreach(Barrier barrier in barriers)
+                foreach(Barrier barrier in barriers.Where(x => !x.Enabled))
                     if (barrier.Location.IsBetween(Source, Sink))
                         Barriers.Add(barrier);
             }
 
             if (!Barriers.Any())
             {
-                foreach(Barrier barrier in barriers)
+                foreach(Barrier barrier in barriers.Where(x => !x.Enabled))
                     Barriers.Add(barrier);
             }
         }

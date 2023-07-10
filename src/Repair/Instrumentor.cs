@@ -5,6 +5,7 @@ namespace LLOR.Repair
     using System.IO;
     using System.Text.RegularExpressions;
     using LLOR.Common;
+    using LLOR.Repair.Exceptions;
     
     public class Instrumentor
     {
@@ -48,6 +49,13 @@ namespace LLOR.Repair
             string arguments = $"-load {instrumentationPath} -openmp-repair {sb_path} -S -o {inst_path} -initialize";
 
             CommandOutput output = CommandRunner.RunCommand(command, arguments);
+            if (output.ExitCode != (int)StatusCode.Pass)
+            {
+                throw new RepairException(
+                    (StatusCode)output.ExitCode,
+                    string.Join('\n', output.StandardError));
+            }
+
             foreach (string line in output.StandardError)
             {
                 string[] parts = line.Split(',');
@@ -70,6 +78,8 @@ namespace LLOR.Repair
                     ));
                 }
             }
+
+            File.Delete(sb_path);
         }
 
         public void Update(Dictionary<string, bool> assignments)
@@ -86,7 +96,14 @@ namespace LLOR.Repair
 
             string command = optPath;
             string arguments = $"-load {instrumentationPath} -openmp-repair {inst_path} -S -o {inst_path}";
-            CommandRunner.RunCommand(command, arguments);
+            CommandOutput output = CommandRunner.RunCommand(command, arguments);
+
+            if (output.ExitCode != (int)StatusCode.Pass)
+            {
+                throw new RepairException(
+                    (StatusCode)output.ExitCode,
+                    string.Join('\n', output.StandardError));
+            }
         }
 
         private void ResetBarriers(string filePath)

@@ -25,18 +25,22 @@ namespace LLOR.TestRunner
             IEnumerable<FileInfo> files = directory.GetFiles()
                 .Where(x => !x.Name.EndsWith(".summary")).OrderBy(x => x.Name);
 
-            Parallel.ForEach(
-                files,
-                new ParallelOptions { MaxDegreeOfParallelism = options.Threads },
-                file =>
-                {
-                    if (options.SummaryOnly)
-                        RunRepair(options, file);
-                    else if (options.Verify)
-                        AssertVerify(options, file);
-                    else
-                        AssertRepair(options, file);
-                });
+            int total = files.Count(), success = 0;
+            foreach (FileInfo file in files)
+            {
+                bool result = true;
+                if (options.SummaryOnly)
+                    RunRepair(options, file);
+                else if (options.Verify)
+                    AssertVerify(options, file);
+                else
+                    result = AssertRepair(options, file);
+
+                if (result == true)
+                    success++;
+            }
+
+            Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
         }
 
         private static void RunRepair(Options options, FileInfo file)
@@ -65,14 +69,14 @@ namespace LLOR.TestRunner
             if (derived == StatusCode.Pass && parsed.Races.Any())
                 derived = StatusCode.XFail;
 
-            string statement = $"{derived.ToString().ToLower()}: {file.FullName} ";
+            string statement = $"{derived.ToString().ToLower()},{file.FullName},";
             if (derived == StatusCode.XFail)
-                statement += $"({parsed.Races.Count})";
+                statement += $"{parsed.Races.Count}";
             
             Console.WriteLine(statement);
         }
 
-        private static void AssertRepair(Options options, FileInfo file)
+        private static bool AssertRepair(Options options, FileInfo file)
         {
             Output expected = new Output(StatusCode.Pass);
 
@@ -99,8 +103,11 @@ namespace LLOR.TestRunner
                 result = expected.StatusCode == actual.StatusCode;
 
             Console.WriteLine(
-                $"{actual.StatusCode.ToString().ToLower()} ("
-                + $"{result.ToString().ToLower()}): {file.FullName}");
+                $"assert_{result.ToString().ToLower()}," 
+                + $"{actual.StatusCode.ToString().ToLower()},{file.FullName},"
+                + $"{actual.Result.Count}");
+
+            return result;
         }
     }
 }
