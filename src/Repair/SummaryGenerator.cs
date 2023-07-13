@@ -96,22 +96,29 @@ namespace LLOR.Repair
                 .Where(x => x.BarrierType == "ordered");
             foreach (string function in barriers.Select(x => x.Function).Distinct())
             {
-                int min = barriers.Where(x => x.Function == function).Min(x => x.Location.Line);
-                int max = barriers.Where(x => x.Function == function).Max(x => x.Location.Line);
+                IEnumerable<string?> loops = barriers.Where(x => x.Function == function)
+                    .Select(x => x.Loop).Distinct();
+                foreach (string? loop in loops)
+                {
+                    int min = barriers.Where(x => x.Function == function && x.Loop == loop)
+                        .Min(x => x.Location.Line);
+                    int max = barriers.Where(x => x.Function == function && x.Loop == loop)
+                        .Max(x => x.Location.Line);
 
-                if (min == max)
-                {
-                    // an existing ordered region at the right place will be at line-1
-                    bool check = !instrumentor.Existing
-                        .Where(x => x.BarrierType == "ordered")
-                        .Any(x => x.Location.Line == max-1);
-                    
-                    if (check)
-                        lines.Add($"Create an ordered region covering line {max}.");
-                }
-                else
-                {
-                    lines.Add($"Create an ordered region covering lines {min} to {max}.");
+                    if (min == max)
+                    {
+                        // an existing ordered region at the right place will be at line-1
+                        bool check = !instrumentor.Existing
+                            .Where(x => x.BarrierType == "ordered")
+                            .Any(x => x.Location.Line == max-1);
+                        
+                        if (check)
+                            lines.Add($"Create an ordered region covering line {max}.");
+                    }
+                    else
+                    {
+                        lines.Add($"Create an ordered region covering lines {min} to {max}.");
+                    }
                 }
             }
 

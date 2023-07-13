@@ -74,7 +74,8 @@ namespace LLOR.Repair
                         parts[1],
                         int.Parse(parts[2]),
                         int.Parse(parts[3]),
-                        parts[4]
+                        parts[4],
+                        parts[1] == "ordered" ? parts[5] : null
                     ));
                 }
             }
