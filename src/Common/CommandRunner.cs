@@ -1,11 +1,12 @@
 namespace LLOR.Common
 {
-    using System.Collections.Generic;
+    using System;
     using System.Diagnostics;
 
     public static class CommandRunner
     {
-        public static CommandOutput RunCommand(string command, string arguments)
+        public static CommandOutput RunCommand(
+            string command, string arguments, int timeout = 300000)
         {
             ProcessStartInfo info = new ProcessStartInfo
             {
@@ -21,9 +22,15 @@ namespace LLOR.Common
             process.Start();
 
             CommandOutput output = new CommandOutput();
-            process.WaitForExit();
-            output.ExitCode = process.ExitCode;
+            if (!process.WaitForExit(timeout))
+            {
+                process.Kill();
+                
+                output.ExitCode = (int)StatusCode.Timeout;
+                return output;
+            }
 
+            output.ExitCode = process.ExitCode;
             if (process.StandardOutput != null)
             {
                 while (!process.StandardOutput.EndOfStream)

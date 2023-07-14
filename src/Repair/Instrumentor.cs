@@ -79,8 +79,6 @@ namespace LLOR.Repair
                     ));
                 }
             }
-
-            File.Delete(sb_path);
         }
 
         public void Update(Dictionary<string, bool> assignments)

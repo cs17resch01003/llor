@@ -42,9 +42,8 @@
 
                 foreach (string change in changes)
                     Console.WriteLine(change);
-                
-                if (!changes.Any() || options.TestOnly || options.SummaryOnly)
-                    CleanFiles(options);
+
+                CleanFiles(options, changes.Count());
             }
             catch (RepairException ex)
             {
@@ -55,7 +54,7 @@
             }
         }
 
-        private static void CleanFiles(Options options)
+        private static void CleanFiles(Options options, int? changes = null)
         {
             FileInfo inputFile = new FileInfo(options.FilePath);
 
@@ -67,11 +66,19 @@
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
             string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
+            string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
             string summary_path = basePath + Path.DirectorySeparatorChar + baseName + ".summary";
 
-            File.Delete(inst_path);
-            if (!options.SummaryOnly)
+            File.Delete(sb_path);
+            if (!changes.HasValue || changes == 0 || options.TestOnly)
+            {
+                File.Delete(inst_path);
                 File.Delete(summary_path);
+            }
+            else if (options.SummaryOnly)
+            {
+                File.Delete(inst_path);
+            }
         }
     }
 }

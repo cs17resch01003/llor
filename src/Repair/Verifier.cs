@@ -99,9 +99,10 @@ namespace LLOR.Repair
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
-            // verify <input>
-            string command = clangPath;
-            string arguments = $"-Xclang -disable-O0-optnone -Xclang -load -Xclang {verifierPath} -I{includePath} -fopenmp -g {inputFile.FullName}";
+            // verify <input>.sb.ll
+            string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
+            string command = optPath;
+            string arguments = $"-load {verifierPath} -disable-output -openmp-verify-mhp {sb_path}";
 
             CommandOutput output = CommandRunner.RunCommand(command, arguments);
             return GetDataRaces(output);

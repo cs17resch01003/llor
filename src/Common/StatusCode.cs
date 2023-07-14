@@ -2,15 +2,17 @@ namespace LLOR.Common
 {
     public enum StatusCode
     {
-        XFail = -2,
-
         Pass = 0,
 
         Fail = 1,
 
-        Unsupported = 100,
+        XFail = 100,
 
-        RepairError = 101,
+        Unsupported = 101,
+
+        RepairError = 102,
+
+        Timeout = 103,
 
         Error = 254,
     }
