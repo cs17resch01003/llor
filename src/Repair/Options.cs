@@ -5,9 +5,9 @@ namespace LLOR.Repair
     public class Options
     {
         [Option('v', "llov", Required = false, HelpText = "Path to LLOV binaries.")]
-        public string BinariesPath { get; set; } = "/devel/llov/build";
+        public string BinariesPath { get; set; } = "/datadrive/llov/build";
 
-        [Option('i', "include", Required = false, HelpText = "Include path for LLOV.")]
+        [Option('i', "include", Required = false, HelpText = "Include path for gcc.")]
         public string IncludePath { get; set; } = "/usr/lib/gcc/x86_64-linux-gnu/11/include/";
 
         [Option('t', "testonly", Required = false, HelpText = "Run the repairer without generating files.")]

@@ -5,12 +5,12 @@ namespace LLOR.TestRunner
     public class Options
     {
         [Option('r', "llor", Required = false, HelpText = "Path to LLOR binaries.")]
-        public string LLORBinariesPath { get; set; } = "/devel/llor/src/Repair/bin/Debug/net6.0/Repair";
+        public string LLORBinariesPath { get; set; } = "/datadrive/llor/src/Repair/bin/Release/net6.0/Repair";
 
         [Option('v', "llov", Required = false, HelpText = "Path to LLOV binaries.")]
-        public string LLOVBinariesPath { get; set; } = "/devel/llov/build/";
+        public string LLOVBinariesPath { get; set; } = "/datadrive/llov/build/";
 
-        [Option('i', "include", Required = false, HelpText = "Include path for LLOV.")]
+        [Option('i', "include", Required = false, HelpText = "Include path for gcc.")]
         public string IncludePath { get; set; } = "/usr/lib/gcc/x86_64-linux-gnu/11/include/";
 
         [Option('o', "verify", Required = false, HelpText = "Run the verifier.")]
