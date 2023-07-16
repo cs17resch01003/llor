@@ -1,15 +1,16 @@
 #!/bin/bash
 
-cd /devel/llov/build/bin
+filepath=$1
+filepath=${filepath%.*}
 
-./clang -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone $1.c -I/usr/lib/gcc/x86_64-linux-gnu/11/include -o $1.ll
-./opt -mem2reg -loop-simplify -simplifycfg $1.ll -S -o $1.ssa.ll
-./opt -load ../lib/OpenMPVerify.so -openmp-resetbounds $1.ssa.ll -S -o $1.rb.ll
-./opt -load ../lib/OpenMPVerify.so -openmp-forceinline -inline $1.rb.ll -S -o $1.in.ll
-./opt -load ../lib/OpenMPVerify.so -openmp-split-basicblock $1.in.ll -S -o $1.sb.ll
-./opt -load ../lib/OpenMPVerify.so -openmp-verify-mhp $1.sb.ll -S -o $1.debug.ll --strip-debug
+clang -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone $1 -I/usr/lib/gcc/x86_64-linux-gnu/11/include -o $filepath.ll
+opt -mem2reg -loop-simplify -simplifycfg $filepath.ll -S -o $filepath.ssa.ll
+opt -load OpenMPVerify.so -openmp-resetbounds $filepath.ssa.ll -S -o $filepath.rb.ll
+opt -load OpenMPVerify.so -openmp-forceinline -inline $filepath.rb.ll -S -o $filepath.in.ll
+opt -load OpenMPVerify.so -openmp-split-basicblock $filepath.in.ll -S -o $filepath.sb.ll
+opt -load OpenMPVerify.so -openmp-verify-mhp $filepath.sb.ll -S -o $filepath.debug.ll --strip-debug
 
-rm $1.ll
-rm $1.ssa.ll
-rm $1.rb.ll
-rm $1.in.ll
+rm $filepath.ll
+rm $filepath.ssa.ll
+rm $filepath.rb.ll
+rm $filepath.in.ll

@@ -22,15 +22,8 @@
 
             try
             {
-                Verifier verifier = new Verifier(
-                    options.BinariesPath, 
-                    options.IncludePath,
-                    options.FilePath);
-                verifier.Initialize();
-
-                Instrumentor instrumentor = new Instrumentor(
-                    options.BinariesPath,
-                    options.FilePath);
+                Verifier verifier = new Verifier(options.FilePath);
+                Instrumentor instrumentor = new Instrumentor(options.FilePath);
                     
                 Repairer repairer = new Repairer(verifier, instrumentor);
                 Dictionary<string, bool> assignments = repairer.Repair();
@@ -74,10 +67,6 @@
             {
                 File.Delete(inst_path);
                 File.Delete(summary_path);
-            }
-            else if (options.SummaryOnly)
-            {
-                File.Delete(inst_path);
             }
         }
     }

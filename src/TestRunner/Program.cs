@@ -23,15 +23,14 @@ namespace LLOR.TestRunner
 
             DirectoryInfo directory = new DirectoryInfo(options.FolderPath);
             IEnumerable<FileInfo> files = directory.GetFiles()
-                .Where(x => !x.Name.EndsWith(".summary")).OrderBy(x => x.Name);
+                .Where(x => x.Name.EndsWith(".c") || x.Name.EndsWith(".cpp") || x.Name.EndsWith(".f95"))
+                .OrderBy(x => x.Name);
 
             int total = files.Count(), success = 0;
             foreach (FileInfo file in files)
             {
                 bool result = true;
-                if (options.SummaryOnly)
-                    RunRepair(options, file);
-                else if (options.Verify)
+                if (options.Verify)
                     AssertVerify(options, file);
                 else
                     result = AssertRepair(options, file);
@@ -46,17 +45,12 @@ namespace LLOR.TestRunner
         private static void RunRepair(Options options, FileInfo file)
         {
             string arguments = $"--file {file.FullName} --summaryonly";
-            CommandRunner.RunCommand(options.LLORBinariesPath, arguments);
+            CommandRunner.RunCommand("llor", arguments);
         }
 
         private static void AssertVerify(Options options, FileInfo file)
         {
-            string arguments = $"-Xclang -disable-O0-optnone -Xclang -load -Xclang "
-                + $"{options.LLOVBinariesPath}/lib/OpenMPVerify.so "
-                + $"-I{options.IncludePath} -fopenmp -g {file.FullName}";
-                
-            CommandOutput output = CommandRunner.RunCommand(
-                $"{options.LLOVBinariesPath}/bin/clang", arguments);
+            CommandOutput output = CommandRunner.RunCommand("llov", file.FullName);
             Output actual = new Output(
                 (StatusCode)output.ExitCode,
                 output.StandardError);
@@ -89,8 +83,7 @@ namespace LLOR.TestRunner
                 .Select(x => x.Replace("//;", string.Empty).Trim()).ToList();
             
             string arguments = $"--file {file.FullName} --testonly";
-            CommandOutput output =
-                CommandRunner.RunCommand(options.LLORBinariesPath, arguments);
+            CommandOutput output = CommandRunner.RunCommand("llor", arguments);
 
             Output actual = new Output(
                 (StatusCode)output.ExitCode,

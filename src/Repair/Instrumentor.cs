@@ -11,44 +11,26 @@ namespace LLOR.Repair
     {
         private FileInfo inputFile;
 
-        private string optPath;
-
-        private string instrumentationPath;
-
         public Dictionary<string, Barrier> Barriers { get; set; } = new Dictionary<string, Barrier>();
 
         public List<ExistingBarrier> Existing { get; set; } = new List<ExistingBarrier>();
 
-        public Instrumentor(string llovPath, string inputFile)
+        public Instrumentor(string filepath)
         {
-            this.inputFile = new FileInfo(inputFile);
-
-            DirectoryInfo directory = new DirectoryInfo(llovPath);
-            string binPath = directory.FullName + Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar;
-            string libPath = directory.FullName + Path.DirectorySeparatorChar + "lib" + Path.DirectorySeparatorChar;
-
-            optPath = binPath + "opt";
-            instrumentationPath = libPath + "OpenMPRepair.so";
-
-            Instrument();
-        }
-
-        private void Instrument()
-        {
+            inputFile = new FileInfo(filepath);
             if (inputFile.Directory == null)
                 throw new ArgumentNullException(nameof(inputFile.Directory));
-
-            string sourcePath = inputFile.FullName;
+                
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
             // generate <input>.inst.ll
             string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
             string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
-            string command = optPath;
-            string arguments = $"-load {instrumentationPath} -openmp-repair {sb_path} -S -o {inst_path} -initialize";
 
-            CommandOutput output = CommandRunner.RunCommand(command, arguments);
+            string arguments = $"-load OpenMPRepair.so -openmp-repair {sb_path} -S -o {inst_path} -initialize";
+            CommandOutput output = CommandRunner.RunCommand("opt", arguments);
+
             if (output.ExitCode != (int)StatusCode.Pass)
             {
                 throw new RepairException(
@@ -93,9 +75,8 @@ namespace LLOR.Repair
             ResetBarriers(inst_path);
             UpdateBarriers(inst_path, assignments);
 
-            string command = optPath;
-            string arguments = $"-load {instrumentationPath} -openmp-repair {inst_path} -S -o {inst_path}";
-            CommandOutput output = CommandRunner.RunCommand(command, arguments);
+            string arguments = $"-load OpenMPRepair.so -openmp-repair {inst_path} -S -o {inst_path}";
+            CommandOutput output = CommandRunner.RunCommand("opt", arguments);
 
             if (output.ExitCode != (int)StatusCode.Pass)
             {
