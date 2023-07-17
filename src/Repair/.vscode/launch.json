@@ -12,7 +12,7 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net6.0/Repair.dll",
             "args": [
-                "--file", "/devel/llor/testsuite/dataracebench/DRB181-SmithWaterman-yes.c"
+                "--file", "/datadrive/llor/testsuite/dataracebench/DRB001-antidep1-orig-yes.c"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

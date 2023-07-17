@@ -18,12 +18,14 @@ namespace LLOR.Repair
 
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+            string extension = inputFile.Extension;
 
             // generate <input>.ll
             string sourcePath = inputFile.FullName;
             string ll_path = basePath + Path.DirectorySeparatorChar + baseName + ".ll";
             string arguments = $"-fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone {sourcePath} -o {ll_path}";
-            CommandRunner.RunCommand("clang", arguments);
+            string command = extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "flang" : "clang";
+            CommandRunner.RunCommand(command, arguments);
 
             // generate <input>.ssa.ll
             string ssa_path = basePath + Path.DirectorySeparatorChar + baseName + ".ssa.ll";
