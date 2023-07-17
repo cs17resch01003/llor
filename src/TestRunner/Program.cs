@@ -2,10 +2,15 @@ namespace LLOR.TestRunner
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Text;
     using System.Threading.Tasks;
     using CommandLine;
+    using CsvHelper;
+    using CsvHelper.Configuration;
     using LLOR.Common;
 
     public class Program
@@ -21,34 +26,35 @@ namespace LLOR.TestRunner
 
             if (options == null) return;
 
-            DirectoryInfo directory = new DirectoryInfo(options.FolderPath);
-            IEnumerable<FileInfo> files = directory.GetFiles()
-                .Where(x => x.Name.EndsWith(".c") || x.Name.EndsWith(".cpp") || x.Name.EndsWith(".f95"))
-                .OrderBy(x => x.Name);
+            IEnumerable<FileInfo> files = Directory.EnumerateFiles(options.FolderPath, "*.*", SearchOption.AllDirectories)
+                .Where(x => x.EndsWith(".c") || x.EndsWith(".cpp"))
+                .OrderBy(x => x).Select(x => new FileInfo(x));
 
-            int total = files.Count(), success = 0;
+            if (options.Verify)
+                Verify(files);
+            else if (options.Repair)
+                Repair(files);
+            else
+                GenerateReport(files, options.FolderPath);
+        }
+
+        private static void Verify(IEnumerable<FileInfo> files)
+        {
             foreach (FileInfo file in files)
             {
-                bool result = true;
-                if (options.Verify)
-                    AssertVerify(options, file);
-                else
-                    result = AssertRepair(options, file);
+                VerificationResult verify = Verify(file);
 
-                if (result == true)
-                    success++;
+                string code = verify.StatusCode.ToString().ToLower();
+                string filename = file.FullName;
+
+                string statement = $"{code}: {filename}";
+                Console.WriteLine(statement);
             }
 
-            Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
+            Console.WriteLine($"\n\nTotal: {files.Count()}.");
         }
 
-        private static void RunRepair(Options options, FileInfo file)
-        {
-            string arguments = $"--file {file.FullName} --summaryonly";
-            CommandRunner.RunCommand("llor", arguments);
-        }
-
-        private static void AssertVerify(Options options, FileInfo file)
+        private static VerificationResult Verify(FileInfo file)
         {
             CommandOutput output = CommandRunner.RunCommand("llov", file.FullName);
             Output actual = new Output(
@@ -57,20 +63,42 @@ namespace LLOR.TestRunner
 
             ParsedOutput parsed = ErrorParser.ParseErrorOutput(actual.Result);
             StatusCode derived = parsed.StatusCode;
+
             if (derived == StatusCode.Pass)
                 derived = actual.StatusCode;
 
             if (derived == StatusCode.Pass && parsed.Races.Any())
                 derived = StatusCode.XFail;
 
-            string statement = $"{derived.ToString().ToLower()},{file.FullName},";
-            if (derived == StatusCode.XFail)
-                statement += $"{parsed.Races.Count}";
-            
-            Console.WriteLine(statement);
+            return new VerificationResult
+            {
+                StatusCode = derived,
+                RaceCount = derived == StatusCode.XFail ? parsed.Races.Count : null,
+            };
         }
 
-        private static bool AssertRepair(Options options, FileInfo file)
+        private static void Repair(IEnumerable<FileInfo> files)
+        {
+            int total = files.Count(), success = 0;
+            foreach (FileInfo file in files)
+            {
+                RepairResult repair = Repair(file);
+
+                string assert = repair.Assert.ToString().ToLower();
+                string code = repair.StatusCode.ToString().ToLower();
+                string filename = file.FullName;
+
+                string statement = $"{assert}_{code}: {filename}";
+                Console.WriteLine(statement);
+
+                if (repair.Assert == true)
+                    success++;
+            }
+
+            Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
+        }
+
+        private static RepairResult Repair(FileInfo file)
         {
             Output expected = new Output(StatusCode.Pass);
 
@@ -95,12 +123,64 @@ namespace LLOR.TestRunner
             else
                 result = expected.StatusCode == actual.StatusCode;
 
-            Console.WriteLine(
-                $"assert_{result.ToString().ToLower()}," 
-                + $"{actual.StatusCode.ToString().ToLower()},{file.FullName},"
-                + $"{actual.Result.Count}");
+            return new RepairResult
+            {
+                StatusCode = actual.StatusCode,
+                Changes = actual.Result.Count,
+                Assert = result,
+            };
+        }
+    
+        private static void GenerateReport(IEnumerable<FileInfo> files, string directory)
+        {
+            List<Record> records = new List<Record>();
 
-            return result;
+            int total = files.Count(), success = 0;
+            foreach (FileInfo file in files)
+            {
+                Stopwatch watch = Stopwatch.StartNew();
+
+                VerificationResult verify = Verify(file);
+                RepairResult repair = Repair(file);
+
+                string assert = repair.Assert.ToString().ToLower();
+                string verifyCode = verify.StatusCode.ToString().ToLower();
+                string repairCode = repair.StatusCode.ToString().ToLower();
+                string filename = file.FullName;
+
+                string statement = $"{assert}_{verifyCode}_{repairCode}: {filename}";
+                Console.WriteLine(statement);
+
+                if (repair.Assert == true)
+                    success++;
+
+                if (file.DirectoryName == null)
+                    throw new ArgumentNullException(nameof(file.DirectoryName));
+
+                records.Add(new Record
+                {
+                    FilePath = new DirectoryInfo(file.DirectoryName).Name + "\\" + file.Name,
+                    VerificationResult = verifyCode,
+                    RepairResult = repairCode,
+                    Changes = repair.Changes,
+                    TimeTaken = watch.ElapsedMilliseconds,
+                });
+            }
+
+            Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
+
+            CsvConfiguration config = new CsvConfiguration(CultureInfo.CurrentCulture)
+            {
+                HasHeaderRecord = true,
+                Delimiter = ",",
+                Encoding = Encoding.UTF8,
+            };
+
+            using (var writer = new StreamWriter(Path.Combine(directory, "result.csv")))
+            using (var csvWriter = new CsvWriter(writer, config))
+            {
+                csvWriter.WriteRecords(records);
+            }
         }
     }
 }
