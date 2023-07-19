@@ -1,6 +1,3 @@
-//; pass
-//; Create an ordered region covering lines 17 to 20.
-
 #define NUM_THREADS 10
 
 int main()
@@ -18,7 +15,7 @@ int main()
 		{
 			data[i] = temp;
 
-			int temp = data[i+1];
+			temp = data[i+1];
 			data[i] = temp;
 		}
 	}

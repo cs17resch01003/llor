@@ -1,6 +1,3 @@
-//; pass
-//; Create an ordered region covering lines 20 to 23.
-
 #define NUM_THREADS 10
 
 int main()
@@ -18,12 +15,15 @@ int main()
 	{
 		int temp = data_a[i+1];
 		#pragma omp ordered
-		{
-			data_a[i] = temp;
+		data_a[i] = temp;
+	}
 
-			int temp = data_b[i+1];
-			data_b[i] = temp;
-		}
+	#pragma omp parallel for ordered
+	for (int i = 0; i < NUM_THREADS; i++)
+	{
+		int temp = data_b[i+1];
+		#pragma omp ordered
+		data_b[i] = temp;
 	}
 
 	return 0;
