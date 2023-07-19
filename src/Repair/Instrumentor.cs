@@ -23,12 +23,16 @@ namespace LLOR.Repair
                 
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+            string extension = inputFile.Extension;
 
             // generate <input>.inst.ll
             string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
             string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
 
             string arguments = $"-load OpenMPRepair.so -openmp-repair {sb_path} -S -o {inst_path} -initialize";
+            if (extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase))
+                arguments += " -language=Fortran";
+
             CommandOutput output = CommandRunner.RunCommand("opt", arguments);
 
             if (output.ExitCode != (int)StatusCode.Pass)
