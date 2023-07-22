@@ -1,3 +1,6 @@
+//; Pass
+//; Add a barrier at line number 20.
+
 #include "omp.h"
 #define NUM_THREADS 10
 
@@ -13,7 +16,8 @@ int main()
 	{
 		int id = omp_get_thread_num();
 		
-		int temp = id+10;
+		int temp = data[id+1];
+		#pragma omp barrier
 		data[id] = temp;
 	}
 }
