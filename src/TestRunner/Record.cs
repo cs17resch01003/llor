@@ -13,6 +13,9 @@ namespace LLOR.TestRunner
         [Name("rresult")]
         public string? RepairResult { get; set; }
 
+        [Name("fresult")]
+        public string? RepairedResult { get; set; }
+
         [Name("changes")]
         public int? Changes { get; set; }
 

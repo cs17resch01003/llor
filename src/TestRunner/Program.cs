@@ -27,8 +27,9 @@ namespace LLOR.TestRunner
             if (options == null) return;
 
             IEnumerable<FileInfo> files = Directory.EnumerateFiles(options.FolderPath, "*.*", SearchOption.AllDirectories)
-                .Where(x => x.EndsWith(".c") || x.EndsWith(".cpp"))
+                .Where(x => x.EndsWith(".c") || x.EndsWith(".cpp") || x.EndsWith(".f95"))
                 .OrderBy(x => x).Select(x => new FileInfo(x));
+            files = files.Where(x => !x.FullName.Contains("fixed"));
 
             if (options.Verify)
                 Verify(files);
@@ -101,14 +102,16 @@ namespace LLOR.TestRunner
         private static RepairResult Repair(FileInfo file)
         {
             Output expected = new Output(StatusCode.Pass);
+            string delimiter = file.Extension
+                .Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "!;" : "//;";
 
             List<string> lines = File.ReadLines(file.FullName).ToList();
             expected.StatusCode = Enum.Parse<StatusCode>(
-                lines[0].Replace("//;", string.Empty).Trim());
+                lines[0].Replace(delimiter, string.Empty).Trim());
 
             lines.RemoveAt(0);
-            expected.Result = lines.Where(x => x.StartsWith("//;"))
-                .Select(x => x.Replace("//;", string.Empty).Trim()).ToList();
+            expected.Result = lines.Where(x => x.StartsWith(delimiter))
+                .Select(x => x.Replace(delimiter, string.Empty).Trim()).ToList();
             
             string arguments = $"--file {file.FullName} --testonly";
             CommandOutput output = CommandRunner.RunCommand("llor", arguments);
@@ -138,28 +141,34 @@ namespace LLOR.TestRunner
             int total = files.Count(), success = 0;
             foreach (FileInfo file in files)
             {
+                if (file.DirectoryName == null)
+                    throw new ArgumentNullException(nameof(file.DirectoryName));
+
                 Stopwatch watch = Stopwatch.StartNew();
 
                 VerificationResult verify = Verify(file);
                 RepairResult repair = Repair(file);
+                VerificationResult? repaired = null;
+
+                string fixedPath = Path.Combine(file.DirectoryName, "fixed", file.Name);
+                if (File.Exists(fixedPath))
+                    repaired = Verify(new FileInfo(fixedPath));
 
                 string assert = repair.Assert.ToString().ToLower();
                 string verifyCode = verify.StatusCode.ToString().ToLower();
                 string repairCode = repair.StatusCode.ToString().ToLower();
+                string repairedCode = repaired == null ? "na" : repaired.StatusCode.ToString().ToLower();
                 string filename = file.FullName;
 
-                string statement = $"{assert}_{verifyCode}_{repairCode}: {filename}";
+                string statement = $"{assert}_{verifyCode}_{repairCode}_{repairedCode}: {filename}";
                 Console.WriteLine(statement);
 
                 if (repair.Assert == true)
                     success++;
 
-                if (file.DirectoryName == null)
-                    throw new ArgumentNullException(nameof(file.DirectoryName));
-
                 records.Add(new Record
                 {
-                    FilePath = new DirectoryInfo(file.DirectoryName).Name + "\\" + file.Name,
+                    FilePath = Path.Combine(new DirectoryInfo(file.DirectoryName).Name, file.Name),
                     VerificationResult = verifyCode,
                     RepairResult = repairCode,
                     Changes = repair.Changes,

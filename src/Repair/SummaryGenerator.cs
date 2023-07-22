@@ -12,6 +12,8 @@ namespace LLOR.Repair
 
         private Instrumentor instrumentor;
 
+        private string language;
+
         private string[] fileContent;
 
         public SummaryGenerator(string inputFile, Instrumentor instrumentor)
@@ -19,6 +21,8 @@ namespace LLOR.Repair
             this.inputFile = new FileInfo(inputFile);
             this.instrumentor = instrumentor;
 
+            string extension = this.inputFile.Extension;
+            language = extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "Fortran" : "C";
             fileContent = File.ReadAllLines(inputFile);
         }
 
@@ -30,6 +34,7 @@ namespace LLOR.Repair
 
             GenerateBarrierSummary(assignments, lines);
             GenerateOrderedSummary(assignments, lines);
+            lines = lines.OrderBy(x => x).ToList();
 
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
@@ -83,8 +88,11 @@ namespace LLOR.Repair
                     line = Regex.Replace(line, @"\s+", " ").Trim();
 
                     // avoid removing implicit barriers
-                    if (line.Contains("pragma omp barrier"))
+                    if ((language == "C" && line.Contains("pragma omp barrier")) ||
+                        (language == "Fortran" && line.Contains("!$omp barrier")))
+                    {
                         lines.Add($"Remove the barrier at line number {existing.Location.Line}.");
+                    }
                 }
             }
         }
@@ -104,6 +112,17 @@ namespace LLOR.Repair
                         .Min(x => x.Location.Line);
                     int max = barriers.Where(x => x.Function == function && x.Loop == loop)
                         .Max(x => x.Location.Line);
+
+                    // overapproximate for Fortran programs
+                    if (language == "Fortran")
+                    {
+                        min = instrumentor.Barriers.Values
+                            .Where(x => x.Function == function && x.Loop == loop)
+                            .Min(x => x.Location.Line);
+                        max = instrumentor.Barriers.Values
+                            .Where(x => x.Function == function && x.Loop == loop)
+                            .Max(x => x.Location.Line);
+                    }
 
                     if (min == max)
                     {

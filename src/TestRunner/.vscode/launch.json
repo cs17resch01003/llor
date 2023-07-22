@@ -12,8 +12,7 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net6.0/TestRunner.dll",
             "args": [
-                "--folder", "/devel/llor/testsuite_fixed/baseline",
-                "--verifyonly"
+                "--folder", "/datadrive/llor/testsuite/baseline"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

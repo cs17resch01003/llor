@@ -1,7 +1,7 @@
 !; Pass
-!; Add a barrier at line number 20.
+!; Remove the barrier at line number 20.
 
-program B01_simple_race
+program B04_unnecessary_barrier
     use omp_lib
 
     implicit none
@@ -17,6 +17,7 @@ program B01_simple_race
         id = omp_get_thread_num()
 
         temp = data(id+1)
+        !$omp barrier
 		data(id) = temp
     !$omp end parallel
 end program

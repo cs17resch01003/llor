@@ -12,7 +12,7 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net6.0/Repair.dll",
             "args": [
-                "--file", "/datadrive/llor/testsuite/baseline_fortran/B08_for_race.f95"
+                "--file", "/datadrive/llor/testsuite/baseline/B01_simple_race.c"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
