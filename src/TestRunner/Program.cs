@@ -101,18 +101,6 @@ namespace LLOR.TestRunner
 
         private static RepairResult Repair(FileInfo file)
         {
-            Output expected = new Output(StatusCode.Pass);
-            string delimiter = file.Extension
-                .Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "!;" : "//;";
-
-            List<string> lines = File.ReadLines(file.FullName).ToList();
-            expected.StatusCode = Enum.Parse<StatusCode>(
-                lines[0].Replace(delimiter, string.Empty).Trim());
-
-            lines.RemoveAt(0);
-            expected.Result = lines.Where(x => x.StartsWith(delimiter))
-                .Select(x => x.Replace(delimiter, string.Empty).Trim()).ToList();
-            
             string arguments = $"--file {file.FullName} --testonly";
             CommandOutput output = CommandRunner.RunCommand("llor", arguments);
 
@@ -120,11 +108,28 @@ namespace LLOR.TestRunner
                 (StatusCode)output.ExitCode,
                 output.StandardOutput);
 
+            Output expected = new Output(StatusCode.Pass);
+            string delimiter = file.Extension
+                .Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "!;" : "//;";
+
+            List<string> lines = File.ReadLines(file.FullName)
+                .Where(x => x.StartsWith(delimiter)).ToList();
+
             bool result = false;
-            if (actual.StatusCode == StatusCode.Pass)
-                result = expected.Equals(actual);
-            else
-                result = expected.StatusCode == actual.StatusCode;
+            if (lines.Any())
+            {
+                expected.StatusCode = Enum.Parse<StatusCode>(
+                    lines[0].Replace(delimiter, string.Empty).Trim());
+
+                lines.RemoveAt(0);
+                expected.Result = lines.Where(x => x.StartsWith(delimiter))
+                    .Select(x => x.Replace(delimiter, string.Empty).Trim()).ToList();
+
+                if (actual.StatusCode == StatusCode.Pass)
+                    result = expected.Equals(actual);
+                else
+                    result = expected.StatusCode == actual.StatusCode;
+            }
 
             return new RepairResult
             {

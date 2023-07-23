@@ -1,7 +1,10 @@
 namespace LLOR.Common
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
+    using LLOR.Common.Exceptions;
 
     public static class CommandRunner
     {
@@ -31,23 +34,28 @@ namespace LLOR.Common
             }
 
             output.ExitCode = process.ExitCode;
-            if (process.StandardOutput != null)
+            output.StandardOutput = GetResult(process.StandardOutput);
+            output.StandardError = GetResult(process.StandardError);
+
+            if (!Enum.IsDefined(typeof(StatusCode), process.ExitCode))
             {
-                while (!process.StandardOutput.EndOfStream)
-                {
-                    string? line = process.StandardOutput.ReadLine();
-                    if (line != null)
-                        output.StandardOutput.Add(line);
-                }
+                string message = string.Join('\n', output.StandardOutput, output.StandardError);
+                throw new CommandLineException(StatusCode.Error, message);
             }
 
-            if (process.StandardError != null)
+            return output;
+        }
+
+        private static List<string> GetResult(StreamReader reader)
+        {
+            List<string> output = new List<string>();
+            if (reader != null)
             {
-                while (!process.StandardError.EndOfStream)
+                while (!reader.EndOfStream)
                 {
-                    string? line = process.StandardError.ReadLine();
+                    string? line = reader.ReadLine();
                     if (line != null)
-                        output.StandardError.Add(line);
+                        output.Add(line);
                 }
             }
 
