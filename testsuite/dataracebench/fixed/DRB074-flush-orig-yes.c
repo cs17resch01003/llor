@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Add a barrier at line number 74.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +46,35 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 /*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
+This benchmark is extracted from flush_nolist.1c of OpenMP Application
+Programming Interface Examples Version 4.5.0 .
+We added one critical section to make it a test with only one pair of data races.
+The data race will not generate wrong result though. So the assertion always passes.
+Data race pair:  *q@60:3:W vs. i@71:11:R
 */
-#include <stdlib.h>
-int main(int argc, char* argv[])
+#include<stdio.h>
+#include<assert.h>
+
+void f1(int *q)
 {
-  int i;
-  int len=100;
+#pragma omp critical
+  *q = 1;
+#pragma omp flush
+}
 
-  if (argc>1)
-    len = atoi(argv[1]);
-
-  int a[len], b[len];
-  for (i=0;i<len;i++)
+int main()
+{ 
+  int i=0, sum=0; 
+  
+  #pragma omp parallel reduction(+:sum) num_threads(10) 
   {
-    a[i]=i;
-    b[i]=i+1;
+     f1(&i);
+     #pragma omp barrier
+     sum+=i;
   }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
-  return 0;
+  assert (sum==10);
+  printf("sum=%d\n", sum);
+  return 0;   
 }

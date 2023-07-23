@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Create an ordered region covering line 59.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +46,19 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
-/*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
-*/
-#include <stdlib.h>
-int main(int argc, char* argv[])
+#include <stdio.h>
+/* This is a program based on a test contributed by Yizi Gu@Rice Univ.
+ * Missing the ordered clause
+ * Data race pair: x@56:5:W vs. x@56:5:W
+ * */
+int main()
 {
-  int i;
-  int len=100;
-
-  if (argc>1)
-    len = atoi(argv[1]);
-
-  int a[len], b[len];
-  for (i=0;i<len;i++)
-  {
-    a[i]=i;
-    b[i]=i+1;
+  int x =0;
+#pragma omp parallel for ordered 
+  for (int i = 0; i < 100; ++i) {
+    #pragma omp ordered
+      x++;
   }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
+  printf ("x=%d\n",x);
   return 0;
-}
+} 

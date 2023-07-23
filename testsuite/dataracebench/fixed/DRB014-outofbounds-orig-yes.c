@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Create an ordered region covering line 78.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +46,40 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
-/*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
+
+/* 
+The outmost loop is parallelized.
+But the inner level loop has out of bound access for b[i][j] when j equals to 0.
+This will case memory access of a previous row's last element.
+
+For example, an array of 4x4: 
+    j=0 1 2 3
+ i=0  x x x x
+   1  x x x x
+   2  x x x x
+   3  x x x x
+  outer loop: i=2, 
+  inner loop: j=0
+  array element accessed b[i][j-1] becomes b[2][-1], which in turn is b[1][3]
+  due to linearized row-major storage of the 2-D array.
+  This causes loop-carried data dependence between i=2 and i=1.
+
+Data race pair: b[i][j]@75:7:W vs. b[i][j-1]@75:15:R
 */
-#include <stdlib.h>
-int main(int argc, char* argv[])
+#include <stdio.h>
+int main(int argc, char* argv[]) 
 {
-  int i;
-  int len=100;
+  int i,j;
+  int n=100, m=100;
+  double b[n][m];
+#pragma omp parallel for private(j) ordered
+  for (i=1;i<n;i++)
+    for (j=0;j<m;j++) // Note there will be out of bound access
+      #pragma omp ordered
+        b[i][j]=b[i][j-1];
 
-  if (argc>1)
-    len = atoi(argv[1]);
+  printf ("b[50][50]=%f\n",b[50][50]);
 
-  int a[len], b[len];
-  for (i=0;i<len;i++)
-  {
-    a[i]=i;
-    b[i]=i+1;
-  }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
-  return 0;
+  return 0;     
 }
+  

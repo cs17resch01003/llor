@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Create an ordered region covering line 77.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +46,52 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 /*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
+For a variable declared in a scope inside an OpenMP construct:
+* private if the variable has an automatic storage duration
+* shared if the variable has a static storage duration. 
+
+Dependence pairs: 
+   tmp@73:7:W vs. tmp@73:7:W
+   tmp@73:7:W vs. tmp@74:14:R
 */
-#include <stdlib.h>
+#include<stdio.h>
+
 int main(int argc, char* argv[])
 {
   int i;
   int len=100;
-
-  if (argc>1)
-    len = atoi(argv[1]);
-
   int a[len], b[len];
+
   for (i=0;i<len;i++)
+  {  a[i]=i; b[i]=i;} 
+/* static storage for a local variable */
+#pragma omp parallel 
   {
-    a[i]=i;
-    b[i]=i+1;
+    static int tmp;
+#pragma omp for ordered
+    for (i=0;i<len;i++)
+    {
+      tmp = a[i]+i;
+      #pragma omp ordered
+        a[i] = tmp;
+    }
   }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
+
+/* automatic storage for a local variable */
+#pragma omp parallel 
+  {
+    int tmp;
+#pragma omp for
+    for (i=0;i<len;i++)
+    {
+      tmp = b[i]+i;
+      b[i] = tmp;
+    }
+  }
+
+  printf("a[50]=%d b[50]=%d\n", a[50], b[50]);
+ 
   return 0;
 }

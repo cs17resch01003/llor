@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Create an ordered region covering line 75.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +46,36 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
-/*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
+/* 
+Race condition on outLen due to unprotected writes.
+Adding private (outLen) can avoid race condition. But it is wrong semantically.
+
+Data race pairs: we allow two pair to preserve the original code pattern.
+1. outLen@72:12:W vs. outLen@72:12:W
+2. output[]@72:5:W vs. output[]@72:5:W
 */
 #include <stdlib.h>
+#include <stdio.h>
 int main(int argc, char* argv[])
 {
-  int i;
-  int len=100;
+  int i ;
+  int inLen=1000 ; 
+  int outLen = 0;
 
   if (argc>1)
-    len = atoi(argv[1]);
+    inLen= atoi(argv[1]);
 
-  int a[len], b[len];
-  for (i=0;i<len;i++)
-  {
-    a[i]=i;
-    b[i]=i+1;
-  }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
+  int input[inLen]; 
+  int output[inLen];
+  for (i=0; i<inLen; ++i) 
+    input[i]=i; 
+
+#pragma omp parallel for ordered
+  for (i=0; i<inLen; ++i) {
+    #pragma omp ordered
+      output[outLen++] = input[i] ;
+  }  
+
+  printf("output[0]=%d\n", output[0]);
   return 0;
 }

@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Create an ordered region covering lines 73 to 74.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +46,37 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <stdio.h>
 /*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
+ *  loop missing the linear clause
+ *  Data race pairs (race on j allows wrong indexing of c):  
+     j@70:7:R vs. j@71:5:W
+     j@71:5:W vs. j@71:5:W 
+     c[j]@70:5:W vs. c[j]@70:5:W
 */
-#include <stdlib.h>
-int main(int argc, char* argv[])
+int main()
 {
-  int i;
   int len=100;
+  double a[len], b[len], c[len];
+  int i,j=0;
 
-  if (argc>1)
-    len = atoi(argv[1]);
-
-  int a[len], b[len];
   for (i=0;i<len;i++)
   {
-    a[i]=i;
-    b[i]=i+1;
+    a[i]=((double)i)/2.0; 
+    b[i]=((double)i)/3.0; 
+    c[i]=((double)i)/7.0; 
   }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
+
+#pragma omp parallel for ordered
+  for (i=0;i<len;i++)
+  {
+    #pragma omp ordered
+    {
+      c[j]+=a[i]*b[i];
+      j++;
+    }
+  }
+
+  printf ("c[50]=%f\n",c[50]);
   return 0;
 }

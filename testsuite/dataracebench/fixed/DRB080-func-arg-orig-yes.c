@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Add a barrier at line number 62.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +46,31 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 /*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
+A function arguments is passed by reference: 
+its data-sharing attribute is the same as its actual argument's. 
+i is shared. *q is shared.
+Data race pair: *q@59:4:W vs. *q@59:4:W 
 */
-#include <stdlib.h>
-int main(int argc, char* argv[])
+
+#include<stdio.h>
+
+/*  argument pass-by-reference */
+void f1(int* q)
 {
-  int i;
-  int len=100;
+  int temp = *q + 1;
+  #pragma omp barrier
+  *q = temp;
+}
 
-  if (argc>1)
-    len = atoi(argv[1]);
-
-  int a[len], b[len];
-  for (i=0;i<len;i++)
+int main()
+{ 
+  int i=0; 
+  #pragma omp parallel 
   {
-    a[i]=i;
-    b[i]=i+1;
+     f1(&i);
   }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
-  return 0;
+  printf ("i=%d\n",i);
+  return 0;   
 }

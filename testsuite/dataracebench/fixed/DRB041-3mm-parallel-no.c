@@ -207,26 +207,32 @@ static void init_array(int ni,int nj,int nk,int nl,int nm,double A[128 + 0][128 
       }
     }
     if (nj >= 1 && nl <= 0) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = nj; c1 <= ((((ni + -1 < nk + -1?ni + -1 : nk + -1)) < nm + -1?((ni + -1 < nk + -1?ni + -1 : nk + -1)) : nm + -1)); c1++) {
-        for (c2 = 0; c2 <= nj + -1; c2++) {
-          A[c1][c2] = ((double )c1) * c2 / ni;
-          B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
-        }
-        for (c2 = nj; c2 <= nk + -1; c2++) {
-          A[c1][c2] = ((double )c1) * c2 / ni;
+        #pragma omp ordered
+        {
+          for (c2 = 0; c2 <= nj + -1; c2++) {
+            A[c1][c2] = ((double )c1) * c2 / ni;
+            B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+          }
+          for (c2 = nj; c2 <= nk + -1; c2++) {
+            A[c1][c2] = ((double )c1) * c2 / ni;
+          }
         }
       }
     }
     if (nj >= 1) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (nj > nm?nj : nm); c1 <= ((ni + -1 < nk + -1?ni + -1 : nk + -1)); c1++) {
-        for (c2 = 0; c2 <= nj + -1; c2++) {
-          A[c1][c2] = ((double )c1) * c2 / ni;
-          B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
-        }
-        for (c2 = nj; c2 <= nk + -1; c2++) {
-          A[c1][c2] = ((double )c1) * c2 / ni;
+        #pragma omp ordered
+        {
+          for (c2 = 0; c2 <= nj + -1; c2++) {
+            A[c1][c2] = ((double )c1) * c2 / ni;
+            B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+          }
+          for (c2 = nj; c2 <= nk + -1; c2++) {
+            A[c1][c2] = ((double )c1) * c2 / ni;
+          }
         }
       }
     }
@@ -246,18 +252,24 @@ static void init_array(int ni,int nj,int nk,int nl,int nm,double A[128 + 0][128 
       }
     }
     if (nj <= 0 && nl <= 0) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = 0; c1 <= ((((ni + -1 < nk + -1?ni + -1 : nk + -1)) < nm + -1?((ni + -1 < nk + -1?ni + -1 : nk + -1)) : nm + -1)); c1++) {
         for (c2 = 0; c2 <= nk + -1; c2++) {
-          A[c1][c2] = ((double )c1) * c2 / ni;
+          #pragma omp ordered
+          {
+            A[c1][c2] = ((double )c1) * c2 / ni;
+          }
         }
       }
     }
     if (nj <= 0) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (0 > nm?0 : nm); c1 <= ((ni + -1 < nk + -1?ni + -1 : nk + -1)); c1++) {
         for (c2 = 0; c2 <= nk + -1; c2++) {
-          A[c1][c2] = ((double )c1) * c2 / ni;
+          #pragma omp ordered
+          {
+            A[c1][c2] = ((double )c1) * c2 / ni;
+          }
         }
       }
     }
@@ -286,14 +298,17 @@ static void init_array(int ni,int nj,int nk,int nl,int nm,double A[128 + 0][128 
       }
     }
     if (nk >= 1 && nl <= 0) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = nk; c1 <= ((((ni + -1 < nj + -1?ni + -1 : nj + -1)) < nm + -1?((ni + -1 < nj + -1?ni + -1 : nj + -1)) : nm + -1)); c1++) {
-        for (c2 = 0; c2 <= nk + -1; c2++) {
-          A[c1][c2] = ((double )c1) * c2 / ni;
-          C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
-        }
-        for (c2 = nk; c2 <= nm + -1; c2++) {
-          C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
+        #pragma omp ordered
+        {
+          for (c2 = 0; c2 <= nk + -1; c2++) {
+            A[c1][c2] = ((double )c1) * c2 / ni;
+            C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
+          }
+          for (c2 = nk; c2 <= nm + -1; c2++) {
+            C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
+          }
         }
       }
     }
@@ -313,10 +328,13 @@ static void init_array(int ni,int nj,int nk,int nl,int nm,double A[128 + 0][128 
       }
     }
     if (nk >= 1 && nm <= 0) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = nk; c1 <= ((ni + -1 < nj + -1?ni + -1 : nj + -1)); c1++) {
         for (c2 = 0; c2 <= nk + -1; c2++) {
-          A[c1][c2] = ((double )c1) * c2 / ni;
+          #pragma omp ordered
+          {
+            A[c1][c2] = ((double )c1) * c2 / ni;
+          }
         }
       }
     }
@@ -336,18 +354,24 @@ static void init_array(int ni,int nj,int nk,int nl,int nm,double A[128 + 0][128 
       }
     }
     if (nk >= 1 && nl <= 0) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (nj > nk?nj : nk); c1 <= ((ni + -1 < nm + -1?ni + -1 : nm + -1)); c1++) {
         for (c2 = 0; c2 <= nk + -1; c2++) {
-          A[c1][c2] = ((double )c1) * c2 / ni;
+          #pragma omp ordered
+          {
+            A[c1][c2] = ((double )c1) * c2 / ni;
+          }
         }
       }
     }
     if (nk >= 1) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (((nj > nk?nj : nk)) > nm?((nj > nk?nj : nk)) : nm); c1 <= ni + -1; c1++) {
         for (c2 = 0; c2 <= nk + -1; c2++) {
-          A[c1][c2] = ((double )c1) * c2 / ni;
+          #pragma omp ordered
+          {
+            A[c1][c2] = ((double )c1) * c2 / ni;
+          }
         }
       }
     }
@@ -398,22 +422,28 @@ static void init_array(int ni,int nj,int nk,int nl,int nm,double A[128 + 0][128 
       }
     }
     if (nm >= 1) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (ni > nm?ni : nm); c1 <= ((nj + -1 < nk + -1?nj + -1 : nk + -1)); c1++) {
-        for (c2 = 0; c2 <= nm + -1; c2++) {
-          B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
-          C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
-        }
-        for (c2 = nm; c2 <= nj + -1; c2++) {
-          B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+        #pragma omp ordered
+        {
+          for (c2 = 0; c2 <= nm + -1; c2++) {
+            B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+            C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
+          }
+          for (c2 = nm; c2 <= nj + -1; c2++) {
+            B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+          }
         }
       }
     }
     if (nm <= 0) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (0 > ni?0 : ni); c1 <= ((nj + -1 < nk + -1?nj + -1 : nk + -1)); c1++) {
         for (c2 = 0; c2 <= nj + -1; c2++) {
-          B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+          #pragma omp ordered
+          {
+            B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+          }
         }
       }
     }
@@ -433,18 +463,24 @@ static void init_array(int ni,int nj,int nk,int nl,int nm,double A[128 + 0][128 
       }
     }
     if (nj >= 1 && nl <= 0) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (ni > nj?ni : nj); c1 <= ((nk + -1 < nm + -1?nk + -1 : nm + -1)); c1++) {
         for (c2 = 0; c2 <= nj + -1; c2++) {
-          B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+          #pragma omp ordered
+          {
+            B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+          }
         }
       }
     }
     if (nj >= 1) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (((ni > nj?ni : nj)) > nm?((ni > nj?ni : nj)) : nm); c1 <= nk + -1; c1++) {
         for (c2 = 0; c2 <= nj + -1; c2++) {
-          B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+          #pragma omp ordered
+          {
+            B[c1][c2] = ((double )c1) * (c2 + 1) / nj;
+          }
         }
       }
     }
@@ -464,18 +500,20 @@ static void init_array(int ni,int nj,int nk,int nl,int nm,double A[128 + 0][128 
       }
     }
     if (nk >= 1 && nl <= 0) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (ni > nk?ni : nk); c1 <= ((nj + -1 < nm + -1?nj + -1 : nm + -1)); c1++) {
         for (c2 = 0; c2 <= nm + -1; c2++) {
-          C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
+          #pragma omp ordered
+            C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
         }
       }
     }
     if (nk >= 1 && nm >= 1) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (((ni > nk?ni : nk)) > nm?((ni > nk?ni : nk)) : nm); c1 <= nj + -1; c1++) {
         for (c2 = 0; c2 <= nm + -1; c2++) {
-          C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
+          #pragma omp ordered
+            C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
         }
       }
     }
@@ -495,42 +533,47 @@ static void init_array(int ni,int nj,int nk,int nl,int nm,double A[128 + 0][128 
       }
     }
     if (nk <= 0 && nl <= 0) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = 0; c1 <= ((nj + -1 < nm + -1?nj + -1 : nm + -1)); c1++) {
         for (c2 = 0; c2 <= nm + -1; c2++) {
-          C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
+          #pragma omp ordered
+            C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
         }
       }
     }
     if (nk <= 0 && nm >= 1) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = nm; c1 <= nj + -1; c1++) {
         for (c2 = 0; c2 <= nm + -1; c2++) {
-          C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
+          #pragma omp ordered
+            C[c1][c2] = ((double )c1) * (c2 + 3) / nl;
         }
       }
     }
     if (nj <= 0 && nl >= 1) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (0 > ni?0 : ni); c1 <= ((nk + -1 < nm + -1?nk + -1 : nm + -1)); c1++) {
         for (c2 = 0; c2 <= nl + -1; c2++) {
-          D[c1][c2] = ((double )c1) * (c2 + 2) / nk;
+          #pragma omp ordered
+            D[c1][c2] = ((double )c1) * (c2 + 2) / nk;
         }
       }
     }
     if (nk >= 1 && nl >= 1) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (((ni > nj?ni : nj)) > nk?((ni > nj?ni : nj)) : nk); c1 <= nm + -1; c1++) {
         for (c2 = 0; c2 <= nl + -1; c2++) {
-          D[c1][c2] = ((double )c1) * (c2 + 2) / nk;
+          #pragma omp ordered
+            D[c1][c2] = ((double )c1) * (c2 + 2) / nk;
         }
       }
     }
     if (nk <= 0 && nl >= 1) {
-#pragma omp parallel for private(c2)
+#pragma omp parallel for private(c2) ordered
       for (c1 = (0 > nj?0 : nj); c1 <= nm + -1; c1++) {
         for (c2 = 0; c2 <= nl + -1; c2++) {
-          D[c1][c2] = ((double )c1) * (c2 + 2) / nk;
+          #pragma omp ordered
+            D[c1][c2] = ((double )c1) * (c2 + 2) / nk;
         }
       }
     }

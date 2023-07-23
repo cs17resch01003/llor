@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Add a barrier at line number 67.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +46,27 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 /*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
+Test if the semantics of omp_get_thread_num() is correctly recognized.
+Thread with id 0 writes numThreads while other threads read it, causing data races.
+Data race pair: numThreads@60:7:W vs. numThreads@64:33:R
 */
-#include <stdlib.h>
-int main(int argc, char* argv[])
+#include <omp.h>
+#include <stdio.h>
+int main()
 {
-  int i;
-  int len=100;
-
-  if (argc>1)
-    len = atoi(argv[1]);
-
-  int a[len], b[len];
-  for (i=0;i<len;i++)
+  int numThreads=0 ; 
+#pragma omp parallel
   {
-    a[i]=i;
-    b[i]=i+1;
+    if ( omp_get_thread_num()==0 ) {
+      numThreads = omp_get_num_threads();
+    }
+    else
+    {
+      #pragma omp barrier
+      printf("numThreads=%d\n", numThreads);
+    }
   }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
   return 0;
 }

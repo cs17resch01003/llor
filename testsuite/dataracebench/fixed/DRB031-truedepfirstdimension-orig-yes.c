@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Create an ordered region covering line 69.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +46,29 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
-/*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
-*/
+
+/* 
+There is a loop-carried true dependence within the outer level loop.
+Data race pair: b[i][j]@66:7:W vs. b[i-1][j-1]@66:15:R
+ */
 #include <stdlib.h>
+#include <stdio.h>
 int main(int argc, char* argv[])
 {
-  int i;
-  int len=100;
+  int i,j;
+  int n=1000, m=1000;
+  double b[1000][1000];
 
-  if (argc>1)
-    len = atoi(argv[1]);
+  for (i=0; i<n; i++)
+    for (j=0; j<m; j++)
+      b[i][j] = 0.5; 
 
-  int a[len], b[len];
-  for (i=0;i<len;i++)
-  {
-    a[i]=i;
-    b[i]=i+1;
-  }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
+#pragma omp parallel for private(j) ordered
+  for (i=1;i<n;i++)
+    for (j=1;j<m;j++)
+      #pragma omp ordered
+        b[i][j]=b[i-1][j-1];
+
+  printf("b[500][500]=%f\n", b[500][500]);  
   return 0;
 }

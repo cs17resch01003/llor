@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Create an ordered region covering line 77.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,13 +46,13 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
-/*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
+
+/* 
+The -- operation is not protected, causing race condition.
+Data race pair: numNodes2@74:7:W vs. numNodes2@74:7:W
 */
-#include <stdlib.h>
-int main(int argc, char* argv[])
+#include <stdlib.h>  
+int main(int argc, char* argv[])  
 {
   int i;
   int len=100;
@@ -59,14 +60,23 @@ int main(int argc, char* argv[])
   if (argc>1)
     len = atoi(argv[1]);
 
-  int a[len], b[len];
-  for (i=0;i<len;i++)
+  int numNodes=len, numNodes2=0; 
+  int x[len]; 
+
+  for (i=0; i< len; i++)
   {
-    a[i]=i;
-    b[i]=i+1;
+    if (i%2==0)
+      x[i]=5;
+    else
+      x[i]= -5;
   }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
+
+#pragma omp parallel for ordered
+  for (i=numNodes-1 ; i>-1 ; --i) {
+    if (x[i]<=0) {
+      #pragma omp ordered
+        numNodes2-- ;
+    }
+  }         
   return 0;
-}
+} 

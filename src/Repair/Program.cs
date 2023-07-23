@@ -4,7 +4,9 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using CommandLine;
+    using LLOR.Common;
     using LLOR.Repair.Exceptions;
 
     public class Program
@@ -40,8 +42,10 @@
             }
             catch (RepairException ex)
             {
-                Console.WriteLine(ex.Message);
                 CleanFiles(options);
+
+                ValidateSource(options.FilePath);
+                Console.WriteLine(ex.Message);
 
                 Environment.Exit((int)ex.StatusCode);
             }
@@ -67,6 +71,28 @@
             {
                 File.Delete(inst_path);
                 File.Delete(summary_path);
+            }
+        }
+
+        private static void ValidateSource(string filePath)
+        {
+            List<string> lines = File.ReadLines(filePath).ToList();
+            foreach (string line in lines)
+            {
+                string temp = Regex.Replace(line, @"\s+", " ").Trim();
+                if (!temp.StartsWith("//"))
+                {
+                    if (line.Contains("#pragma omp section"))
+                    {
+                        Console.WriteLine("Data races across sections cannot be repaired!");
+                        Environment.Exit((int)StatusCode.Unsupported);
+                    }
+                    else if (temp.Contains("#pragma omp simd"))
+                    {
+                        Console.WriteLine("Data races inside a simd section cannot be repaired!");
+                        Environment.Exit((int)StatusCode.Unsupported);
+                    }
+                }
             }
         }
     }

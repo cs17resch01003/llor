@@ -1,4 +1,6 @@
-//; Unsupported
+//; Pass
+//; Create an ordered region covering line 65.
+//; Create an ordered region covering line 66.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +47,26 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <stdio.h>
 /*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
+Two-dimensional array computation using loops: missing private(j).
+References to j in the loop cause data races.
+Data race pairs (we allow multiple ones to preserve the pattern):
+  Write_set = {j@61:10, j@61:20}
+  Read_set = {j@62:20, j@62:12, j@61:14, j@61:20}
+  Any pair from Write_set vs. Write_set  and Write_set vs. Read_set is a data race pair.
 */
-#include <stdlib.h>
-int main(int argc, char* argv[])
+int a[100][100];
+int main()
 {
-  int i;
-  int len=100;
-
-  if (argc>1)
-    len = atoi(argv[1]);
-
-  int a[len], b[len];
-  for (i=0;i<len;i++)
-  {
-    a[i]=i;
-    b[i]=i+1;
-  }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
+  int i,j;
+#pragma omp parallel for ordered
+  for (i=0;i<100;i++)
+    #pragma omp ordered
+    {
+      for (j=0;j<100;j++)
+        a[i][j]=a[i][j]+1;
+    }
   return 0;
 }
+

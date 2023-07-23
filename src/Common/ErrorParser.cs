@@ -11,7 +11,6 @@ namespace LLOR.Common
             List<ParseMessage> messages = new List<ParseMessage>
             {
                 new ParseMessage("Region is Data Race Free.", 2, StatusCode.Pass),
-                new ParseMessage("warning", 2, StatusCode.Pass),
                 new ParseMessage("Tasking and DOACROSS loops are not supported.", 1, StatusCode.Unsupported),
                 new ParseMessage("Directive Not Analyzed by the verifier.", 1, StatusCode.Unsupported),
                 new ParseMessage("/usr/bin/ld", 0, StatusCode.Fail),

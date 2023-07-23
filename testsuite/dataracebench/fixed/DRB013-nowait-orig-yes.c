@@ -1,4 +1,5 @@
-//; Unsupported
+//; Pass
+//; Add a barrier at line number 78.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -45,28 +46,39 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 /*
-This one has race condition due to true dependence.
-But data races happen at instruction level, not thread level.
-Data race pair: a[i+1]@68:5:W vs. a[i]@68:12:R  
+This example is extracted from a paper: 
+Ma etc. Symbolic Analysis of Concurrency Errors in OpenMP Programs, ICPP 2013
+
+Some threads may finish the for loop early and execute errors = dt[9]+1
+while another thread may still be simultaneously executing
+the for worksharing region by writing to d[9], causing data races. 
+
+Data race pair: a[i]@72:7:W vs. a[9]@75:13:R
 */
-#include <stdlib.h>
-int main(int argc, char* argv[])
+
+#include <stdio.h>
+int main()
 {
-  int i;
-  int len=100;
+  int i,error;
+  int len = 1000;
+  int a[len], b=5;
 
-  if (argc>1)
-    len = atoi(argv[1]);
-
-  int a[len], b[len];
-  for (i=0;i<len;i++)
+  for (i=0; i<len; i++)
+    a[i]= i;
+ 
+#pragma omp parallel shared(b, error) 
   {
-    a[i]=i;
-    b[i]=i+1;
+#pragma omp for nowait
+    for(i = 0; i < len; i++)
+      a[i] = b + a[i]*5;
+
+    #pragma omp barrier
+#pragma omp single    
+    error = a[9] + 1;
   }
-#pragma omp simd
-  for (i=0;i<len-1;i++)
-    a[i+1]=a[i]*b[i];
+
+  printf ("error = %d\n", error);
   return 0;
-}
+}  

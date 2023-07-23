@@ -160,7 +160,7 @@ namespace LLOR.TestRunner
                 string repairedCode = repaired == null ? "na" : repaired.StatusCode.ToString().ToLower();
                 string filename = file.FullName;
 
-                string statement = $"{assert}_{verifyCode}_{repairCode}_{repairedCode}: {filename}";
+                string statement = $"{assert}_{verifyCode}_{repairCode}_{repairedCode}_{repair.Changes}: {filename}";
                 Console.WriteLine(statement);
 
                 if (repair.Assert == true)
