@@ -25,27 +25,31 @@ namespace LLOR.Repair
             string ll_path = basePath + Path.DirectorySeparatorChar + baseName + ".ll";
             string arguments = $"-fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone {sourcePath} -o {ll_path}";
             string command = extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "flang" : "clang";
-            CommandRunner.RunCommand(command, arguments);
+            RunCommand(command, arguments);
+            
+            // flang has constructs that are not supported by llov
+            if (extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase))
+                Transformer.TransformIR(ll_path);
 
             // generate <input>.ssa.ll
             string ssa_path = basePath + Path.DirectorySeparatorChar + baseName + ".ssa.ll";
             arguments = $"-mem2reg -loop-simplify -simplifycfg {ll_path} -S -o {ssa_path}";
-            CommandRunner.RunCommand("opt", arguments);
+            RunCommand("opt", arguments);
 
             // generate <input>.rb.ll
             string rb_path = basePath + Path.DirectorySeparatorChar + baseName + ".rb.ll";
             arguments = $"-load OpenMPVerify.so -openmp-resetbounds {ssa_path} -S -o {rb_path}";
-            CommandRunner.RunCommand("opt", arguments);
+            RunCommand("opt", arguments);
 
             // generate <input>.in.ll
             string in_path = basePath + Path.DirectorySeparatorChar + baseName + ".in.ll";
             arguments = $"-load OpenMPVerify.so -openmp-forceinline -inline {rb_path} -S -o {in_path}";
-            CommandRunner.RunCommand("opt", arguments);
+            RunCommand("opt", arguments);
 
             // generate <input>.sb.ll
             string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
             arguments = $"-load OpenMPVerify.so -openmp-split-basicblock {in_path} -S -o {sb_path}";
-            CommandRunner.RunCommand("opt", arguments);
+            RunCommand("opt", arguments);
 
             foreach(string path in new string[] { ll_path, ssa_path, rb_path, in_path })
                 File.Delete(path);
@@ -83,6 +87,13 @@ namespace LLOR.Repair
 
             CommandOutput output = CommandRunner.RunCommand("opt", arguments);
             return GetDataRaces(output);
+        }
+
+        private void RunCommand(string command, string arguments)
+        {
+            CommandOutput output = CommandRunner.RunCommand(command, arguments);
+            if (output.ExitCode != 0)
+                throw new RepairException(StatusCode.Fail, string.Join("\n", output.StandardError));
         }
 
         private List<DataRace> GetDataRaces(CommandOutput output)

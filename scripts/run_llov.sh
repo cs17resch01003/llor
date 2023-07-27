@@ -7,6 +7,7 @@ extension=${input##*.}
 if [[ $extension == "f95" ]]
 then
     flang -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone $1 -o $filepath.ll
+    transform --file $filepath.ll
 else
     clang -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone $1 -o $filepath.ll
 fi
