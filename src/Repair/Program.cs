@@ -22,11 +22,11 @@
 
             if (options == null) return;
 
-            Verifier verifier = new Verifier(options.FilePath);
-            Instrumentor instrumentor = new Instrumentor(options.FilePath);
-
             try
             {
+                Verifier verifier = new Verifier(options.FilePath);
+                Instrumentor instrumentor = new Instrumentor(options.FilePath);
+
                 Repairer repairer = new Repairer(verifier, instrumentor);
                 Dictionary<string, bool> assignments = repairer.Repair();
 
