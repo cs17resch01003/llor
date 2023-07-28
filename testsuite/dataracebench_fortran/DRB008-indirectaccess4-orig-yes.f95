@@ -1,4 +1,5 @@
-!; Fail
+!; Pass
+!; Create an ordered region covering lines 82 to 85.
 
 !!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!
 !!! Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
