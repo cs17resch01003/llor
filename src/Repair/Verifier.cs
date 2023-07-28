@@ -3,6 +3,8 @@ namespace LLOR.Repair
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
+    using System.Text.RegularExpressions;
     using LLOR.Common;
     using LLOR.Repair.Exceptions;
     
@@ -87,6 +89,26 @@ namespace LLOR.Repair
 
             CommandOutput output = CommandRunner.RunCommand("opt", arguments);
             return GetDataRaces(output);
+        }
+
+        public void ValidateSource()
+        {
+            string language = inputFile.Extension == ".f95" ? "Fortran" : "C";
+            string section = language == "C" ? "#pragma omp section" : "!$omp section";
+            string simd = language == "C" ? "#pragma omp simd" : "!$omp simd";
+
+            List<string> lines = File.ReadLines(inputFile.FullName).ToList();
+            foreach (string line in lines)
+            {
+                string temp = Regex.Replace(line, @"\s+", " ").Trim();
+                if (language != "C" || !temp.StartsWith("//"))
+                {
+                    if (temp.Contains(section))
+                        throw new RepairException(StatusCode.Unsupported, "Data races across sections cannot be repaired!");
+                    else if (temp.Contains(simd))
+                        throw new RepairException(StatusCode.Unsupported, "Data races inside a simd section cannot be repaired!");
+                }
+            }
         }
 
         private void RunCommand(string command, string arguments)

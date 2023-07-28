@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Text.RegularExpressions;
     using CommandLine;
     using LLOR.Common;
     using LLOR.Common.Exceptions;
@@ -23,11 +22,11 @@
 
             if (options == null) return;
 
+            Verifier verifier = new Verifier(options.FilePath);
+            Instrumentor instrumentor = new Instrumentor(options.FilePath);
+
             try
             {
-                Verifier verifier = new Verifier(options.FilePath);
-                Instrumentor instrumentor = new Instrumentor(options.FilePath);
-                    
                 Repairer repairer = new Repairer(verifier, instrumentor);
                 Dictionary<string, bool> assignments = repairer.Repair();
 
@@ -54,8 +53,6 @@
         private static void HandleException(Options options, StatusCode statusCode, string message)
         {
             CleanFiles(options);
-
-            ValidateSource(options.FilePath);
             Console.WriteLine(message);
 
             Environment.Exit((int)statusCode);
@@ -81,33 +78,6 @@
             {
                 File.Delete(inst_path);
                 File.Delete(summary_path);
-            }
-        }
-
-        private static void ValidateSource(string filePath)
-        {
-            string language = new FileInfo(filePath).Extension == ".f95"
-                ? "Fortran" : "C";
-            string section = language == "C" ? "#pragma omp section" : "!$omp section";
-            string simd = language == "C" ? "#pragma omp simd" : "!$omp simd";
-
-            List<string> lines = File.ReadLines(filePath).ToList();
-            foreach (string line in lines)
-            {
-                string temp = Regex.Replace(line, @"\s+", " ").Trim();
-                if (language != "C" || !temp.StartsWith("//"))
-                {
-                    if (temp.Contains(section))
-                    {
-                        Console.WriteLine("Data races across sections cannot be repaired!");
-                        Environment.Exit((int)StatusCode.Unsupported);
-                    }
-                    else if (temp.Contains(simd))
-                    {
-                        Console.WriteLine("Data races inside a simd section cannot be repaired!");
-                        Environment.Exit((int)StatusCode.Unsupported);
-                    }
-                }
             }
         }
     }

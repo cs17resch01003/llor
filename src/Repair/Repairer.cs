@@ -22,6 +22,8 @@ namespace LLOR.Repair
             Dictionary<string, bool> assignments = new Dictionary<string, bool>();
             try
             {
+                verifier.ValidateSource();
+
                 List<DataRace> races = new List<DataRace>();
                 while (true)
                 {
