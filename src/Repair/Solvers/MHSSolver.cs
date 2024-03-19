@@ -14,6 +14,12 @@ namespace LLOR.Repair.Solvers
 
         public Dictionary<string, bool> Solve(out SolverStatus status)
         {
+            if (!clauses.Any())
+            {
+                status = SolverStatus.Unsatisfiable;
+                return new Dictionary<string, bool>();
+            }
+
             MHSSolution solution = new MHSSolution(clauses);
             Solve(solution);
 
