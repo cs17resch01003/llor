@@ -3,7 +3,7 @@ namespace LLOR.Common
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.IO;
+    using System.Threading;
     using LLOR.Common.Exceptions;
 
     public static class CommandRunner
@@ -20,46 +20,57 @@ namespace LLOR.Common
                 UseShellExecute = false,
             };
 
-            Process process = new Process();
-            process.StartInfo = info;
-            process.Start();
-
-            CommandOutput output = new CommandOutput();
-            if (!process.WaitForExit(timeout))
+            using (Process process = new Process())
             {
-                process.Kill();
-                
-                output.ExitCode = (int)StatusCode.Timeout;
-                return output;
-            }
+                process.StartInfo = info;
 
-            output.ExitCode = process.ExitCode;
-            output.StandardOutput = GetResult(process.StandardOutput);
-            output.StandardError = GetResult(process.StandardError);
+                List<string> stdout = new List<string>();
+                List<string> stderr = new List<string>();
 
-            if (!Enum.IsDefined(typeof(StatusCode), process.ExitCode))
-            {
-                string message = string.Join('\n', output.StandardOutput, output.StandardError);
-                throw new CommandLineException(StatusCode.Error, message);
-            }
-
-            return output;
-        }
-
-        private static List<string> GetResult(StreamReader reader)
-        {
-            List<string> output = new List<string>();
-            if (reader != null)
-            {
-                while (!reader.EndOfStream)
+                using (AutoResetEvent outputWaitHandle = new AutoResetEvent(false))
+                using (AutoResetEvent errorWaitHandle = new AutoResetEvent(false))
                 {
-                    string? line = reader.ReadLine();
-                    if (line != null)
-                        output.Add(line);
+                    process.OutputDataReceived += (sender, e) => {
+                        if (e.Data == null)
+                            outputWaitHandle.Set();
+                        else
+                            stdout.Add(e.Data);
+                    };
+
+                    process.ErrorDataReceived += (sender, e) => {
+                        if (e.Data == null)
+                            errorWaitHandle.Set();
+                        else
+                            stderr.Add(e.Data);
+                    };
+
+                    process.Start();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
+
+                    CommandOutput output = new CommandOutput();
+                    if (process.WaitForExit(timeout) &&
+                        outputWaitHandle.WaitOne(timeout) && errorWaitHandle.WaitOne(timeout))
+                    {
+                        output.ExitCode = process.ExitCode;
+                        output.StandardOutput = stdout;
+                        output.StandardError = stderr;
+
+                        if (!Enum.IsDefined(typeof(StatusCode), process.ExitCode))
+                        {
+                            string message = string.Join('\n', output.StandardOutput, output.StandardError);
+                            throw new CommandLineException(StatusCode.Error, message);
+                        }
+                    }
+                    else
+                    {
+                        process.Kill();
+                        output.ExitCode = (int)StatusCode.Timeout;
+                    }
+
+                    return output;
                 }
             }
-
-            return output;
         }
     }
 }
