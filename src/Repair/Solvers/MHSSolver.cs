@@ -21,13 +21,14 @@ namespace LLOR.Repair.Solvers
             }
 
             MHSSolution solution = new MHSSolution(clauses);
-            Solve(solution);
+            status = Solve(solution);
+            if (status == SolverStatus.Unsatisfiable)
+                return new Dictionary<string, bool>();
 
-            status = SolverStatus.Satisfiable;
             return solution.Assignments;
         }
 
-        private void Solve(MHSSolution solution)
+        private SolverStatus Solve(MHSSolution solution)
         {
             // unit literal propogation
             List<Clause> unit_clauses = solution.GetActiveUnitClauses();
@@ -41,7 +42,10 @@ namespace LLOR.Repair.Solvers
             List<Clause> clauses = solution.GetActiveClauses();
             while (clauses.Any())
             {
-                ApplyMHS(solution, clauses);
+                SolverStatus? status = ApplyMHS(solution, clauses);
+                if (status == SolverStatus.Unsatisfiable)
+                    return SolverStatus.Unsatisfiable;
+
                 clauses = solution.GetActiveClauses();
             }
 
@@ -49,6 +53,8 @@ namespace LLOR.Repair.Solvers
             foreach (string variable in solution.VariableLookup.Keys)
                 if (!solution.Assignments.ContainsKey(variable))
                     solution.SetAssignment(variable, false);
+
+            return SolverStatus.Satisfiable;
         }
 
         private void UnitLiteralPropogation(MHSSolution solution, List<Clause> clauses)
@@ -62,7 +68,7 @@ namespace LLOR.Repair.Solvers
                     }
         }
 
-        private void ApplyMHS(MHSSolution solution, List<Clause> clauses)
+        private SolverStatus? ApplyMHS(MHSSolution solution, List<Clause> clauses)
         {
             IEnumerable<string> variables = clauses.SelectMany(x => x.Literals)
                 .Select(x => x.Variable).Distinct();
@@ -85,7 +91,11 @@ namespace LLOR.Repair.Solvers
                 }
             }
 
+            if (chosen == string.Empty)
+                return SolverStatus.Unsatisfiable;
+
             solution.SetAssignment(chosen, true);
+            return null;
         }
     }
 }
