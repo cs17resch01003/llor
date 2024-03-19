@@ -33,9 +33,21 @@ namespace LLOR.TestRunner
             if (output == null)
                 return false;
 
-            HashSet<string> set = new HashSet<string>(output.Result.Distinct());
+            List<string> filtered = new List<string>();
+            foreach(string line in output.Result.Distinct())
+            {
+                if (!line.StartsWith("Instructions") &&
+                    !line.StartsWith("Barriers") &&
+                    !line.StartsWith("Changes") &&
+                    !line.StartsWith("Watch"))
+                {
+                    filtered.Add(line);
+                }
+            }
+
+            HashSet<string> set = new HashSet<string>(filtered);
             return output.StatusCode == StatusCode
-                && output.Result.Count == Result.Count
+                && filtered.Count == Result.Count
                 && set.SetEquals(Result.Distinct());
         }
 

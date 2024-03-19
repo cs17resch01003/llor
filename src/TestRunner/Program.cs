@@ -35,6 +35,8 @@ namespace LLOR.TestRunner
                 Verify(files);
             else if (options.Repair)
                 Repair(files);
+            else if (options.Check)
+                Check(files);
             else
                 GenerateReport(files, options.FolderPath);
         }
@@ -99,14 +101,19 @@ namespace LLOR.TestRunner
             Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
         }
 
-        private static RepairResult Repair(FileInfo file)
+        private static RepairResult Repair(FileInfo file, string? solverType = null)
         {
+            RepairResult value = new RepairResult();
             string arguments = $"--file {file.FullName} --testonly";
-            CommandOutput output = CommandRunner.RunCommand("llor", arguments);
+            if (solverType != null)
+                arguments += " --solvertype " + solverType;
 
+            Stopwatch watch = Stopwatch.StartNew();
+            CommandOutput output = CommandRunner.RunCommand("llor", arguments);
             Output actual = new Output(
                 (StatusCode)output.ExitCode,
                 output.StandardOutput);
+            value.TimeTaken = watch.ElapsedMilliseconds;
 
             Output expected = new Output(StatusCode.Pass);
             string delimiter = file.Extension
@@ -131,25 +138,36 @@ namespace LLOR.TestRunner
                     result = expected.StatusCode == actual.StatusCode;
             }
 
-            return new RepairResult
+            value.StatusCode = actual.StatusCode;
+            value.Assert = result;
+            value.Lines = GetLines(file.FullName);
+
+            foreach (string line in actual.Result)
             {
-                StatusCode = actual.StatusCode,
-                Changes = actual.Result.Count,
-                Assert = result,
-            };
+                if (line.StartsWith("Instructions"))
+                    value.Instructions = int.Parse(line.Split(";")[1]);
+                if (line.StartsWith("Barriers"))
+                    value.Barriers = int.Parse(line.Split(";")[1]);
+                if (line.StartsWith("Changes"))
+                    value.Changes = int.Parse(line.Split(";")[1]);
+                if (line.StartsWith("Watch"))
+                {
+                    string measure = line.Split(";")[1];
+                    if (measure == "MaxSAT" || measure == "Optimization")
+                        value.SolverCount++;
+                }
+            }
+
+            return value;
         }
     
-        private static void GenerateReport(IEnumerable<FileInfo> files, string directory)
+        private static void Check(IEnumerable<FileInfo> files)
         {
-            List<Record> records = new List<Record>();
-
             int total = files.Count(), success = 0;
             foreach (FileInfo file in files)
             {
                 if (file.DirectoryName == null)
                     throw new ArgumentNullException(nameof(file.DirectoryName));
-
-                Stopwatch watch = Stopwatch.StartNew();
 
                 VerificationResult verify = Verify(file);
                 RepairResult repair = Repair(file);
@@ -165,20 +183,56 @@ namespace LLOR.TestRunner
                 string repairedCode = repaired == null ? "na" : repaired.StatusCode.ToString().ToLower();
                 string filename = file.FullName;
 
-                string statement = $"{assert}_{verifyCode}_{repairCode}_{repairedCode}_{repair.Changes}: {filename}";
+                string statement = $"{assert}_{verifyCode}_{repairCode}_{repairedCode}: {filename}";
                 Console.WriteLine(statement);
 
                 if (repair.Assert == true)
                     success++;
+            }
 
-                records.Add(new Record
-                {
-                    FilePath = Path.Combine(new DirectoryInfo(file.DirectoryName).Name, file.Name),
-                    VerificationResult = verifyCode,
-                    RepairResult = repairCode,
-                    Changes = repair.Changes,
-                    TimeTaken = watch.ElapsedMilliseconds,
-                });
+            Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
+        }
+
+        private static void GenerateReport(IEnumerable<FileInfo> files, string directory)
+        {
+            List<Record> records = new List<Record>();
+
+            int total = files.Count(), success = 0;
+            foreach (FileInfo file in files)
+            {
+                if (file.DirectoryName == null)
+                    throw new ArgumentNullException(nameof(file.DirectoryName));
+
+                VerificationResult verify = Verify(file);
+                RepairResult mhs = Repair(file);
+                RepairResult maxsat = Repair(file, "MaxSAT");
+
+                Record record = new Record();
+                record.FilePath = Path.Combine(new DirectoryInfo(file.DirectoryName).Name, file.Name);
+                record.Lines = mhs.Lines;
+                record.Instructions = mhs.Instructions;
+                record.Barriers = mhs.Barriers;
+
+                record.VerificationResult = verify.StatusCode.ToString().ToLower();
+
+                record.MhsResult = mhs.StatusCode.ToString().ToLower();
+                record.MhsTimeTaken = mhs.TimeTaken;
+                record.MhsChanges = mhs.Changes;
+                record.MhsSolverCount = mhs.SolverCount;
+
+                record.MaxResult = maxsat.StatusCode.ToString().ToLower();
+                record.MaxTimeTaken = maxsat.TimeTaken;
+                record.MaxChanges = maxsat.Changes;
+                record.MaxSolverCount = maxsat.SolverCount;
+
+                string mhs_assert = mhs.Assert ? "PASS" : "FAIL";
+                string max_assert = maxsat.Assert ? "PASS" : "FAIL";
+                string statement = $"{mhs_assert}: {max_assert}: {record.FilePath}";
+                Console.WriteLine(statement);
+
+                if (mhs.Assert == true && maxsat.Assert == true)
+                    success++;
+                records.Add(record);
             }
 
             Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
@@ -195,6 +249,25 @@ namespace LLOR.TestRunner
             {
                 csvWriter.WriteRecords(records);
             }
+        }
+    
+        private static int GetLines(string file)
+        {
+            int count = 0;
+
+            string? line;
+            using (StreamReader reader = File.OpenText(file))
+            {
+                do
+                {
+                    line = reader.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(line))
+                        count++;
+                }
+                while (line != null);
+            }
+
+            return count;
         }
     }
 }

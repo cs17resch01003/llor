@@ -12,5 +12,8 @@ namespace LLOR.TestRunner
 
         [Option('o', "repair", Required = false, HelpText = "Run only the repairer.")]
         public bool Repair { get; set; } = false;
+
+        [Option('o', "check", Required = false, HelpText = "Run the complete check")]
+        public bool Check { get; set; } = false;
     }
 }

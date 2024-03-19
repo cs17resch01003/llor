@@ -17,7 +17,7 @@ namespace LLOR.Repair
             this.instrumentor = instrumentor;
         }
 
-        public Dictionary<string, bool> Repair()
+        public Dictionary<string, bool> Repair(Solver.SolverType solverType)
         {
             Dictionary<string, bool> assignments = new Dictionary<string, bool>();
             try
@@ -29,9 +29,14 @@ namespace LLOR.Repair
                 {
                     IEnumerable<DataRace> current_races = verifier.Verify();
                     if (!current_races.Any())
-                        return assignments;
+                    {
+                        if (solverType == Solver.SolverType.mhs)
+                            solverType = Solver.SolverType.Optimizer;
+                        else
+                            return assignments;
+                    }
 
-                    if (current_races.All(x => x.Sink != null && x.Sink == x.Source))
+                    if (current_races.Any() && current_races.All(x => x.Sink != null && x.Sink == x.Source))
                         throw new RepairException(
                             StatusCode.RepairError,
                             "Encountered a write-write race on the same line.");
@@ -41,7 +46,13 @@ namespace LLOR.Repair
                     races.AddRange(current_races);
 
                     Solver solver = new Solver();
-                    assignments = solver.Solve(races);
+                    if (solverType == Solver.SolverType.Optimizer)
+                    {
+                        if (assignments.Count(x => x.Value == true) != 1)
+                            assignments = solver.Optimize(races, assignments);
+                    }
+                    else
+                        assignments = solver.Solve(races, solverType);
 
                     instrumentor.Update(assignments);
                 }

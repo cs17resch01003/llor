@@ -5,6 +5,7 @@ namespace LLOR.Repair
     using System.IO;
     using System.Text.RegularExpressions;
     using LLOR.Common;
+    using LLOR.Repair.Diagnostics;
     using LLOR.Repair.Exceptions;
     
     public class Instrumentor
@@ -15,9 +16,9 @@ namespace LLOR.Repair
 
         public List<ExistingBarrier> Existing { get; set; } = new List<ExistingBarrier>();
 
-        public Instrumentor(string filepath)
+        public Instrumentor(Options options)
         {
-            inputFile = new FileInfo(filepath);
+            inputFile = new FileInfo(options.FilePath);
             if (inputFile.Directory == null)
                 throw new ArgumentNullException(nameof(inputFile.Directory));
                 
@@ -32,6 +33,8 @@ namespace LLOR.Repair
             string arguments = $"-load OpenMPRepair.so -openmp-repair {sb_path} -S -o {inst_path} -initialize";
             if (extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase))
                 arguments += " -language=Fortran";
+            if (options.DetailedLogging)
+                arguments += " -detailedlogging";
 
             CommandOutput output = CommandRunner.RunCommand("opt", arguments);
 
@@ -44,6 +47,12 @@ namespace LLOR.Repair
 
             foreach (string line in output.StandardError)
             {
+                if (line.StartsWith("Instructions"))
+                {
+                    Logger.Log(line);
+                    continue;
+                }
+
                 string[] parts = line.Split(',');
                 if (parts[0] == "existing")
                 {

@@ -7,6 +7,7 @@
     using CommandLine;
     using LLOR.Common;
     using LLOR.Common.Exceptions;
+    using LLOR.Repair.Diagnostics;
     using LLOR.Repair.Exceptions;
 
     public class Program
@@ -21,14 +22,16 @@
                 });
 
             if (options == null) return;
+            Logger.DetailedLogging = options.DetailedLogging;
 
             try
             {
                 Verifier verifier = new Verifier(options.FilePath);
-                Instrumentor instrumentor = new Instrumentor(options.FilePath);
+                Instrumentor instrumentor = new Instrumentor(options);
+                Logger.Log($"Barriers;{instrumentor.Barriers.Count()}");
 
                 Repairer repairer = new Repairer(verifier, instrumentor);
-                Dictionary<string, bool> assignments = repairer.Repair();
+                Dictionary<string, bool> assignments = repairer.Repair(options.SolverType);
 
                 SummaryGenerator generator = new SummaryGenerator(
                     options.FilePath,
@@ -38,6 +41,7 @@
                 foreach (string change in changes)
                     Console.WriteLine(change);
 
+                Logger.Log($"Changes;{changes.Count()}");
                 CleanFiles(options, changes.Count());
             }
             catch (RepairException ex)
@@ -65,7 +69,6 @@
             if (inputFile.Directory == null)
                 throw new ArgumentNullException(nameof(inputFile.Directory));
 
-            string sourcePath = inputFile.FullName;
             string basePath = inputFile.Directory.FullName;
             string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 

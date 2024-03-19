@@ -7,19 +7,40 @@ namespace LLOR.TestRunner
         [Name("filepath")]
         public string? FilePath { get; set; }
 
+        [Name("lines")]
+        public int Lines { get; set; }
+
+        [Name("instructions")]
+        public int Instructions { get; set; }
+
+        [Name("barriers")]
+        public int Barriers { get; set; }
+
         [Name("vresult")]
         public string? VerificationResult { get; set; }
 
-        [Name("rresult")]
-        public string? RepairResult { get; set; }
+        [Name("mhs_result")]
+        public string? MhsResult { get; set; }
 
-        [Name("fresult")]
-        public string? RepairedResult { get; set; }
+        [Name("mhs_time")]
+        public long MhsTimeTaken { get; set; }
 
-        [Name("changes")]
-        public int? Changes { get; set; }
+        [Name("mhs_changes")]
+        public int MhsChanges { get; set; }
 
-        [Name("timetaken")]
-        public long? TimeTaken { get; set; }
+        [Name("mhs_solvercount")]
+        public int MhsSolverCount { get; set; }
+
+        [Name("max_result")]
+        public string? MaxResult { get; set; }
+
+        [Name("max_time")]
+        public long MaxTimeTaken { get; set; }
+
+        [Name("max_changes")]
+        public int MaxChanges { get; set; }
+
+        [Name("max_solvercount")]
+        public int MaxSolverCount { get; set; }
     }
 }
