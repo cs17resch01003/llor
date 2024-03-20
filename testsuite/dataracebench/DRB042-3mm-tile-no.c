@@ -1,4 +1,4 @@
-//; Timeout
+//; Unsupported
 
 /**
  * 3mm.c: This file is part of the PolyBench/C 3.2 test suite.

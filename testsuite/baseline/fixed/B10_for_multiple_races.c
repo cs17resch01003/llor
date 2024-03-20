@@ -1,5 +1,5 @@
 //; Pass
-//; Create an ordered region covering lines 17 to 20.
+//; Create an ordered region covering lines 17 to 19.
 
 #define NUM_THREADS 10
 
@@ -17,10 +17,9 @@ int main()
 		#pragma omp ordered
 		{
 			data[i] = temp;
-
-			temp = data[i+1];
-			data[i] = temp;
+			temp = data[i+1];			
 		}
+		data[i] = temp;
 	}
 
 	return 0;
