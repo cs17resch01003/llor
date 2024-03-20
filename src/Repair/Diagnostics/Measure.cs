@@ -6,5 +6,6 @@ namespace LLOR.Repair.Diagnostics
         mhs = 2,
         Verification = 3,
         Optimization = 4,
+        Total = 5,
     }
 }

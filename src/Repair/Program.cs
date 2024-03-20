@@ -14,43 +14,46 @@
     {
         public static void Main(string[] args)
         {
-            Options options = new Options();
-            Parser.Default.ParseArguments<Options>(args)
-                .WithParsed(o =>
+            using (Watch watch = new Watch(Measure.Total))
+            {
+                Options options = new Options();
+                Parser.Default.ParseArguments<Options>(args)
+                    .WithParsed(o =>
+                    {
+                        options = o;
+                    });
+
+                if (options == null) return;
+                Logger.DetailedLogging = options.DetailedLogging;
+
+                try
                 {
-                    options = o;
-                });
+                    Verifier verifier = new Verifier(options.FilePath);
+                    Instrumentor instrumentor = new Instrumentor(options);
+                    Logger.Log($"Barriers;{instrumentor.Barriers.Count()}");
 
-            if (options == null) return;
-            Logger.DetailedLogging = options.DetailedLogging;
+                    Repairer repairer = new Repairer(verifier, instrumentor);
+                    Dictionary<string, bool> assignments = repairer.Repair(options.SolverType);
 
-            try
-            {
-                Verifier verifier = new Verifier(options.FilePath);
-                Instrumentor instrumentor = new Instrumentor(options);
-                Logger.Log($"Barriers;{instrumentor.Barriers.Count()}");
+                    SummaryGenerator generator = new SummaryGenerator(
+                        options.FilePath,
+                        instrumentor);
+                    IEnumerable<string> changes = generator.GenerateSummary(assignments);
 
-                Repairer repairer = new Repairer(verifier, instrumentor);
-                Dictionary<string, bool> assignments = repairer.Repair(options.SolverType);
+                    foreach (string change in changes)
+                        Console.WriteLine(change);
 
-                SummaryGenerator generator = new SummaryGenerator(
-                    options.FilePath,
-                    instrumentor);
-                IEnumerable<string> changes = generator.GenerateSummary(assignments);
-
-                foreach (string change in changes)
-                    Console.WriteLine(change);
-
-                Logger.Log($"Changes;{changes.Count()}");
-                CleanFiles(options, changes.Count());
-            }
-            catch (RepairException ex)
-            {
-                HandleException(options, ex.StatusCode, ex.Message);
-            }
-            catch (CommandLineException ex)
-            {
-                HandleException(options, ex.StatusCode, ex.Message);
+                    Logger.Log($"Changes;{changes.Count()}");
+                    CleanFiles(options, changes.Count());
+                }
+                catch (RepairException ex)
+                {
+                    HandleException(options, ex.StatusCode, ex.Message);
+                }
+                catch (CommandLineException ex)
+                {
+                    HandleException(options, ex.StatusCode, ex.Message);
+                }
             }
         }
 

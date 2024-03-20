@@ -103,7 +103,12 @@ namespace LLOR.TestRunner
 
         private static RepairResult Repair(FileInfo file, string? solverType = null)
         {
+            if (file.DirectoryName == null)
+                    throw new ArgumentNullException(nameof(file.DirectoryName));
+
             RepairResult value = new RepairResult();
+            value.FilePath = Path.Combine(new DirectoryInfo(file.DirectoryName).Name, file.Name);
+
             string arguments = $"--file {file.FullName} --testonly";
             if (solverType != null)
                 arguments += " --solvertype " + solverType;
@@ -138,7 +143,7 @@ namespace LLOR.TestRunner
                     result = expected.StatusCode == actual.StatusCode;
             }
 
-            value.StatusCode = actual.StatusCode;
+            value.StatusCode = actual.StatusCode.ToString().ToLower();
             value.Assert = result;
             value.Lines = GetLines(file.FullName);
 
@@ -152,9 +157,27 @@ namespace LLOR.TestRunner
                     value.Changes = int.Parse(line.Split(";")[1]);
                 if (line.StartsWith("Watch"))
                 {
-                    string measure = line.Split(";")[1];
-                    if (measure == "MaxSAT" || measure == "Optimization")
+                    string[] parts = line.Split(";");
+
+                    if (parts[1] == "MaxSAT" || parts[1] == "Optimization")
+                    {
                         value.SolverCount++;
+                        value.SolverTime += int.Parse(parts[2]);
+                    }
+                    else if (parts[1] == "mhs")
+                    {
+                        value.MhsCount++;
+                        value.MhsTime += int.Parse(parts[2]);
+                    }
+                    else if (parts[1] == "Verification")
+                    {
+                        value.VerificationCount++;
+                        value.VerificationTime += int.Parse(parts[2]);
+                    }
+                    else if (parts[1] == "Total")
+                    {
+                        value.TotalTime = int.Parse(parts[2]);
+                    }
                 }
             }
 
@@ -196,6 +219,8 @@ namespace LLOR.TestRunner
         private static void GenerateReport(IEnumerable<FileInfo> files, string directory)
         {
             List<Record> records = new List<Record>();
+            List<RepairResult> mhs_results = new List<RepairResult>();
+            List<RepairResult> maxsat_results = new List<RepairResult>();
 
             int total = files.Count(), success = 0;
             foreach (FileInfo file in files)
@@ -215,15 +240,11 @@ namespace LLOR.TestRunner
 
                 record.VerificationResult = verify.StatusCode.ToString().ToLower();
 
-                record.MhsResult = mhs.StatusCode.ToString().ToLower();
+                record.MhsResult = mhs.StatusCode;
                 record.MhsTimeTaken = mhs.TimeTaken;
-                record.MhsChanges = mhs.Changes;
-                record.MhsSolverCount = mhs.SolverCount;
 
-                record.MaxResult = maxsat.StatusCode.ToString().ToLower();
+                record.MaxResult = maxsat.StatusCode;
                 record.MaxTimeTaken = maxsat.TimeTaken;
-                record.MaxChanges = maxsat.Changes;
-                record.MaxSolverCount = maxsat.SolverCount;
 
                 string mhs_assert = mhs.Assert ? "PASS" : "FAIL";
                 string max_assert = maxsat.Assert ? "PASS" : "FAIL";
@@ -232,7 +253,10 @@ namespace LLOR.TestRunner
 
                 if (mhs.Assert == true && maxsat.Assert == true)
                     success++;
+                
                 records.Add(record);
+                mhs_results.Add(mhs);
+                maxsat_results.Add(maxsat);
             }
 
             Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
@@ -248,6 +272,18 @@ namespace LLOR.TestRunner
             using (var csvWriter = new CsvWriter(writer, config))
             {
                 csvWriter.WriteRecords(records);
+            }
+
+            using (var writer = new StreamWriter(Path.Combine(directory, "result_mhs.csv")))
+            using (var csvWriter = new CsvWriter(writer, config))
+            {
+                csvWriter.WriteRecords(mhs_results);
+            }
+
+            using (var writer = new StreamWriter(Path.Combine(directory, "result_maxsat.csv")))
+            using (var csvWriter = new CsvWriter(writer, config))
+            {
+                csvWriter.WriteRecords(maxsat_results);
             }
         }
     

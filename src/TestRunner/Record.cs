@@ -25,22 +25,10 @@ namespace LLOR.TestRunner
         [Name("mhs_time")]
         public long MhsTimeTaken { get; set; }
 
-        [Name("mhs_changes")]
-        public int MhsChanges { get; set; }
-
-        [Name("mhs_solvercount")]
-        public int MhsSolverCount { get; set; }
-
         [Name("max_result")]
         public string? MaxResult { get; set; }
 
         [Name("max_time")]
         public long MaxTimeTaken { get; set; }
-
-        [Name("max_changes")]
-        public int MaxChanges { get; set; }
-
-        [Name("max_solvercount")]
-        public int MaxSolverCount { get; set; }
     }
 }

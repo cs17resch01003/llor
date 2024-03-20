@@ -6,6 +6,7 @@ namespace LLOR.Repair
     using System.Linq;
     using System.Text.RegularExpressions;
     using LLOR.Common;
+    using LLOR.Repair.Diagnostics;
     using LLOR.Repair.Exceptions;
     
     public class Verifier
@@ -59,36 +60,42 @@ namespace LLOR.Repair
     
         public List<DataRace> Verify()
         {
-            List<DataRace> races = new List<DataRace>();
-            if (inputFile.Directory == null)
-                return races;
+            using (Watch watch = new Watch(Measure.Verification))
+            {
+                List<DataRace> races = new List<DataRace>();
+                if (inputFile.Directory == null)
+                    return races;
 
-            string basePath = inputFile.Directory.FullName;
-            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+                string basePath = inputFile.Directory.FullName;
+                string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
-            // verify <input>.inst.ll
-            string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
-            string arguments = $"-load OpenMPVerify.so -disable-output -openmp-verify-mhp {inst_path}";
+                // verify <input>.inst.ll
+                string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
+                string arguments = $"-load OpenMPVerify.so -disable-output -openmp-verify-mhp {inst_path}";
 
-            CommandOutput output = CommandRunner.RunCommand("opt", arguments);
-            return GetDataRaces(output);
+                CommandOutput output = CommandRunner.RunCommand("opt", arguments);
+                return GetDataRaces(output);
+            }
         }
 
         public List<DataRace> VerifySource()
         {
-            List<DataRace> races = new List<DataRace>();
-            if (inputFile.Directory == null)
-                return races;
+            using (Watch watch = new Watch(Measure.Verification))
+            {
+                List<DataRace> races = new List<DataRace>();
+                if (inputFile.Directory == null)
+                    return races;
 
-            string basePath = inputFile.Directory.FullName;
-            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+                string basePath = inputFile.Directory.FullName;
+                string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
-            // verify <input>.sb.ll
-            string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
-            string arguments = $"-load OpenMPVerify.so -disable-output -openmp-verify-mhp {sb_path}";
+                // verify <input>.sb.ll
+                string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
+                string arguments = $"-load OpenMPVerify.so -disable-output -openmp-verify-mhp {sb_path}";
 
-            CommandOutput output = CommandRunner.RunCommand("opt", arguments);
-            return GetDataRaces(output);
+                CommandOutput output = CommandRunner.RunCommand("opt", arguments);
+                return GetDataRaces(output);
+            }
         }
 
         public void ValidateSource()

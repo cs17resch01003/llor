@@ -48,8 +48,10 @@ namespace LLOR.Repair
                     Solver solver = new Solver();
                     if (solverType == Solver.SolverType.Optimizer)
                     {
-                        if (assignments.Count(x => x.Value == true) != 1)
+                        if (assignments.Count(x => x.Value == true) >= 2)
                             assignments = solver.Optimize(races, assignments);
+                        else
+                            return assignments;
                     }
                     else
                         assignments = solver.Solve(races, solverType);
