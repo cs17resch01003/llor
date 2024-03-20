@@ -71,7 +71,7 @@ namespace LLOR.Repair.Solvers
         private SolverStatus? ApplyMHS(MHSSolution solution, List<Clause> clauses)
         {
             IEnumerable<string> variables = clauses.SelectMany(x => x.Literals)
-                .Select(x => x.Variable).Distinct();
+                .Select(x => x.Variable).Distinct().Reverse();
 
             string chosen = string.Empty;
             double max_total_weight = 0;
