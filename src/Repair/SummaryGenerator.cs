@@ -48,6 +48,9 @@ namespace LLOR.Repair
 
         private void GenerateBarrierSummary(Dictionary<string, bool> assignments, List<string> lines)
         {
+            int add = 0, remove = 0;
+            List<string> temp = new List<string>();
+
             IEnumerable<Barrier> barriers = assignments.Where(x => x.Value)
                 .Select(x => instrumentor.Barriers[x.Key])
                 .Where(x => x.BarrierType == "barrier");
@@ -60,7 +63,10 @@ namespace LLOR.Repair
                     .Any(x => x.Location.Line == line-1);
 
                 if (check)
-                    lines.Add($"Add a barrier at line number {line}.");
+                {
+                    temp.Add($"Add a barrier at line number {line}.");
+                    add++;
+                }
             }
 
             IEnumerable<ExistingBarrier> existingBarriers =
@@ -91,14 +97,21 @@ namespace LLOR.Repair
                     if ((language == "C" && line.Contains("pragma omp barrier")) ||
                         (language == "Fortran" && line.Contains("!$omp barrier")))
                     {
-                        lines.Add($"Remove the barrier at line number {existing.Location.Line}.");
+                        temp.Add($"Remove the barrier at line number {existing.Location.Line}.");
+                        remove++;
                     }
                 }
             }
+
+            if (add != remove)
+                lines.AddRange(temp);
         }
         
         private void GenerateOrderedSummary(Dictionary<string, bool> assignments, List<string> lines)
         {
+            int add = 0, remove = 0;
+            List<string> temp = new List<string>();
+
             IEnumerable<Barrier> barriers = assignments.Where(x => x.Value)
                 .Select(x => instrumentor.Barriers[x.Key])
                 .Where(x => x.BarrierType == "ordered");
@@ -132,11 +145,15 @@ namespace LLOR.Repair
                             .Any(x => x.Location.Line == max-1);
                         
                         if (check)
-                            lines.Add($"Create an ordered region covering line {max}.");
+                        {
+                            temp.Add($"Create an ordered region covering line {max}.");
+                            add++;
+                        }
                     }
                     else
                     {
-                        lines.Add($"Create an ordered region covering lines {min} to {max}.");
+                        temp.Add($"Create an ordered region covering lines {min} to {max}.");
+                        add++;
                     }
                 }
             }
@@ -161,8 +178,14 @@ namespace LLOR.Repair
                 }
 
                 if (!keepExisting)
-                    lines.Add($"Remove the ordered region at line number {existing.Location.Line}.");
+                {
+                    temp.Add($"Remove the ordered region at line number {existing.Location.Line}.");
+                    remove++;
+                }
             }
+
+            if (add != remove)
+                lines.AddRange(temp);
         }
     }
 }
