@@ -15,13 +15,13 @@ namespace LLOR.TestRunner
         [Name("time")]
         public long TimeTaken { get; set; }
 
-        [Name("lines")]
+        [Ignore]
         public int Lines { get; set; }
 
-        [Name("instructions")]
+        [Ignore]
         public int Instructions { get; set; }
 
-        [Name("barriers")]
+        [Ignore]
         public int Barriers { get; set; }
 
         [Name("vcount")]

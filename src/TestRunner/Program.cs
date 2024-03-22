@@ -218,7 +218,9 @@ namespace LLOR.TestRunner
 
         private static void GenerateReport(IEnumerable<FileInfo> files, string directory)
         {
-            List<Record> records = new List<Record>();
+            List<SourceCode> sourceCodes = new List<SourceCode>();
+            List<Summary> summaries = new List<Summary>();
+
             List<RepairResult> mhs_results = new List<RepairResult>();
             List<RepairResult> maxsat_results = new List<RepairResult>();
 
@@ -232,29 +234,34 @@ namespace LLOR.TestRunner
                 RepairResult mhs = Repair(file);
                 RepairResult maxsat = Repair(file, "MaxSAT");
 
-                Record record = new Record();
-                record.FilePath = Path.Combine(new DirectoryInfo(file.DirectoryName).Name, file.Name);
-                record.Lines = mhs.Lines;
-                record.Instructions = mhs.Instructions;
-                record.Barriers = mhs.Barriers;
+                sourceCodes.Add(new SourceCode
+                {
+                    FilePath = mhs.FilePath,
+                    Lines = mhs.Lines,
+                    Instructions = mhs.Instructions,
+                    Barriers = mhs.Barriers,
+                });
 
-                record.VerificationResult = verify.StatusCode.ToString().ToLower();
-
-                record.MhsResult = mhs.StatusCode;
-                record.MhsTimeTaken = mhs.TimeTaken;
-
-                record.MaxResult = maxsat.StatusCode;
-                record.MaxTimeTaken = maxsat.TimeTaken;
+                summaries.Add(new Summary
+                {
+                    FilePath = mhs.FilePath,
+                    VerificationResult = verify.StatusCode.ToString().ToLower(),
+                    MhsResult = mhs.StatusCode,
+                    MhsChanges = mhs.Changes,
+                    MhsTimeTaken = mhs.TimeTaken,
+                    MaxResult = maxsat.StatusCode,
+                    MaxChanges = maxsat.Changes,
+                    MaxTimeTaken = maxsat.TimeTaken,
+                });
 
                 string mhs_assert = mhs.Assert ? "PASS" : "FAIL";
                 string max_assert = maxsat.Assert ? "PASS" : "FAIL";
-                string statement = $"{mhs_assert}: {max_assert}: {record.FilePath}";
+                string statement = $"{mhs_assert}: {max_assert}: {mhs.FilePath}";
                 Console.WriteLine(statement);
 
                 if (mhs.Assert == true && maxsat.Assert == true)
                     success++;
-                
-                records.Add(record);
+
                 mhs_results.Add(mhs);
                 maxsat_results.Add(maxsat);
             }
@@ -268,19 +275,25 @@ namespace LLOR.TestRunner
                 Encoding = Encoding.UTF8,
             };
 
-            using (var writer = new StreamWriter(Path.Combine(directory, "result.csv")))
+            using (var writer = new StreamWriter(Path.Combine(directory, "summary.csv")))
             using (var csvWriter = new CsvWriter(writer, config))
             {
-                csvWriter.WriteRecords(records);
+                csvWriter.WriteRecords(summaries);
             }
 
-            using (var writer = new StreamWriter(Path.Combine(directory, "result_mhs.csv")))
+            using (var writer = new StreamWriter(Path.Combine(directory, "sourcecode.csv")))
+            using (var csvWriter = new CsvWriter(writer, config))
+            {
+                csvWriter.WriteRecords(sourceCodes);
+            }
+
+            using (var writer = new StreamWriter(Path.Combine(directory, "mhs.csv")))
             using (var csvWriter = new CsvWriter(writer, config))
             {
                 csvWriter.WriteRecords(mhs_results);
             }
 
-            using (var writer = new StreamWriter(Path.Combine(directory, "result_maxsat.csv")))
+            using (var writer = new StreamWriter(Path.Combine(directory, "maxsat.csv")))
             using (var csvWriter = new CsvWriter(writer, config))
             {
                 csvWriter.WriteRecords(maxsat_results);

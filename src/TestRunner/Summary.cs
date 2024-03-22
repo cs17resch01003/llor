@@ -2,19 +2,10 @@ namespace LLOR.TestRunner
 {
     using CsvHelper.Configuration.Attributes;
     
-    public class Record
+    public class Summary
     {
         [Name("filepath")]
         public string? FilePath { get; set; }
-
-        [Name("lines")]
-        public int Lines { get; set; }
-
-        [Name("instructions")]
-        public int Instructions { get; set; }
-
-        [Name("barriers")]
-        public int Barriers { get; set; }
 
         [Name("vresult")]
         public string? VerificationResult { get; set; }
@@ -22,11 +13,17 @@ namespace LLOR.TestRunner
         [Name("mhs_result")]
         public string? MhsResult { get; set; }
 
+        [Name("mhs_change")]
+        public int MhsChanges { get; set; }
+
         [Name("mhs_time")]
         public long MhsTimeTaken { get; set; }
 
         [Name("max_result")]
         public string? MaxResult { get; set; }
+
+        [Name("max_change")]
+        public int MaxChanges { get; set; }
 
         [Name("max_time")]
         public long MaxTimeTaken { get; set; }
