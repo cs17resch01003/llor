@@ -1,6 +1,4 @@
 //; Pass
-//; Add a barrier at line number 42.
-//; Remove the barrier at line number 39.
 
 /*
 !!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!

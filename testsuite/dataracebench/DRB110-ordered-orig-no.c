@@ -1,6 +1,4 @@
 //; Pass
-//; Create an ordered region covering line 62.
-//; Remove the ordered region at line number 60.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.

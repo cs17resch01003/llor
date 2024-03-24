@@ -1,6 +1,4 @@
 //; Pass
-//; Add a barrier at line number 77.
-//; Remove the barrier at line number 74.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
