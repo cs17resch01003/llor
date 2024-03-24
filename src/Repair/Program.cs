@@ -38,14 +38,14 @@
                     SummaryGenerator generator = new SummaryGenerator(
                         options.FilePath,
                         instrumentor);
-                        
+
                     IEnumerable<string> changes = generator.GenerateSummary(assignments);
                     if (changes.Any())
                     {
                         // ignore cases where barriers are moved
                         int add = changes.Count(x => x.StartsWith("Add"));
                         int remove = changes.Count(x => x.StartsWith("Remove"));
-                        if (add - remove >= instrumentor.Existing.Count) {
+                        if (add == remove) {
                             List<DataRace> races = verifier.VerifySource();
                             if (!races.Any())
                                 changes = new List<string>();
