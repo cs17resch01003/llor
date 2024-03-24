@@ -40,6 +40,15 @@
                         instrumentor);
                     IEnumerable<string> changes = generator.GenerateSummary(assignments);
 
+                    // ignore cases where barriers are moved
+                    int add = changes.Count(x => x.StartsWith("Add"));
+                    int remove = changes.Count(x => x.StartsWith("Remove"));
+                    if (add - remove >= instrumentor.Existing.Count) {
+                        List<DataRace> races = verifier.VerifySource();
+                        if (!races.Any())
+                            changes = new List<string>();
+                    }
+
                     foreach (string change in changes)
                         Console.WriteLine(change);
 
