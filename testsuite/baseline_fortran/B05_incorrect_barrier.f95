@@ -1,4 +1,5 @@
 !; Pass
+!; Remove the barrier at line number 19.
 
 program B05_incorrect_barrier
     use omp_lib

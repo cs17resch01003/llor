@@ -1,4 +1,5 @@
 !; Pass
+!; Add a barrier at line number 22.
 
 program B02_multiple_races
     use omp_lib
