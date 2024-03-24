@@ -45,7 +45,7 @@
                         // ignore cases where barriers are moved
                         int add = changes.Count(x => x.StartsWith("Add") || x.StartsWith("Create"));
                         int remove = changes.Count(x => x.StartsWith("Remove"));
-                        if (add == remove) {
+                        if (add == remove || add - remove >= instrumentor.Existing.Count) {
                             List<DataRace> races = verifier.VerifySource();
                             if (!races.Any())
                                 changes = new List<string>();
