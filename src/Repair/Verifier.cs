@@ -103,7 +103,6 @@ namespace LLOR.Repair
             string language = inputFile.Extension == ".f95" ? "Fortran" : "C";
             string section = language == "C" ? "#pragma omp section" : "!$omp section";
             string simd = language == "C" ? "#pragma omp simd" : "!$omp simd";
-            string target = language == "C" ? "#pragma omp target" : "!$omp target";
 
             List<string> lines = File.ReadLines(inputFile.FullName).ToList();
             foreach (string line in lines)
@@ -115,8 +114,6 @@ namespace LLOR.Repair
                         throw new RepairException(StatusCode.Unsupported, "Data races across sections cannot be repaired!");
                     else if (temp.Contains(simd))
                         throw new RepairException(StatusCode.Unsupported, "Data races inside a simd section cannot be repaired!");
-                    else if (temp.Contains(target))
-                        throw new RepairException(StatusCode.Unsupported, "Data races inside a target section cannot be repaired!");
                 }
             }
         }
