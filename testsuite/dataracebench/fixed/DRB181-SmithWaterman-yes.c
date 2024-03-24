@@ -137,51 +137,52 @@ void similarityScore(long long int i, long long int j, int* H, int* P, long long
     //Get element on the left
     left = H[index - 1] + gapScore;
 
-	#pragma omp ordered {
     //Get element on the diagonal
-    diag = H[index - m - 1] + matchMissmatchScore(i, j);
+	#pragma omp ordered
+	{
+		diag = H[index - m - 1] + matchMissmatchScore(i, j);
 
-    //Calculates the maximum
-    int max = NONE;
-    int pred = NONE;
-    /* === Matrix ===
-     *      a[0] ... a[n]
-     * b[0]
-     * ...
-     * b[n]
-     *
-     * generate 'a' from 'b', if '←' insert e '↑' remove
-     * a=GAATTCA
-     * b=GACTT-A
-     *
-     * generate 'b' from 'a', if '←' insert e '↑' remove
-     * b=GACTT-A
-     * a=GAATTCA
-    */
+		//Calculates the maximum
+		int max = NONE;
+		int pred = NONE;
+		/* === Matrix ===
+		 *      a[0] ... a[n]
+		 * b[0]
+		 * ...
+		 * b[n]
+		 *
+		 * generate 'a' from 'b', if '←' insert e '↑' remove
+		 * a=GAATTCA
+		 * b=GACTT-A
+		 *
+		 * generate 'b' from 'a', if '←' insert e '↑' remove
+		 * b=GACTT-A
+		 * a=GAATTCA
+		*/
 
-    if (diag > max) { //same letter ↖
-        max = diag;
-        pred = DIAGONAL;
-    }
+		if (diag > max) { //same letter ↖
+			max = diag;
+			pred = DIAGONAL;
+		}
 
-    if (up > max) { //remove letter ↑
-        max = up;
-        pred = UP;
-    }
+		if (up > max) { //remove letter ↑
+			max = up;
+			pred = UP;
+		}
 
-    if (left > max) { //insert letter ←
-        max = left;
-        pred = LEFT;
-    }
-    //Inserts the value in the similarity and predecessor matrixes
-    H[index] = max;
-    P[index] = pred;
+		if (left > max) { //insert letter ←
+			max = left;
+			pred = LEFT;
+		}
+		//Inserts the value in the similarity and predecessor matrixes
+		H[index] = max;
+		P[index] = pred;
 
-    //Updates maximum score to be used as seed on backtrack
-    if (max > H[*maxPos]) {        
-    #pragma omp critical
-        *maxPos = index;
-    }
+		//Updates maximum score to be used as seed on backtrack
+		if (max > H[*maxPos]) {        
+		#pragma omp critical
+			*maxPos = index;
+		}
 	}
 
 }  /* End of similarityScore */
