@@ -1,4 +1,5 @@
 !; Pass
+!; Remove the barrier at line number 19.
 
 program B07_racefree
     use omp_lib

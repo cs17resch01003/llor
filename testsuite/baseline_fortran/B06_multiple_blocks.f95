@@ -1,6 +1,4 @@
 !; Pass
-!; Add a barrier at line number 22.
-!; Add a barrier at line number 29.
 
 program B06_multiple_blocks
     use omp_lib

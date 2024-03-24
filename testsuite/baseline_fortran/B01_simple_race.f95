@@ -1,5 +1,4 @@
 !; Pass
-!; Add a barrier at line number 20.
 
 program B01_simple_race
     use omp_lib
