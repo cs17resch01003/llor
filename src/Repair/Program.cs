@@ -43,7 +43,7 @@
                     if (changes.Any())
                     {
                         // ignore cases where barriers are moved
-                        int add = changes.Count(x => x.StartsWith("Add"));
+                        int add = changes.Count(x => x.StartsWith("Add") || x.StartsWith("Create"));
                         int remove = changes.Count(x => x.StartsWith("Remove"));
                         if (add == remove) {
                             List<DataRace> races = verifier.VerifySource();
