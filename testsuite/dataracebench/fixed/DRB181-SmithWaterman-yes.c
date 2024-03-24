@@ -1,5 +1,5 @@
 //; Pass
-//; Create an ordered region covering lines 180 to 182.
+//; Create an ordered region covering lines 141 to 182.
 
 /*
 !!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!
@@ -137,6 +137,7 @@ void similarityScore(long long int i, long long int j, int* H, int* P, long long
     //Get element on the left
     left = H[index - 1] + gapScore;
 
+	#pragma omp ordered {
     //Get element on the diagonal
     diag = H[index - m - 1] + matchMissmatchScore(i, j);
 
@@ -177,12 +178,11 @@ void similarityScore(long long int i, long long int j, int* H, int* P, long long
     P[index] = pred;
 
     //Updates maximum score to be used as seed on backtrack
-    #pragma omp ordered
-    {
-        if (max > H[*maxPos]) {
-            *maxPos = index;
-        }
+    if (max > H[*maxPos]) {        
+    #pragma omp critical
+        *maxPos = index;
     }
+	}
 
 }  /* End of similarityScore */
 

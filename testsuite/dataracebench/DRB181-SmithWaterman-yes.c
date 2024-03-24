@@ -1,5 +1,5 @@
 //; Pass
-//; Create an ordered region covering lines 180 to 182.
+//; Create an ordered region covering lines 141 to 182.
 
 /*
 !!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!
