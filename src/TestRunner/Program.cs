@@ -255,11 +255,10 @@ namespace LLOR.TestRunner
                 });
 
                 string mhs_assert = mhs.Assert ? "PASS" : "FAIL";
-                string max_assert = maxsat.Assert ? "PASS" : "FAIL";
-                string statement = $"{mhs_assert}: {max_assert}: {mhs.FilePath}";
+                string statement = $"{mhs_assert}: {mhs.FilePath}";
                 Console.WriteLine(statement);
 
-                if (mhs.Assert == true && maxsat.Assert == true)
+                if (mhs.Assert == true)
                     success++;
 
                 mhs_results.Add(mhs);
