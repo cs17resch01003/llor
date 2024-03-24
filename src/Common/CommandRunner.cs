@@ -58,7 +58,9 @@ namespace LLOR.Common
 
                         if (!Enum.IsDefined(typeof(StatusCode), process.ExitCode))
                         {
-                            string message = string.Join('\n', output.StandardOutput, output.StandardError);
+                            string message = string.Join('\n', 
+                                string.Join('\n', output.StandardOutput.ToArray()),
+                                string.Join('\n', output.StandardError.ToArray()));
                             throw new CommandLineException(StatusCode.Error, message);
                         }
                     }
