@@ -16,7 +16,7 @@ program B04_unnecessary_barrier
     !$omp parallel private(id,temp)
         id = omp_get_thread_num()
 
-        temp = data(id+1)
+        temp = id+10
         !$omp barrier
 		data(id) = temp
     !$omp end parallel

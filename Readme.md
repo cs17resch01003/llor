@@ -96,7 +96,13 @@ cmake --build . -jN
 cmake --build . --target install
 ```
 
-8. Download the source code of LLOR from the [llor](https://github.com/cs17resch01003/llor) repository and compile it
+8. Add the install directory of flang to the PATH environment variable. To make this permanent, include this line in ~/.profile
+
+```bash
+export PATH="$PATH:/datadrive/flang/install/bin"
+```
+
+9. Download the source code of LLOR from the [llor](https://github.com/cs17resch01003/llor) repository and compile it
 
 ```bash
 # download the source code
