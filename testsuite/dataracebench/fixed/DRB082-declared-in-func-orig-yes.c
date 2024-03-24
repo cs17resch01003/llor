@@ -1,5 +1,5 @@
 //; Pass
-//; Create an ordered region covering line 64.
+//; Add a barrier at line number 60.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -48,44 +48,26 @@ THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /*
-A file-scope variable used within a function called by a parallel region.
-No threadprivate is used to avoid data races.
+A variable is declared inside a function called within a parallel region.
+The variable should be shared if it uses static storage.
 
-Data race pairs  sum0@61:3:W vs. sum0@61:8:R
-                 sum0@61:3:W vs. sum0@61:3:W
+Data race pair: q@57:3:W vs. q@57:3:W 
 */
-#include <stdio.h>
-#include <assert.h>
-int sum0=0, sum1=0;
-//#pragma omp threadprivate(sum0)
 
-void foo (int i)
+void foo()
 {
-  sum0=sum0+i;
+  static int q; 
+  int temp = q + 1;
+  #pragma omp barrier
+  q = temp;
 }
 
 int main()
-{
-  int i, sum=0;
-#pragma omp parallel
+{ 
+  #pragma omp parallel 
   {
-#pragma omp for
-    for (i=1;i<=1000;i++)
-    {
-       foo (i);
-    }   
-#pragma omp critical
-    {
-      sum= sum+sum0;
-    } 
-  }  
-/*  reference calculation */
-  for (i=1;i<=1000;i++)
-  {
-    sum1=sum1+i;
+     foo();
   }
-  printf("sum=%d; sum1=%d\n",sum,sum1);
-//  assert(sum==sum1);
-  return 0;
+  return 0;   
 }
 

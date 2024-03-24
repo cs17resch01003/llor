@@ -1,4 +1,5 @@
-//; RepairError
+//; Pass
+//; Create an ordered region covering line 71.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.

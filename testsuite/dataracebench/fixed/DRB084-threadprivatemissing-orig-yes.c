@@ -61,6 +61,7 @@ int sum0=0, sum1=0;
 
 void foo (int i)
 {
+  #pragma omp ordered
   sum0=sum0+i;
 }
 
@@ -69,7 +70,7 @@ int main()
   int i, sum=0;
 #pragma omp parallel
   {
-#pragma omp for
+#pragma omp for ordered
     for (i=1;i<=1000;i++)
     {
        foo (i);

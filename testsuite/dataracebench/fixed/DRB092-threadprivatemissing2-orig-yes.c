@@ -1,5 +1,5 @@
 //; Pass
-//; Create an ordered region covering line 64.
+//; Create an ordered region covering line 71.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -50,29 +50,26 @@ THE POSSIBILITY OF SUCH DAMAGE.
 /*
 A file-scope variable used within a function called by a parallel region.
 No threadprivate is used to avoid data races.
+This is the case for a variable referenced within a construct. 
 
-Data race pairs  sum0@61:3:W vs. sum0@61:8:R
-                 sum0@61:3:W vs. sum0@61:3:W
+Data race pairs  sum0@68:7:W vs. sum0@68:12:R
+                 sum0@68:7:W vs. sum0@68:7:W
 */
 #include <stdio.h>
 #include <assert.h>
 int sum0=0, sum1=0;
 //#pragma omp threadprivate(sum0)
 
-void foo (int i)
-{
-  sum0=sum0+i;
-}
-
 int main()
 {
   int i, sum=0;
 #pragma omp parallel
   {
-#pragma omp for
+#pragma omp for ordered
     for (i=1;i<=1000;i++)
     {
-       foo (i);
+      #pragma omp ordered		
+      sum0=sum0+i;
     }   
 #pragma omp critical
     {
