@@ -35,10 +35,14 @@ namespace LLOR.Common
                     }
 
                     string[] parts = line.Split(":");
+                    Location location = new Location(
+                        int.Parse(parts[2]),
+                        int.Parse(parts[3]));
+
                     if (line.StartsWith("Source"))
-                        current.Source = new Location(int.Parse(parts[2]), int.Parse(parts[3]));
+                        current.Source = location;
                     else
-                        current.Sink = new Location(int.Parse(parts[2]), int.Parse(parts[3]));
+                        current.Sink = location;
                 }
                 else
                 {

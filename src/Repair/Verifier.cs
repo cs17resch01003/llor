@@ -16,46 +16,7 @@ namespace LLOR.Repair
         public Verifier(string filepath)
         {
             inputFile = new FileInfo(filepath);
-            if (inputFile.Directory == null)
-                throw new ArgumentNullException(nameof(inputFile.Directory));
-
-            string basePath = inputFile.Directory.FullName;
-            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
-            string extension = inputFile.Extension;
-
-            // generate <input>.ll
-            string sourcePath = inputFile.FullName;
-            string ll_path = basePath + Path.DirectorySeparatorChar + baseName + ".ll";
-            string arguments = $"-fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone {sourcePath} -o {ll_path}";
-            string command = extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "flang" : "clang";
-            RunCommand(command, arguments);
-            
-            // flang has constructs that are not supported by llov
-            if (extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase))
-                Transformer.TransformIR(ll_path);
-
-            // generate <input>.ssa.ll
-            string ssa_path = basePath + Path.DirectorySeparatorChar + baseName + ".ssa.ll";
-            arguments = $"-mem2reg -loop-simplify -simplifycfg {ll_path} -S -o {ssa_path}";
-            RunCommand("opt", arguments);
-
-            // generate <input>.rb.ll
-            string rb_path = basePath + Path.DirectorySeparatorChar + baseName + ".rb.ll";
-            arguments = $"-load OpenMPVerify.so -openmp-resetbounds {ssa_path} -S -o {rb_path}";
-            RunCommand("opt", arguments);
-
-            // generate <input>.in.ll
-            string in_path = basePath + Path.DirectorySeparatorChar + baseName + ".in.ll";
-            arguments = $"-load OpenMPVerify.so -openmp-forceinline -inline {rb_path} -S -o {in_path}";
-            RunCommand("opt", arguments);
-
-            // generate <input>.sb.ll
-            string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
-            arguments = $"-load OpenMPVerify.so -openmp-split-basicblock {in_path} -S -o {sb_path}";
-            RunCommand("opt", arguments);
-
-            foreach(string path in new string[] { ll_path, ssa_path, rb_path, in_path })
-                File.Delete(path);
+            Initialize();
         }
     
         public List<DataRace> Verify()
@@ -116,6 +77,50 @@ namespace LLOR.Repair
                         throw new RepairException(StatusCode.Unsupported, "Data races inside a simd section cannot be repaired!");
                 }
             }
+        }
+
+        private void Initialize()
+        {
+            if (inputFile.Directory == null)
+                throw new ArgumentNullException(nameof(inputFile.Directory));
+                
+            string basePath = inputFile.Directory.FullName;
+            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+            string extension = inputFile.Extension;
+
+            // generate <input>.ll
+            string sourcePath = inputFile.FullName;
+            string ll_path = basePath + Path.DirectorySeparatorChar + baseName + ".ll";
+            string arguments = $"-fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone {sourcePath} -o {ll_path}";
+            string command = extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "flang" : "clang";
+            RunCommand(command, arguments);
+            
+            // flang has constructs that are not supported by llov
+            if (extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase))
+                Transformer.TransformIR(ll_path);
+
+            // generate <input>.ssa.ll
+            string ssa_path = basePath + Path.DirectorySeparatorChar + baseName + ".ssa.ll";
+            arguments = $"-mem2reg -loop-simplify -simplifycfg {ll_path} -S -o {ssa_path}";
+            RunCommand("opt", arguments);
+
+            // generate <input>.rb.ll
+            string rb_path = basePath + Path.DirectorySeparatorChar + baseName + ".rb.ll";
+            arguments = $"-load OpenMPVerify.so -openmp-resetbounds {ssa_path} -S -o {rb_path}";
+            RunCommand("opt", arguments);
+
+            // generate <input>.in.ll
+            string in_path = basePath + Path.DirectorySeparatorChar + baseName + ".in.ll";
+            arguments = $"-load OpenMPVerify.so -openmp-forceinline -inline {rb_path} -S -o {in_path}";
+            RunCommand("opt", arguments);
+
+            // generate <input>.sb.ll
+            string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
+            arguments = $"-load OpenMPVerify.so -openmp-split-basicblock {in_path} -S -o {sb_path}";
+            RunCommand("opt", arguments);
+
+            foreach(string path in new string[] { ll_path, ssa_path, rb_path, in_path })
+                File.Delete(path);
         }
 
         private void RunCommand(string command, string arguments)
