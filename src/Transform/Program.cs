@@ -1,7 +1,6 @@
 namespace LLOR.Transform
 {
     using CommandLine;
-    using LLOR.Common;
 
     public class Program
     {
