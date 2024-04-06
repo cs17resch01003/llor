@@ -10,21 +10,28 @@ namespace LLOR.Repair
     
     public class Instrumentor
     {
-        private FileInfo inputFile;
+        public Metadata Metadata = new Metadata();
+        
+        private string basePath;
 
-        public Dictionary<string, Barrier> Barriers { get; set; } = new Dictionary<string, Barrier>();
+        private string baseName;
 
-        public List<ExistingBarrier> Existing { get; set; } = new List<ExistingBarrier>();
-
-        public Instrumentor(Options options)
+        public Instrumentor(FileInfo inputFile)
         {
-            inputFile = new FileInfo(options.FilePath);
             if (inputFile.Directory == null)
                 throw new ArgumentNullException(nameof(inputFile.Directory));
                 
-            string basePath = inputFile.Directory.FullName;
-            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
-            string extension = inputFile.Extension;
+            basePath = inputFile.Directory.FullName;
+            baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+        }
+
+        public void Instrument(Options options)
+        {
+            string extension = string.Empty;
+            if (File.Exists(options.Path))
+            {
+                extension = new FileInfo(options.Path).Extension;
+            }
 
             // generate <input>.inst.ll
             string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
@@ -56,7 +63,7 @@ namespace LLOR.Repair
                 string[] parts = line.Split(',');
                 if (parts[0] == "existing")
                 {
-                    Existing.Add(new ExistingBarrier(
+                    Metadata.Existing.Add(new ExistingBarrier(
                         parts[1],
                         int.Parse(parts[2]),
                         int.Parse(parts[3])
@@ -64,7 +71,7 @@ namespace LLOR.Repair
                 }
                 else
                 {
-                    Barriers.Add(parts[0], new Barrier(
+                    Metadata.Barriers.Add(parts[0], new Barrier(
                         parts[0],
                         parts[1],
                         int.Parse(parts[2]),
@@ -78,12 +85,6 @@ namespace LLOR.Repair
 
         public void Update(Dictionary<string, bool> assignments)
         {
-            if (inputFile.Directory == null)
-                throw new ArgumentNullException(nameof(inputFile.Directory));
-                
-            string basePath = inputFile.Directory.FullName;
-            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
-
             string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
             ResetBarriers(inst_path);
             UpdateBarriers(inst_path, assignments);
@@ -102,16 +103,15 @@ namespace LLOR.Repair
         private void ResetBarriers(string filePath)
         {
             // by default the barriers are disabled
-            foreach (Barrier barrier in Barriers.Values)
+            foreach (Barrier barrier in Metadata.Barriers.Values)
                 barrier.Enabled = false;
-
             UpdateBarriers(filePath);
         }
 
         private void UpdateBarriers(string filePath, Dictionary<string, bool> assignments)
         {
             foreach (string barrierName in assignments.Keys)
-                Barriers[barrierName].Enabled = assignments[barrierName];
+                Metadata.Barriers[barrierName].Enabled = assignments[barrierName];
             UpdateBarriers(filePath);
         }
 
@@ -132,7 +132,7 @@ namespace LLOR.Repair
                     string barrierType = match.Groups["barrierType"].Value;
                     bool enabled = bool.Parse(match.Groups["enabled"].Value);
 
-                    bool value = Barriers[barrierName].Enabled;
+                    bool value = Metadata.Barriers[barrierName].Enabled;
                     if (enabled != value)
                     {
                         output = output.Replace(

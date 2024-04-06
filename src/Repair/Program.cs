@@ -26,61 +26,61 @@
                 if (options == null) return;
                 Logger.DetailedLogging = options.DetailedLogging;
 
-                try
+                List<string> changes  = new List<string>();
+
+                IEnumerable<FileInfo> files = Initializer.Initialize(options.Path);
+                foreach (FileInfo file in files)
                 {
-                    Verifier verifier = new Verifier(options.FilePath);
-                    Instrumentor instrumentor = new Instrumentor(options);
-                    Logger.Log($"Barriers;{instrumentor.Barriers.Count()}");
-
-                    Repairer repairer = new Repairer(verifier, instrumentor);
-                    Dictionary<string, bool> assignments = repairer.Repair(options.SolverType);
-
-                    SummaryGenerator generator = new SummaryGenerator(
-                        options.FilePath,
-                        instrumentor);
-
-                    IEnumerable<string> changes = generator.GenerateSummary(assignments);
-                    if (changes.Any())
+                    try
                     {
-                        // ignore cases where barriers are moved
-                        int add = changes.Count(x => x.StartsWith("Add") || x.StartsWith("Create"));
-                        int remove = changes.Count(x => x.StartsWith("Remove"));
-                        if (add == remove || add - remove >= instrumentor.Existing.Count) {
-                            List<DataRace> races = verifier.VerifySource();
-                            if (!races.Any())
-                                changes = new List<string>();
-                        }
+                        Instrumentor instrumentor = new Instrumentor(file);
+                        instrumentor.Instrument(options);
+                        Logger.Log($"Barriers;{instrumentor.Metadata.Barriers.Count()}");
 
-                        foreach (string change in changes)
-                            Console.WriteLine(change);
+                        Verifier verifier = new Verifier(file);
+
+                        Repairer repairer = new Repairer(verifier, instrumentor);
+                        Dictionary<string, bool> assignments = repairer.Repair(options);
+
+                        SummaryGenerator generator = new SummaryGenerator(
+                            file, verifier, instrumentor.Metadata, options);
+                        IEnumerable<string> temp = generator.GenerateSummary(assignments, files.Count() > 1);
+                        changes.AddRange(temp);
+
+                        if (files.Count() == 1)
+                            generator.WriteSummary(changes);
+                        CleanFiles(file, options, changes.Count());
                     }
+                    catch (RepairException ex)
+                    {
+                        HandleException(file, options, ex.StatusCode, ex.Message);
+                    }
+                    catch (CommandLineException ex)
+                    {
+                        HandleException(file, options, ex.StatusCode, ex.Message);
+                    }
+                }
 
-                    Logger.Log($"Changes;{changes.Count()}");
-                    CleanFiles(options, changes.Count());
-                }
-                catch (RepairException ex)
-                {
-                    HandleException(options, ex.StatusCode, ex.Message);
-                }
-                catch (CommandLineException ex)
-                {
-                    HandleException(options, ex.StatusCode, ex.Message);
-                }
+                if (files.Count() != 1)
+                    SummaryGenerator.WriteSummary(new DirectoryInfo(options.Path).FullName, changes);
+                    
+                Logger.Log($"Changes;{changes.Count()}");
+                foreach (string change in changes)
+                    Console.WriteLine(change);
             }
         }
 
-        private static void HandleException(Options options, StatusCode statusCode, string message)
+        private static void HandleException(
+            FileInfo inputFile, Options options, StatusCode statusCode, string message)
         {
-            CleanFiles(options);
+            CleanFiles(inputFile, options);
             Console.WriteLine(message);
 
             Environment.Exit((int)statusCode);
         }
 
-        private static void CleanFiles(Options options, int? changes = null)
+        private static void CleanFiles(FileInfo inputFile, Options options, int? changes = null)
         {
-            FileInfo inputFile = new FileInfo(options.FilePath);
-
             if (inputFile.Directory == null)
                 throw new ArgumentNullException(nameof(inputFile.Directory));
 

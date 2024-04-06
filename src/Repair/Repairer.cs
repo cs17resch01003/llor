@@ -17,12 +17,14 @@ namespace LLOR.Repair
             this.instrumentor = instrumentor;
         }
 
-        public Dictionary<string, bool> Repair(Solver.SolverType solverType)
+        public Dictionary<string, bool> Repair(Options options)
         {
+            Solver.SolverType solverType = options.SolverType;
             Dictionary<string, bool> assignments = new Dictionary<string, bool>();
+
             try
             {
-                verifier.ValidateSource();
+                verifier.ValidateSource(options);
 
                 List<DataRace> races = new List<DataRace>();
                 while (true)
@@ -42,7 +44,7 @@ namespace LLOR.Repair
                             "Encountered a write-write race on the same line.");
 
                     foreach (DataRace race in current_races)
-                        race.PopulateBarriers(instrumentor.Barriers.Values);
+                        race.PopulateBarriers(instrumentor.Metadata.Barriers.Values);
                     races.AddRange(current_races);
 
                     Solver solver = new Solver();

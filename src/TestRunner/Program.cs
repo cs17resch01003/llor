@@ -109,7 +109,7 @@ namespace LLOR.TestRunner
             RepairResult value = new RepairResult();
             value.FilePath = Path.Combine(new DirectoryInfo(file.DirectoryName).Name, file.Name);
 
-            string arguments = $"--file {file.FullName} --testonly";
+            string arguments = $"--path {file.FullName} --testonly";
             if (solverType != null)
                 arguments += " --solvertype " + solverType;
 

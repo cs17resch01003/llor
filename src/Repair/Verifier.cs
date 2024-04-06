@@ -11,12 +11,17 @@ namespace LLOR.Repair
     
     public class Verifier
     {
-        private FileInfo inputFile;
+        private string basePath;
 
-        public Verifier(string filepath)
+        private string baseName;
+
+        public Verifier(FileInfo inputFile)
         {
-            inputFile = new FileInfo(filepath);
-            Initialize();
+            if (inputFile.Directory == null)
+                throw new ArgumentNullException(nameof(inputFile.Directory));
+                
+            basePath = inputFile.Directory.FullName;
+            baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
         }
     
         public List<DataRace> Verify()
@@ -24,11 +29,6 @@ namespace LLOR.Repair
             using (Watch watch = new Watch(Measure.Verification))
             {
                 List<DataRace> races = new List<DataRace>();
-                if (inputFile.Directory == null)
-                    return races;
-
-                string basePath = inputFile.Directory.FullName;
-                string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
                 // verify <input>.inst.ll
                 string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
@@ -44,11 +44,6 @@ namespace LLOR.Repair
             using (Watch watch = new Watch(Measure.Verification))
             {
                 List<DataRace> races = new List<DataRace>();
-                if (inputFile.Directory == null)
-                    return races;
-
-                string basePath = inputFile.Directory.FullName;
-                string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
                 // verify <input>.sb.ll
                 string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
@@ -59,9 +54,14 @@ namespace LLOR.Repair
             }
         }
 
-        public void ValidateSource()
+        public void ValidateSource(Options options)
         {
-            string language = inputFile.Extension == ".f95" ? "Fortran" : "C";
+            FileInfo? inputFile = GetSource(options);
+            if (inputFile == null)
+                return;
+
+            string extension = inputFile.Extension;
+            string language = extension == ".f95" ? "Fortran" : "C";
             string section = language == "C" ? "#pragma omp section" : "!$omp section";
             string simd = language == "C" ? "#pragma omp simd" : "!$omp simd";
 
@@ -79,55 +79,29 @@ namespace LLOR.Repair
             }
         }
 
-        private void Initialize()
+        public FileInfo? GetSource(Options options)
         {
-            if (inputFile.Directory == null)
-                throw new ArgumentNullException(nameof(inputFile.Directory));
+            FileInfo? inputFile = null;
+            if (File.Exists(options.Path))
+            {
+                inputFile = new FileInfo(options.Path);
+            }
+            else
+            {
+                string source_path = basePath + Path.DirectorySeparatorChar + baseName + ".c";
+                if (File.Exists(source_path))
+                    inputFile = new FileInfo(source_path);
                 
-            string basePath = inputFile.Directory.FullName;
-            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
-            string extension = inputFile.Extension;
+                source_path = basePath + Path.DirectorySeparatorChar + baseName + ".cpp";
+                if (File.Exists(source_path))
+                    inputFile = new FileInfo(source_path);
 
-            // generate <input>.ll
-            string sourcePath = inputFile.FullName;
-            string ll_path = basePath + Path.DirectorySeparatorChar + baseName + ".ll";
-            string arguments = $"-fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone {sourcePath} -o {ll_path}";
-            string command = extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "flang" : "clang";
-            RunCommand(command, arguments);
-            
-            // flang has constructs that are not supported by llov
-            if (extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase))
-                Transformer.TransformIR(ll_path);
+                source_path = basePath + Path.DirectorySeparatorChar + baseName + ".h";
+                if (File.Exists(source_path))
+                    inputFile = new FileInfo(source_path);
+            }
 
-            // generate <input>.ssa.ll
-            string ssa_path = basePath + Path.DirectorySeparatorChar + baseName + ".ssa.ll";
-            arguments = $"-mem2reg -loop-simplify -simplifycfg {ll_path} -S -o {ssa_path}";
-            RunCommand("opt", arguments);
-
-            // generate <input>.rb.ll
-            string rb_path = basePath + Path.DirectorySeparatorChar + baseName + ".rb.ll";
-            arguments = $"-load OpenMPVerify.so -openmp-resetbounds {ssa_path} -S -o {rb_path}";
-            RunCommand("opt", arguments);
-
-            // generate <input>.in.ll
-            string in_path = basePath + Path.DirectorySeparatorChar + baseName + ".in.ll";
-            arguments = $"-load OpenMPVerify.so -openmp-forceinline -inline {rb_path} -S -o {in_path}";
-            RunCommand("opt", arguments);
-
-            // generate <input>.sb.ll
-            string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
-            arguments = $"-load OpenMPVerify.so -openmp-split-basicblock {in_path} -S -o {sb_path}";
-            RunCommand("opt", arguments);
-
-            foreach(string path in new string[] { ll_path, ssa_path, rb_path, in_path })
-                File.Delete(path);
-        }
-
-        private void RunCommand(string command, string arguments)
-        {
-            CommandOutput output = CommandRunner.RunCommand(command, arguments);
-            if (output.ExitCode != 0)
-                throw new RepairException(StatusCode.Fail, string.Join("\n", output.StandardError));
+            return inputFile;
         }
 
         private List<DataRace> GetDataRaces(CommandOutput output)
