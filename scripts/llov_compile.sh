@@ -8,7 +8,7 @@ if [[ $extension == "f95" ]]
 then
     flang -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone $1 -o $filepath.ll
     llor_transform --file $filepath.ll
-elif [[ $extension == "" ]]
+elif [[ $extension == $input ]]
 then
     cd $input
     make llov
