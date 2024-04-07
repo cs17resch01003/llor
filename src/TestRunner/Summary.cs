@@ -4,8 +4,8 @@ namespace LLOR.TestRunner
     
     public class Summary
     {
-        [Name("filepath")]
-        public string? FilePath { get; set; }
+        [Name("path")]
+        public string? Path { get; set; }
 
         [Name("vresult")]
         public string? VerificationResult { get; set; }

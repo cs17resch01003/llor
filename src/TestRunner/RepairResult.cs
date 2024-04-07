@@ -6,8 +6,8 @@ namespace LLOR.TestRunner
 
     public class RepairResult
     {
-        [Name("filepath")]
-        public string? FilePath { get; set; }
+        [Name("path")]
+        public string? Path { get; set; }
 
         [Name("statuscode")]
         public string? StatusCode { get; set; }

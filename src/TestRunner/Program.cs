@@ -7,7 +7,6 @@ namespace LLOR.TestRunner
     using System.IO;
     using System.Linq;
     using System.Text;
-    using System.Threading.Tasks;
     using CommandLine;
     using CsvHelper;
     using CsvHelper.Configuration;
@@ -26,40 +25,47 @@ namespace LLOR.TestRunner
 
             if (options == null) return;
 
-            IEnumerable<FileInfo> files = Directory.EnumerateFiles(options.FolderPath, "*.*", SearchOption.AllDirectories)
-                .Where(x => x.EndsWith(".c") || x.EndsWith(".cpp") || x.EndsWith(".f95"))
-                .OrderBy(x => x).Select(x => new FileInfo(x));
-            files = files.Where(x => !x.FullName.Contains("fixed"));
+            List<FileSystemInfo> paths = new List<FileSystemInfo>();
+            foreach(string directory in Directory.EnumerateDirectories(options.FolderPath))
+            {
+                IEnumerable<string> files = Directory.EnumerateFiles(directory);
+                if (files.Any())
+                    foreach (string file in files)
+                        paths.Add(new FileInfo(file));
+                else
+                    foreach (string dirctory in Directory.EnumerateDirectories(directory))
+                        paths.Add(new DirectoryInfo(directory));
+            }
 
             if (options.Verify)
-                Verify(files);
+                Verify(paths);
             else if (options.Repair)
-                Repair(files);
+                Repair(paths);
             else if (options.Check)
-                Check(files);
+                Check(paths);
             else
-                GenerateReport(files, options.FolderPath);
+                GenerateReport(paths, options.FolderPath);
         }
 
-        private static void Verify(IEnumerable<FileInfo> files)
+        private static void Verify(IEnumerable<FileSystemInfo> paths)
         {
-            foreach (FileInfo file in files)
+            foreach (FileSystemInfo path in paths)
             {
-                VerificationResult verify = Verify(file);
+                VerificationResult verify = Verify(path);
 
                 string code = verify.StatusCode.ToString().ToLower();
-                string filename = file.FullName;
+                string sourcePath = path.FullName;
 
-                string statement = $"{code}: {filename}";
+                string statement = $"{code}: {sourcePath}";
                 Console.WriteLine(statement);
             }
 
-            Console.WriteLine($"\n\nTotal: {files.Count()}.");
+            Console.WriteLine($"\n\nTotal: {paths.Count()}.");
         }
 
-        private static VerificationResult Verify(FileInfo file)
+        private static VerificationResult Verify(FileSystemInfo path)
         {
-            CommandOutput output = CommandRunner.RunCommand("llov", file.FullName);
+            CommandOutput output = CommandRunner.RunCommand("llov", path.FullName);
             Output actual = new Output(
                 (StatusCode)output.ExitCode,
                 output.StandardError);
@@ -80,16 +86,17 @@ namespace LLOR.TestRunner
             };
         }
 
-        private static void Repair(IEnumerable<FileInfo> files)
+        private static void Repair(IEnumerable<FileSystemInfo> paths)
         {
-            int total = files.Count(), success = 0;
-            foreach (FileInfo file in files)
+            int total = paths.Count(), success = 0;
+            foreach (FileSystemInfo path in paths)
             {
-                RepairResult repair = Repair(file);
+                RepairResult repair = Repair(path);
 
                 string assert = repair.Assert.ToString().ToLower();
-                string code = repair.StatusCode.ToString().ToLower();
-                string filename = file.FullName;
+                string code = repair.StatusCode == null ? string.Empty :
+                    repair.StatusCode.ToString().ToLower();
+                string filename = path.FullName;
 
                 string statement = $"{assert}_{code}: {filename}";
                 Console.WriteLine(statement);
@@ -101,15 +108,12 @@ namespace LLOR.TestRunner
             Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
         }
 
-        private static RepairResult Repair(FileInfo file, string? solverType = null)
+        private static RepairResult Repair(FileSystemInfo path, string? solverType = null)
         {
-            if (file.DirectoryName == null)
-                    throw new ArgumentNullException(nameof(file.DirectoryName));
-
             RepairResult value = new RepairResult();
-            value.FilePath = Path.Combine(new DirectoryInfo(file.DirectoryName).Name, file.Name);
+            value.Path = path.FullName;
 
-            string arguments = $"--path {file.FullName} --testonly";
+            string arguments = $"--path {path.FullName} --testonly";
             if (solverType != null)
                 arguments += " --solvertype " + solverType;
 
@@ -121,11 +125,24 @@ namespace LLOR.TestRunner
             value.TimeTaken = watch.ElapsedMilliseconds;
 
             Output expected = new Output(StatusCode.Pass);
-            string delimiter = file.Extension
-                .Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "!;" : "//;";
 
-            List<string> lines = File.ReadLines(file.FullName)
-                .Where(x => x.StartsWith(delimiter)).ToList();
+            List<string> lines = new List<string>();
+            string delimiter = "//;";
+
+            FileInfo? file = path as FileInfo;
+            if (file != null)
+            {
+                delimiter = file.Extension
+                    .Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "!;" : "//;";
+                lines = File.ReadLines(path.FullName)
+                    .Where(x => x.StartsWith(delimiter)).ToList();
+            }
+            else
+            {
+                string assert = Path.Combine(path.FullName, "assert.txt");
+                lines = File.ReadLines(assert)
+                    .Where(x => x.StartsWith(delimiter)).ToList();
+            }
 
             bool result = false;
             if (lines.Any())
@@ -145,14 +162,14 @@ namespace LLOR.TestRunner
 
             value.StatusCode = actual.StatusCode.ToString().ToLower();
             value.Assert = result;
-            value.Lines = GetLines(file.FullName);
+            value.Lines = GetLines(path);
 
             foreach (string line in actual.Result)
             {
                 if (line.StartsWith("Instructions"))
-                    value.Instructions = int.Parse(line.Split(";")[1]);
+                    value.Instructions += int.Parse(line.Split(";")[1]);
                 if (line.StartsWith("Barriers"))
-                    value.Barriers = int.Parse(line.Split(";")[1]);
+                    value.Barriers += int.Parse(line.Split(";")[1]);
                 if (line.StartsWith("Changes"))
                     value.Changes = int.Parse(line.Split(";")[1]);
                 if (line.StartsWith("Watch"))
@@ -184,29 +201,24 @@ namespace LLOR.TestRunner
             return value;
         }
     
-        private static void Check(IEnumerable<FileInfo> files)
+        private static void Check(IEnumerable<FileSystemInfo> paths)
         {
-            int total = files.Count(), success = 0;
-            foreach (FileInfo file in files)
+            int total = paths.Count(), success = 0;
+            foreach (FileSystemInfo path in paths)
             {
-                if (file.DirectoryName == null)
-                    throw new ArgumentNullException(nameof(file.DirectoryName));
+                FileSystemInfo fixedPath = GetFixedPath(path);
 
-                VerificationResult verify = Verify(file);
-                RepairResult repair = Repair(file);
-                VerificationResult? repaired = null;
-
-                string fixedPath = Path.Combine(file.DirectoryName, "fixed", file.Name);
-                if (File.Exists(fixedPath))
-                    repaired = Verify(new FileInfo(fixedPath));
+                VerificationResult verify = Verify(path);
+                RepairResult repair = Repair(path);
+                VerificationResult? repaired = Verify(fixedPath);
 
                 string assert = repair.Assert.ToString().ToLower();
                 string verifyCode = verify.StatusCode.ToString().ToLower();
-                string repairCode = repair.StatusCode.ToString().ToLower();
+                string repairCode = repair.StatusCode == null ? string.Empty :
+                    repair.StatusCode.ToString().ToLower();
                 string repairedCode = repaired == null ? "na" : repaired.StatusCode.ToString().ToLower();
-                string filename = file.FullName;
 
-                string statement = $"{assert}_{verifyCode}_{repairCode}_{repairedCode}: {filename}";
+                string statement = $"{assert}_{verifyCode}_{repairCode}_{repairedCode}: {path.FullName}";
                 Console.WriteLine(statement);
 
                 if (repair.Assert == true)
@@ -216,7 +228,24 @@ namespace LLOR.TestRunner
             Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
         }
 
-        private static void GenerateReport(IEnumerable<FileInfo> files, string directory)
+        private static FileSystemInfo GetFixedPath(FileSystemInfo path)
+        {
+            FileInfo? file = path as FileInfo;
+            if (file != null)
+            {
+                if (file.DirectoryName == null)
+                    throw new ArgumentNullException(nameof(file.DirectoryName));
+                string fixedPath = Path.Combine(file.DirectoryName, "fixed", file.Name);
+                return new FileInfo(fixedPath);
+            }
+            else
+            {
+                string fixedPath = Path.Combine(path.FullName, "fixed");
+                return new DirectoryInfo(fixedPath);
+            }
+        }
+
+        private static void GenerateReport(IEnumerable<FileSystemInfo> paths, string directory)
         {
             List<SourceCode> sourceCodes = new List<SourceCode>();
             List<Summary> summaries = new List<Summary>();
@@ -224,19 +253,16 @@ namespace LLOR.TestRunner
             List<RepairResult> mhs_results = new List<RepairResult>();
             List<RepairResult> maxsat_results = new List<RepairResult>();
 
-            int total = files.Count(), success = 0;
-            foreach (FileInfo file in files)
+            int total = paths.Count(), success = 0;
+            foreach (FileSystemInfo path in paths)
             {
-                if (file.DirectoryName == null)
-                    throw new ArgumentNullException(nameof(file.DirectoryName));
-
-                VerificationResult verify = Verify(file);
-                RepairResult mhs = Repair(file);
-                RepairResult maxsat = Repair(file, "MaxSAT");
+                VerificationResult verify = Verify(path);
+                RepairResult mhs = Repair(path);
+                RepairResult maxsat = Repair(path, "MaxSAT");
 
                 sourceCodes.Add(new SourceCode
                 {
-                    FilePath = mhs.FilePath,
+                    Path = mhs.Path,
                     Lines = mhs.Lines,
                     Instructions = mhs.Instructions,
                     Barriers = mhs.Barriers,
@@ -244,7 +270,7 @@ namespace LLOR.TestRunner
 
                 summaries.Add(new Summary
                 {
-                    FilePath = mhs.FilePath,
+                    Path = mhs.Path,
                     VerificationResult = verify.StatusCode.ToString().ToLower(),
                     MhsResult = mhs.StatusCode,
                     MhsChanges = mhs.Changes,
@@ -255,7 +281,7 @@ namespace LLOR.TestRunner
                 });
 
                 string mhs_assert = mhs.Assert ? "PASS" : "FAIL";
-                string statement = $"{mhs_assert}: {mhs.FilePath}";
+                string statement = $"{mhs_assert}: {mhs.Path}";
                 Console.WriteLine(statement);
 
                 if (mhs.Assert == true)
@@ -299,12 +325,35 @@ namespace LLOR.TestRunner
             }
         }
     
-        private static int GetLines(string file)
+        private static int GetLines(FileSystemInfo path)
+        {
+            FileInfo? file = path as FileInfo;
+            if (file != null)
+                return GetLines(file);
+            else
+            {
+                int lines = 0;
+                foreach (string fileName in Directory.EnumerateFiles(path.FullName))
+                {
+                    file = new FileInfo(fileName);
+                    bool check = file.Extension.Equals("c", StringComparison.InvariantCultureIgnoreCase)
+                        || file.Extension.Equals("cpp", StringComparison.InvariantCultureIgnoreCase)
+                        || file.Extension.Equals("h", StringComparison.InvariantCultureIgnoreCase);
+
+                    if (check)
+                        lines += GetLines(file);
+                }
+
+                return lines;
+            }
+        }
+
+        private static int GetLines(FileInfo file)
         {
             int count = 0;
 
             string? line;
-            using (StreamReader reader = File.OpenText(file))
+            using (StreamReader reader = File.OpenText(file.FullName))
             {
                 do
                 {
