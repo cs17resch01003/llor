@@ -55,7 +55,6 @@ namespace LLOR.Repair
             List<string> lines = new List<string>();
             GenerateSummary(assignments, lines, includeFilename);
 
-            lines = lines.Distinct().OrderBy(x => x).ToList();
             return lines;
         }
 
@@ -172,8 +171,8 @@ namespace LLOR.Repair
                 }
             }
 
-            add = add.Distinct().ToList();
-            remove = remove.Distinct().ToList();
+            add = add.Distinct().OrderBy(x => x).ToList();
+            remove = remove.Distinct().OrderBy(x => x).ToList();
 
             return new Tuple<List<int>, List<int>>(add, remove);
         }
@@ -254,8 +253,51 @@ namespace LLOR.Repair
                     remove.Add(existing.Location.Line);
             }
 
-            remove = remove.Distinct().ToList();
+            create = MergeRanges(create).OrderBy(x => x.Item1).ToList();
+            remove = remove.Distinct().OrderBy(x => x).ToList();
             return new Tuple<List<Tuple<int, int>>, List<int>>(create, remove);
+        }
+
+        private IEnumerable<Tuple<int, int>> MergeRanges(IEnumerable<Tuple<int, int>> ranges)
+        {
+            int? begin = null, end = null;
+
+            List<Tuple<int, int>> unique = new List<Tuple<int, int>>();
+            foreach (Tuple<int, int> range in ranges.OrderBy(x => x.Item1))
+            {
+                if (begin == null && end == null)
+                {
+                    begin = range.Item1;
+                    end = range.Item2;
+                }
+                else
+                {
+                    // current range is between begin and end
+                    if (range.Item1 >= begin && range.Item2 <= end)
+                        continue;
+                    
+                    // current range starts after begin but extends beyond end
+                    else if (range.Item1 >= begin && range.Item1 <= end && range.Item2 >= end)
+                        end = range.Item2;
+
+                    // current range starts immediately after end
+                    else if (range.Item1 == end + 1)
+                        end = range.Item2;
+                    
+                    else
+                    {
+                        if (begin.HasValue && end.HasValue)
+                            unique.Add(new Tuple<int, int>(begin.Value, end.Value));
+                            
+                        begin = range.Item1;
+                        end = range.Item2;
+                    }
+                }
+            }
+
+            if (begin.HasValue && end.HasValue)
+                unique.Add(new Tuple<int, int>(begin.Value, end.Value));
+            return unique;
         }
     }
 }

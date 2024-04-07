@@ -42,14 +42,19 @@
                         Repairer repairer = new Repairer(verifier, instrumentor);
                         Dictionary<string, bool> assignments = repairer.Repair(options);
 
-                        SummaryGenerator generator = new SummaryGenerator(
-                            file, verifier, instrumentor.Metadata, options);
-                        IEnumerable<string> temp = generator.GenerateSummary(assignments, files.Count() > 1);
-                        changes.AddRange(temp);
+                        IEnumerable<string> temp = new List<string>();
+                        if (assignments.Any(x => x.Value))
+                        {
+                            SummaryGenerator generator = new SummaryGenerator(
+                                file, verifier, instrumentor.Metadata, options);
+                            temp = generator.GenerateSummary(assignments, files.Count() > 1);
+                            changes.AddRange(temp);
 
-                        if (files.Count() == 1)
-                            generator.WriteSummary(changes);
-                        CleanFiles(file, options, changes.Count());
+                            if (files.Count() == 1)
+                                generator.WriteSummary(changes);
+                        }
+
+                        CleanFiles(file, options, temp.Count());
                     }
                     catch (RepairException ex)
                     {
