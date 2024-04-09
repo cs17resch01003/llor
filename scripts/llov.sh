@@ -5,12 +5,29 @@ filepath=${input%.*}
 extension=${input##*.}
 
 llov_compile $input
-llov_transform $input
 
-if [[ $2 == "debug" ]]
+if [[ $extension == $input ]]
 then
-    opt -load OpenMPVerify.so -openmp-verify-mhp $filepath.sb.ll -S -o $filepath.debug.ll --strip-debug
+    cd $input
+    for file in *.ll; do
+        llov_transform $file
+        filepath=${file%.*}
+
+        if [[ $2 == "debug" ]]
+        then
+            opt -load OpenMPVerify.so -openmp-verify-mhp $filepath.sb.ll -S -o $filepath.debug.ll --strip-debug
+        else
+            opt -load OpenMPVerify.so -disable-output -openmp-verify-mhp $filepath.sb.ll
+            rm $filepath.sb.ll
+        fi
+    done
 else
-    opt -load OpenMPVerify.so -disable-output -openmp-verify-mhp $filepath.sb.ll
-    rm $filepath.sb.ll
+    llov_transform $input
+    if [[ $2 == "debug" ]]
+    then
+        opt -load OpenMPVerify.so -openmp-verify-mhp $filepath.sb.ll -S -o $filepath.debug.ll --strip-debug
+    else
+        opt -load OpenMPVerify.so -disable-output -openmp-verify-mhp $filepath.sb.ll
+        rm $filepath.sb.ll
+    fi
 fi
