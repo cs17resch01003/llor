@@ -4,11 +4,20 @@ namespace LLOR.Repair.Solvers
     {
         public string Variable { get; set; }
 
+        public int Order { get; set; } = 0;
+
         public bool Value { get; set; }
 
         public Literal(string variable, bool value)
         {
             Variable = variable;
+            Value = value;
+        }
+
+        public Literal(string variable, int order, bool value)
+        {
+            Variable = variable;
+            Order = order;
             Value = value;
         }
 

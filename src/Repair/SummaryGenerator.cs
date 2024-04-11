@@ -214,12 +214,13 @@ namespace LLOR.Repair
                 if (!barriers.Any())
                     continue;
 
-                IEnumerable<DataRace> races = repairer.Races
-                    .Where(x => x.Start >= function.Start.Line)
-                    .Where(x => function.End == null || x.End <= function.End.Line);
-
                 int min = barriers.Min(x => x.Location.Line);
                 int max = barriers.Max(x => x.Location.Line);
+
+                IEnumerable<DataRace> races = repairer.Races
+                    .Where(x => x.Start >= function.Start.Line)
+                    .Where(x => x.Start < min)
+                    .Where(x => function.End == null || x.End <= function.End.Line);
                 int? max2 = races.Max(x => x.End);
 
                 max = max2.HasValue ? Math.Max(max, max2.Value) : max;

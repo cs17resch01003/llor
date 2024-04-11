@@ -30,10 +30,10 @@ namespace LLOR.TestRunner
             {
                 IEnumerable<string> files = Directory.EnumerateFiles(directory);
                 if (files.Any())
-                    foreach (string file in files)
+                    foreach (string file in files.OrderBy(x => x))
                         paths.Add(new FileInfo(file));
                 else
-                    foreach (string folder in Directory.EnumerateDirectories(directory))
+                    foreach (string folder in Directory.EnumerateDirectories(directory).OrderBy(x => x))
                         paths.Add(new DirectoryInfo(folder));
             }
 

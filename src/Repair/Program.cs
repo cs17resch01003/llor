@@ -43,7 +43,7 @@
                         Dictionary<string, bool> assignments = repairer.Repair(options);
 
                         IEnumerable<string> temp = new List<string>();
-                        if (assignments.Any(x => x.Value))
+                        if (assignments.Any(x => x.Value) || instrumentor.Metadata.Existing.Any())
                         {
                             SummaryGenerator generator = new SummaryGenerator(
                                 file, verifier, repairer, instrumentor.Metadata, options);

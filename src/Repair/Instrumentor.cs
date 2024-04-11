@@ -69,7 +69,7 @@ namespace LLOR.Repair
                         int.Parse(parts[3])
                     ));
                 }
-                if (parts[0] == "function")
+                else if (parts[0] == "function")
                 {
                     Metadata.Functions.Add(new Function(
                         parts[1],

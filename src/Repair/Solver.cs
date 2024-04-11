@@ -44,7 +44,12 @@ namespace LLOR.Repair
                 Clause clause = new Clause();
                 foreach (Barrier barrier in race.Barriers)
                     if (barrier.Name != null)
-                        clause.Add(new Literal(barrier.Name, true));
+                    {
+                        if (barrier.BarrierType == "barrier")
+                            clause.Add(new Literal(barrier.Name, true));
+                        else
+                            clause.Add(new Literal(barrier.Name, barrier.Location.Line, true));
+                    }
 
                 clauses.Add(clause);
             }
