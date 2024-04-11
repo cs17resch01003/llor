@@ -220,7 +220,7 @@ namespace LLOR.Repair
 
                 int min = barriers.Min(x => x.Location.Line);
                 int max = barriers.Max(x => x.Location.Line);
-                int? max2 = repairer.Races.Max(x => x.End);
+                int? max2 = races.Max(x => x.End);
 
                 max = max2.HasValue ? Math.Max(max, max2.Value) : max;
                 if (min == max)
