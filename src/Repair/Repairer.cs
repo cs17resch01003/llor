@@ -11,6 +11,8 @@ namespace LLOR.Repair
 
         private Instrumentor instrumentor;
 
+        public List<DataRace> Races { get; set; } = new List<DataRace>();
+
         public Repairer(Verifier verifier, Instrumentor instrumentor)
         {
             this.verifier = verifier;
@@ -25,8 +27,6 @@ namespace LLOR.Repair
             try
             {
                 verifier.ValidateSource(options);
-
-                List<DataRace> races = new List<DataRace>();
                 while (true)
                 {
                     IEnumerable<DataRace> current_races = verifier.Verify();
@@ -44,19 +44,23 @@ namespace LLOR.Repair
                             "Encountered a write-write race on the same line.");
 
                     foreach (DataRace race in current_races)
-                        race.PopulateBarriers(instrumentor.Metadata.Barriers.Values);
-                    races.AddRange(current_races);
+                        race.PopulateMetadata(instrumentor.Metadata.Barriers.Values);
+                    Races.AddRange(current_races);
 
                     Solver solver = new Solver();
                     if (solverType == Solver.SolverType.Optimizer)
                     {
                         if (assignments.Count(x => x.Value == true) >= 2)
-                            assignments = solver.Optimize(races, assignments);
+                        {
+                            Dictionary<string, bool> temp = solver.Optimize(Races, assignments);
+                            if (temp.Where(x => x.Value).Count() >= assignments.Where(x => x.Value).Count())
+                                return assignments;
+                        }
                         else
                             return assignments;
                     }
                     else
-                        assignments = solver.Solve(races, solverType);
+                        assignments = solver.Solve(Races, solverType);
 
                     instrumentor.Update(assignments);
                 }

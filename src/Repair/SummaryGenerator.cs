@@ -14,6 +14,8 @@ namespace LLOR.Repair
 
         private Verifier verifier;
 
+        private Repairer repairer;
+
         private Metadata metadata;
 
         private FileInfo? sourceFile;
@@ -23,7 +25,8 @@ namespace LLOR.Repair
         private string[]? fileContent;
 
         public SummaryGenerator(
-            FileInfo inputFile, Verifier verifier, Metadata metadata, Options options)
+            FileInfo inputFile, Verifier verifier, Repairer repairer,
+            Metadata metadata, Options options)
         {
             if (inputFile.Directory == null)
                 throw new ArgumentNullException(nameof(inputFile.Directory));
@@ -32,6 +35,7 @@ namespace LLOR.Repair
             baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
 
             this.verifier = verifier;
+            this.repairer = repairer;
             this.metadata = metadata;
 
             sourceFile = verifier.GetSource(options);
@@ -67,49 +71,43 @@ namespace LLOR.Repair
 
         private void GenerateSummary(Dictionary<string, bool> assignments, List<string> lines, bool includeFilename)
         {
-            Tuple<List<int>, List<int>> barriers = GenerateBarrierSummary(assignments);
-            List<int> barriers_add = barriers.Item1;
-            List<int> barriers_remove = barriers.Item2;
+            (bool, List<string>) barriers = GenerateBarrierSummary(assignments, includeFilename);
+            (bool, List<string>) ordereds = GenerateOrderedSummary(assignments, includeFilename);
 
-            bool barriers_check = (barriers_add.Any() || barriers_remove.Any()) && (
-                barriers_add.Count == barriers_remove.Count ||
-                barriers_add.Count - barriers_remove.Count >= metadata.Existing.Count(x => x.BarrierType == "barrier"));
-
-            Tuple<List<Tuple<int, int>>, List<int>> ordered = GenerateOrderedSummary(assignments);
-            List<Tuple<int, int>> ordered_create = ordered.Item1;
-            List<int> ordered_remove = ordered.Item2;
-
-            bool ordered_check = (ordered_create.Any() || ordered_remove.Any()) && (
-                ordered_create.Count == ordered_remove.Count ||
-                ordered_create.Count - ordered_remove.Count >= metadata.Existing.Count(x => x.BarrierType == "ordered"));
-
-            if (barriers_check || ordered_check)
+            if (barriers.Item1 || ordereds.Item1)
             {
                 List<DataRace> races = verifier.VerifySource();
                 if (!races.Any())
                     return;
             }
 
-            string fileDescription = includeFilename && sourceFile != null ? $" in {sourceFile.FullName}" : string.Empty;
-            foreach (int line in barriers_add)
-                lines.Add($"Add a barrier at line number {line}{fileDescription}.");
-
-            foreach (int line in barriers_remove)
-                lines.Add($"Remove the barrier at line number {line}{fileDescription}.");
-
-            foreach (Tuple<int, int> tuple in ordered_create)
-            {
-                if (tuple.Item1 == tuple.Item2)
-                    lines.Add($"Create an ordered region covering line {tuple.Item1}{fileDescription}.");
-                else
-                    lines.Add($"Create an ordered region covering lines {tuple.Item1} to {tuple.Item2}{fileDescription}.");
-            }
-
-            foreach (int line in ordered_remove)
-                lines.Add($"Remove the ordered region at line number {line}{fileDescription}.");
+            lines.AddRange(barriers.Item2);
+            lines.AddRange(ordereds.Item2);
         }
 
-        private Tuple<List<int>, List<int>> GenerateBarrierSummary(Dictionary<string, bool> assignments)
+        private (bool, List<string>) GenerateBarrierSummary(Dictionary<string, bool> assignments, bool includeFilename)
+        {
+            (List<int>, List<int>) barriers = GenerateBarrierSummary(assignments);
+            List<int> add = barriers.Item1;
+            List<int> remove = barriers.Item2;
+
+            bool barriers_check = (add.Any() || remove.Any()) && (
+                add.Count == remove.Count ||
+                add.Count - remove.Count >= metadata.Existing.Count(x => x.BarrierType == "barrier"));
+
+            string fileDescription = includeFilename && sourceFile != null ? $" in {sourceFile.FullName}" : string.Empty;
+
+            List<string> lines = new List<string>();
+            foreach (int line in add)
+                lines.Add($"Add a barrier at line number {line}{fileDescription}.");
+
+            foreach (int line in remove)
+                lines.Add($"Remove the barrier at line number {line}{fileDescription}.");
+
+            return (barriers_check, lines);
+        }
+
+        private (List<int>, List<int>) GenerateBarrierSummary(Dictionary<string, bool> assignments)
         {
             List<int> add = new List<int>();
             List<int> remove = new List<int>();
@@ -121,17 +119,14 @@ namespace LLOR.Repair
             {
                 // an existing barrier at the right place will be at line-1
                 int line = barrier.Location.Line;
-                bool check = !metadata.Existing
-                    .Where(x => x.BarrierType == "barrier")
+                bool check = !metadata.Existing.Where(x => x.BarrierType == "barrier")
                     .Any(x => x.Location.Line == line-1);
 
                 if (check)
                     add.Add(line);
             }
 
-            IEnumerable<ExistingBarrier> existingBarriers =
-                metadata.Existing.Where(x => x.BarrierType == "barrier");
-            foreach (ExistingBarrier existing in existingBarriers)
+            foreach (Barrier existing in metadata.Existing.Where(x => x.BarrierType == "barrier"))
             {
                 bool keepExisting = false;
                 barriers = assignments.Where(x => x.Value)
@@ -174,130 +169,89 @@ namespace LLOR.Repair
             add = add.Distinct().OrderBy(x => x).ToList();
             remove = remove.Distinct().OrderBy(x => x).ToList();
 
-            return new Tuple<List<int>, List<int>>(add, remove);
+            return (add, remove);
         }
-        
-        private Tuple<List<Tuple<int, int>>, List<int>> GenerateOrderedSummary(Dictionary<string, bool> assignments)
+
+        private (bool, List<string>) GenerateOrderedSummary(Dictionary<string, bool> assignments, bool includeFilename)
         {
-            List<Tuple<int, int>> create = new List<Tuple<int, int>>();
-            List<int> remove = new List<int>();
+            (List<(int, int)>, List<int>) ordered = GenerateOrderedSummary(assignments);
+            List<(int, int)> create = ordered.Item1;
+            List<int> remove = ordered.Item2;
 
-            IEnumerable<Barrier> barriers = assignments.Where(x => x.Value)
-                .Select(x => metadata.Barriers[x.Key])
-                .Where(x => x.BarrierType == "ordered");
-            foreach (string function in barriers.Select(x => x.Function).Distinct())
+            bool ordered_check = (create.Any() || remove.Any()) && (
+                create.Count == remove.Count ||
+                create.Count - remove.Count >= metadata.Existing.Count(x => x.BarrierType == "ordered"));
+
+            string fileDescription = includeFilename && sourceFile != null ? $" in {sourceFile.FullName}" : string.Empty;
+
+            List<string> lines = new List<string>();
+            foreach ((int, int) range in create)
             {
-                IEnumerable<string?> loops = barriers.Where(x => x.Function == function)
-                    .Select(x => x.Loop).Distinct();
-                foreach (string? loop in loops)
-                {
-                    int min = barriers.Where(x => x.Function == function && x.Loop == loop)
-                        .Min(x => x.Location.Line);
-                    int max = barriers.Where(x => x.Function == function && x.Loop == loop)
-                        .Max(x => x.Location.Line);
-
-                    // overapproximate for Fortran programs
-                    if (language == "Fortran")
-                    {
-                        min = metadata.Barriers.Values
-                            .Where(x => x.Function == function && x.Loop == loop)
-                            .Min(x => x.Location.Line);
-                        max = metadata.Barriers.Values
-                            .Where(x => x.Function == function && x.Loop == loop)
-                            .Max(x => x.Location.Line);
-                    }
-
-                    if (min == max)
-                    {
-                        // an existing ordered region at the right place will be at line-1
-                        bool check = metadata.Existing
-                            .Where(x => x.BarrierType == "ordered")
-                            .Any(x => x.Location.Line == max-1);
-                        
-                        if (check)
-                        {
-                            continue;
-                        }
-                    }
-
-                    bool exists = false;
-                    foreach (Tuple<int, int> range in create)
-                        if (range.Item1 == min && range.Item2 == max)
-                            exists = true;
-
-                    if (!exists)
-                        create.Add(new Tuple<int, int>(min, max));
-                }
+                if (range.Item1 == range.Item2)
+                    lines.Add($"Create an ordered region covering line {range.Item1}{fileDescription}.");
+                else
+                    lines.Add($"Create an ordered region covering lines {range.Item1} to {range.Item2}{fileDescription}.");
             }
 
-            IEnumerable<ExistingBarrier> existingBarriers =
-                metadata.Existing.Where(x => x.BarrierType == "ordered");
-            foreach (ExistingBarrier existing in existingBarriers)
+            foreach (int line in remove)
+                lines.Add($"Remove the ordered region at line number {line}{fileDescription}.");
+
+            return (ordered_check, lines);
+        }
+
+        private (List<(int, int)>, List<int>) GenerateOrderedSummary(Dictionary<string, bool> assignments)
+        {
+            List<(int, int)> create = new List<(int, int)>();
+            List<int> remove = new List<int>();
+
+            foreach (Function function in metadata.Functions)
             {
-                bool keepExisting = false;
-                barriers = assignments.Where(x => x.Value)
+                IEnumerable<Barrier> barriers = assignments.Where(x => x.Value)
                     .Select(x => metadata.Barriers[x.Key])
-                    .Where(x => x.BarrierType == "ordered");
-                foreach(Barrier barrier in barriers)
+                    .Where(x => x.BarrierType == "ordered")
+                    .Where(x => function.FunctionName == x.Function);
+
+                if (!barriers.Any())
+                    continue;
+
+                IEnumerable<DataRace> races = repairer.Races
+                    .Where(x => x.Start >= function.Start.Line)
+                    .Where(x => function.End == null || x.End <= function.End.Line);
+
+                int min = barriers.Min(x => x.Location.Line);
+                int max = barriers.Max(x => x.Location.Line);
+                int? max2 = repairer.Races.Max(x => x.End);
+
+                max = max2.HasValue ? Math.Max(max, max2.Value) : max;
+                if (min == max)
                 {
-                    // an existing barrier at the right place will be at line-1
-                    int line = barrier.Location.Line;
-                    if (existing.Location.Line == line-1)
-                    {
-                        keepExisting = true;
-                        break;
-                    }
+                    // an existing ordered region at the right place will be at line-1
+                    bool check = metadata.Existing.Where(x => x.BarrierType == "ordered")
+                        .Any(x => x.Location.Line == max-1);
+                    if (check)
+                        continue;
                 }
+
+                create.Add((min, max));
+            }
+
+            foreach (Barrier existing in metadata.Existing.Where(x => x.BarrierType == "ordered"))
+            {
+                bool keepExisting = true;
+                foreach ((int, int) range in create)
+                    if (existing.Location.Line >= range.Item1 && existing.Location.Line <= range.Item2)
+                    {
+                        keepExisting = false;
+                        continue;
+                    }
 
                 if (!keepExisting)
                     remove.Add(existing.Location.Line);
             }
 
-            create = MergeRanges(create).OrderBy(x => x.Item1).ToList();
+            create = create.OrderBy(x => x.Item1).ToList();
             remove = remove.Distinct().OrderBy(x => x).ToList();
-            return new Tuple<List<Tuple<int, int>>, List<int>>(create, remove);
-        }
-
-        private IEnumerable<Tuple<int, int>> MergeRanges(IEnumerable<Tuple<int, int>> ranges)
-        {
-            int? begin = null, end = null;
-
-            List<Tuple<int, int>> unique = new List<Tuple<int, int>>();
-            foreach (Tuple<int, int> range in ranges.OrderBy(x => x.Item1))
-            {
-                if (begin == null && end == null)
-                {
-                    begin = range.Item1;
-                    end = range.Item2;
-                }
-                else
-                {
-                    // current range is between begin and end
-                    if (range.Item1 >= begin && range.Item2 <= end)
-                        continue;
-                    
-                    // current range starts after begin but extends beyond end
-                    else if (range.Item1 >= begin && range.Item1 <= end && range.Item2 >= end)
-                        end = range.Item2;
-
-                    // current range starts immediately after end
-                    else if (range.Item1 == end + 1)
-                        end = range.Item2;
-                    
-                    else
-                    {
-                        if (begin.HasValue && end.HasValue)
-                            unique.Add(new Tuple<int, int>(begin.Value, end.Value));
-                            
-                        begin = range.Item1;
-                        end = range.Item2;
-                    }
-                }
-            }
-
-            if (begin.HasValue && end.HasValue)
-                unique.Add(new Tuple<int, int>(begin.Value, end.Value));
-            return unique;
+            return (create, remove);
         }
     }
 }

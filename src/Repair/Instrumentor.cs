@@ -63,7 +63,7 @@ namespace LLOR.Repair
                 string[] parts = line.Split(',');
                 if (parts[0] == "existing")
                 {
-                    Metadata.Existing.Add(new ExistingBarrier(
+                    Metadata.Existing.Add(new Barrier(
                         parts[1],
                         int.Parse(parts[2]),
                         int.Parse(parts[3])

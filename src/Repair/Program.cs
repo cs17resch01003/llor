@@ -46,7 +46,7 @@
                         if (assignments.Any(x => x.Value))
                         {
                             SummaryGenerator generator = new SummaryGenerator(
-                                file, verifier, instrumentor.Metadata, options);
+                                file, verifier, repairer, instrumentor.Metadata, options);
                             temp = generator.GenerateSummary(assignments, files.Count() > 1);
                             changes.AddRange(temp);
 

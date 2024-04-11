@@ -4,15 +4,24 @@ namespace LLOR.Repair
     
     public class Barrier
     {
-        public string Name { get; set; }
+        public string? Name { get; set; } = null;
 
         public string BarrierType { get; set; }
 
-        public string Function { get; set; }
+        public string? Function { get; set; } = null;
 
         public Location Location { get; set; }
 
         public bool Enabled { get; set; } = false;
+
+        public Barrier(
+            string barrierType,
+            int line,
+            int column)
+        {
+            BarrierType = barrierType;
+            Location = new Location(line, column);
+        }
 
         public Barrier(
             string name,
