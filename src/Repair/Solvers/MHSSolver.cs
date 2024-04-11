@@ -1,5 +1,6 @@
 namespace LLOR.Repair.Solvers
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -71,7 +72,8 @@ namespace LLOR.Repair.Solvers
         private SolverStatus? ApplyMHS(MHSSolution solution, List<Clause> clauses)
         {
             IEnumerable<string> variables = clauses.SelectMany(x => x.Literals)
-                .Select(x => x.Variable).Distinct().Reverse();
+                .OrderBy(x => x.Weight)
+                .Select(x => x.Variable).Distinct();
 
             string chosen = string.Empty;
             double max_total_weight = 0;

@@ -3,7 +3,7 @@ namespace LLOR.Repair
     using System.Collections.Generic;
     using System.Linq;
 
-    public class DataRace : LLOR.Common.DataRace
+    public class DataRace : Common.DataRace
     {
         public List<Barrier> Barriers { get; set; } = new List<Barrier>();
 
@@ -21,6 +21,9 @@ namespace LLOR.Repair
                 foreach(Barrier barrier in barriers.Where(x => !x.Enabled))
                     Barriers.Add(barrier);
             }
+
+            Barriers = Barriers.Any(x => x.BarrierType == "ordered") ?
+                Barriers.Where(x => x.BarrierType == "ordered").ToList() : Barriers;
         }
     }
 }

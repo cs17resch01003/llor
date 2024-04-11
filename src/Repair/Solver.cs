@@ -42,8 +42,11 @@ namespace LLOR.Repair
             foreach (DataRace race in races)
             {
                 Clause clause = new Clause();
-                foreach (string variable in race.Barriers.Select(x => x.Name))
-                    clause.Add(new Literal(variable, true));
+                foreach (Barrier barrier in race.Barriers)
+                    if (barrier.BarrierType == "barrier")
+                        clause.Add(new Literal(barrier.Name, true));
+                    else
+                        clause.Add(new Literal(barrier.Name, barrier.Location.Line, true));
 
                 clauses.Add(clause);
             }
