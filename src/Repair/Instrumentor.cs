@@ -74,7 +74,7 @@ namespace LLOR.Repair
                     Metadata.Functions.Add(new Function(
                         parts[1],
                         int.Parse(parts[2]),
-                        int.Parse(parts[3])));
+                        parts.Length == 4 ? int.Parse(parts[3]) : null));
                 }
                 else
                 {

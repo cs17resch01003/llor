@@ -8,16 +8,17 @@ namespace LLOR.Repair
 
         public Location Start { get; set; }
 
-        public Location End { get; set; }
+        public Location? End { get; set; }
 
         public Function(
             string functionName,
             int start,
-            int end)
+            int? end)
         {
             FunctionName = functionName;
             Start = new Location(start, 0);
-            End = new Location(end, 0);
+            if (end != null)
+                End = new Location(end.Value, 0);
         }
     }
 }
