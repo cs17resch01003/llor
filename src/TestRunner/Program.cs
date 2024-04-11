@@ -33,8 +33,8 @@ namespace LLOR.TestRunner
                     foreach (string file in files)
                         paths.Add(new FileInfo(file));
                 else
-                    foreach (string dirctory in Directory.EnumerateDirectories(directory))
-                        paths.Add(new DirectoryInfo(directory));
+                    foreach (string folder in Directory.EnumerateDirectories(directory))
+                        paths.Add(new DirectoryInfo(folder));
             }
 
             if (options.Verify)
