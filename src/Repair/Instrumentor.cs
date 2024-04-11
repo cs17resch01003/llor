@@ -69,6 +69,13 @@ namespace LLOR.Repair
                         int.Parse(parts[3])
                     ));
                 }
+                if (parts[0] == "function")
+                {
+                    Metadata.Functions.Add(new Function(
+                        parts[1],
+                        int.Parse(parts[2]),
+                        int.Parse(parts[3])));
+                }
                 else
                 {
                     Metadata.Barriers.Add(parts[0], new Barrier(
@@ -76,8 +83,7 @@ namespace LLOR.Repair
                         parts[1],
                         int.Parse(parts[2]),
                         int.Parse(parts[3]),
-                        parts[4],
-                        parts[1] == "ordered" ? parts[5] : null
+                        parts[4]
                     ));
                 }
             }

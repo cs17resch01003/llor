@@ -7,5 +7,7 @@ namespace LLOR.Repair
         public Dictionary<string, Barrier> Barriers { get; set; } = new Dictionary<string, Barrier>();
 
         public List<ExistingBarrier> Existing { get; set; } = new List<ExistingBarrier>();
+
+        public List<Function> Functions { get; set; } = new List<Function>();
     }
 }

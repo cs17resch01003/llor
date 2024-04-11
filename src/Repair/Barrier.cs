@@ -10,8 +10,6 @@ namespace LLOR.Repair
 
         public string Function { get; set; }
 
-        public string? Loop { get; set; }
-
         public Location Location { get; set; }
 
         public bool Enabled { get; set; } = false;
@@ -21,13 +19,11 @@ namespace LLOR.Repair
             string barrierType,
             int line,
             int column,
-            string function,
-            string? loop)
+            string function)
         {
             Name = name;
             BarrierType = barrierType;
             Function = function;
-            Loop = loop;
             Location = new Location(line, column);
         }
     }
