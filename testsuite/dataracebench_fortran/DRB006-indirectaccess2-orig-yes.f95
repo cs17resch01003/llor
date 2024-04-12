@@ -1,5 +1,5 @@
 !; Pass
-!; Create an ordered region covering lines 81 to 84.
+!; Create an ordered region covering lines 83 to 84.
 
 !!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!
 !!! Copyright (c) 2017-20, Lawrence Livermore National Security, LLC

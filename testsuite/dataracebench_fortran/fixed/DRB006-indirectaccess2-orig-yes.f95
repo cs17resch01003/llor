@@ -1,5 +1,5 @@
 !; Pass
-!; Create an ordered region covering lines 81 to 84.
+!; Create an ordered region covering lines 83 to 84.
 
 !!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!
 !!! Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
@@ -78,9 +78,9 @@ program DRB006_indirectaccess2_orig_yes
 
     !$omp parallel do ordered
     do i = 1, n
-        !$omp ordered
         idx1 = indexSet(i)
         idx2 = indexSet(i)+12
+        !$omp ordered
         base(idx1) = base(idx1)+1.0
         base(idx2) = base(idx2)+3.0
         !$omp end ordered
