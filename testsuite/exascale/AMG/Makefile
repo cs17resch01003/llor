@@ -48,9 +48,7 @@ llov:
 	do \
 	  if [ -d $$i ]; \
 	  then \
-	    echo "Verifing $$i ..."; \
 	    (cd $$i; make llov); \
-	    echo ""; \
 	  fi; \
 	done
 
