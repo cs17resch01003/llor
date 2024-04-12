@@ -19,9 +19,6 @@
 #
 #EHEADER**********************************************************************
 
-
-
-
 srcdir = .
 
 HYPRE_DIRS =\
@@ -41,6 +38,18 @@ all:
 	  then \
 	    echo "Making $$i ..."; \
 	    (cd $$i; make); \
+	    echo ""; \
+	  fi; \
+	done
+
+llov:
+	@ \
+	for i in ${HYPRE_DIRS}; \
+	do \
+	  if [ -d $$i ]; \
+	  then \
+	    echo "Verifing $$i ..."; \
+	    (cd $$i; make llov); \
 	    echo ""; \
 	  fi; \
 	done

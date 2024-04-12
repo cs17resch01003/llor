@@ -25,10 +25,19 @@
 
 include ../Makefile.include
 
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
+CC   = mpicc
+LD   = mpicc
+LLOVFLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+
 CFLAGS =\
    -I..\
    ${INCLUDE_CFLAGS}\
-   ${CDEFS}
+   ${CDEFS}\
+   ${LLOVFLAGS}
 CXX_COMPILE_FLAGS = ${CFLAGS}
 
 RANLIB = ranlib
@@ -85,6 +94,8 @@ FILES =\
  hypre_hopscotch_hash.c
 
 OBJS = ${FILES:.c=.o}
+
+llov: ${OBJS}
 
 ##################################################################
 # Rules

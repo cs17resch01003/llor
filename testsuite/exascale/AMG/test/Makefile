@@ -27,6 +27,14 @@
 srcdir = .
                                                                                                
 include ../Makefile.include
+
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
+CC   = mpicc
+LD   = mpicc
+LLOVFLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
                                                                                                
 CFLAGS = \
  -I..\
@@ -37,7 +45,8 @@ CFLAGS = \
  -I../parcsr_ls\
  -I../krylov\
  ${INCLUDE_CFLAGS}\
- -DHYPRE_TIMING
+ -DHYPRE_TIMING\
+ ${LLOVFLAGS}
                                                                                                
 LFLAGS =\
  -L.\
@@ -81,4 +90,6 @@ amg: amg.o
                                                                                                                                          
 .c.o:
 	${CC} -o $@ -c ${CFLAGS} $<
-                                                             
+
+llov:
+	${CC} -o amg.o -c ${CFLAGS} amg.c
