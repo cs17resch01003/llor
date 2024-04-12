@@ -52,11 +52,12 @@ namespace LLOR.Common
                     if (process.WaitForExit(timeout) &&
                         outputWaitHandle.WaitOne(timeout) && errorWaitHandle.WaitOne(timeout))
                     {
-                        output.ExitCode = process.ExitCode;
+                        int exitCode = process.ExitCode == 134 ? 1 : process.ExitCode;
+                        output.ExitCode = exitCode;
+                        
                         output.StandardOutput = stdout;
                         output.StandardError = stderr;
 
-                        int exitCode = process.ExitCode == 134 ? 1 : process.ExitCode;
                         if (!Enum.IsDefined(typeof(StatusCode), exitCode))
                         {
                             string message = string.Join('\n', 
