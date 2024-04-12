@@ -248,6 +248,9 @@ namespace LLOR.Repair
             foreach (Barrier existing in metadata.Existing.Where(x => x.BarrierType == "ordered"))
             {
                 bool keepExisting = true;
+                if (!assignments.Any())
+                    keepExisting = false;
+                    
                 foreach ((int, int) range in create)
                     if (existing.Location.Line >= range.Item1 && existing.Location.Line <= range.Item2)
                     {
