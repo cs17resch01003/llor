@@ -1,5 +1,5 @@
 //; Pass
-//; Create an ordered region covering lines 33 to 34.
+//; Create an ordered region covering line 33.
 
 /*
 !!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!
@@ -31,10 +31,8 @@ int main(){
   for (int i=0; i<100; i++){
     omp_set_lock(&lck);
     #pragma omp ordered
-    {
     var++;
     omp_unset_lock(&lck);
-    }
   }
 
   omp_destroy_lock(&lck);
