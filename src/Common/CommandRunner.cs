@@ -56,7 +56,8 @@ namespace LLOR.Common
                         output.StandardOutput = stdout;
                         output.StandardError = stderr;
 
-                        if (!Enum.IsDefined(typeof(StatusCode), process.ExitCode))
+                        int exitCode = process.ExitCode == 134 ? 1 : process.ExitCode;
+                        if (!Enum.IsDefined(typeof(StatusCode), exitCode))
                         {
                             string message = string.Join('\n', 
                                 string.Join('\n', output.StandardOutput.ToArray()),
