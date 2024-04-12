@@ -1,5 +1,5 @@
 //; Pass
-//; Create an ordered region covering line 77.
+//; Create an ordered region covering lines 76 to 77.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.

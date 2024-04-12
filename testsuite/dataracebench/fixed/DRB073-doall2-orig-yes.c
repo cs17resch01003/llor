@@ -1,6 +1,5 @@
 //; Pass
-//; Create an ordered region covering line 65.
-//; Create an ordered region covering line 66.
+//; Create an ordered region covering lines 64 to 65.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -64,8 +63,8 @@ int main()
   for (i=0;i<100;i++)
     #pragma omp ordered
     {
-      for (j=0;j<100;j++)
-        a[i][j]=a[i][j]+1;
+    for (j=0;j<100;j++)
+      a[i][j]=a[i][j]+1;
     }
   return 0;
 }

@@ -1,27 +1,23 @@
 //; Pass
-//; Create an ordered region covering lines 213 to 214.
-//; Create an ordered region covering line 217.
-//; Create an ordered region covering lines 225 to 226.
-//; Create an ordered region covering line 229.
-//; Create an ordered region covering line 252.
-//; Create an ordered region covering line 260.
-//; Create an ordered region covering lines 292 to 293.
-//; Create an ordered region covering line 296.
-//; Create an ordered region covering line 319.
-//; Create an ordered region covering line 342.
-//; Create an ordered region covering line 350.
-//; Create an ordered region covering lines 404 to 405.
-//; Create an ordered region covering line 408.
-//; Create an ordered region covering line 416.
-//; Create an ordered region covering line 439.
-//; Create an ordered region covering line 447.
-//; Create an ordered region covering line 470.
-//; Create an ordered region covering line 478.
-//; Create an ordered region covering line 501.
-//; Create an ordered region covering line 509.
-//; Create an ordered region covering line 517.
-//; Create an ordered region covering line 525.
-//; Create an ordered region covering line 533.
+//; Create an ordered region covering lines 209 to 213.
+//; Create an ordered region covering lines 221 to 225.
+//; Create an ordered region covering line 248.
+//; Create an ordered region covering line 256.
+//; Create an ordered region covering lines 288 to 292.
+//; Create an ordered region covering line 315.
+//; Create an ordered region covering line 338.
+//; Create an ordered region covering line 346.
+//; Create an ordered region covering lines 400 to 404.
+//; Create an ordered region covering line 412.
+//; Create an ordered region covering line 435.
+//; Create an ordered region covering line 443.
+//; Create an ordered region covering line 466.
+//; Create an ordered region covering line 474.
+//; Create an ordered region covering line 497.
+//; Create an ordered region covering line 505.
+//; Create an ordered region covering line 513.
+//; Create an ordered region covering line 521.
+//; Create an ordered region covering line 529.
 
 /**
  * 3mm.c: This file is part of the PolyBench/C 3.2 test suite.

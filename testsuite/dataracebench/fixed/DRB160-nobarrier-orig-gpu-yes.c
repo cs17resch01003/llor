@@ -1,6 +1,5 @@
 //; Pass
-//; Create an ordered region covering line 46.
-//; Create an ordered region covering line 51.
+//; Create an ordered region covering lines 45 to 50.
 
 /*
 !!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!
@@ -43,13 +42,13 @@ int main(){
       #pragma omp for ordered
       for(int i=0; i<C; i++){
         #pragma omp ordered
-          temp[i] = b[i] + c[i];
+        temp[i] = b[i] + c[i];
       }
 
       #pragma omp for ordered
       for(int i=C-1; i>=0; i--){
         #pragma omp ordered
-          b[i] = temp[i] * a;
+        b[i] = temp[i] * a;
       }
     }
   }

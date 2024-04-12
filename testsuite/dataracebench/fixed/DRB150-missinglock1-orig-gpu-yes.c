@@ -1,5 +1,5 @@
 //; Pass
-//; Create an ordered region covering line 33.
+//; Create an ordered region covering lines 33 to 34.
 
 /*
 !!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!
@@ -29,8 +29,12 @@ int main(){
   #pragma omp target map(tofrom:var) device(0)
   #pragma omp parallel for ordered
   for (int i=0; i<100; i++){
+    omp_set_lock(&lck);
     #pragma omp ordered
-      var++;
+    {
+    var++;
+    omp_unset_lock(&lck);
+    }
   }
 
   omp_destroy_lock(&lck);

@@ -1,6 +1,5 @@
 //; Pass
-//; Create an ordered region covering line 51.
-//; Create an ordered region covering line 46.
+//; Create an ordered region covering lines 45 to 50.
 
 /*
 !!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!!!

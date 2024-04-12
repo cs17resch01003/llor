@@ -1,5 +1,5 @@
 //; Pass
-//; Create an ordered region covering line 77.
+//; Create an ordered region covering lines 76 to 77.
 
 /*
 Copyright (c) 2017, Lawrence Livermore National Security, LLC.
@@ -73,9 +73,11 @@ int main(int argc, char* argv[])
 
 #pragma omp parallel for ordered
   for (i=numNodes-1 ; i>-1 ; --i) {
+    #pragma omp ordered
+    {
     if (x[i]<=0) {
-      #pragma omp ordered
         numNodes2-- ;
+    }
     }
   }         
   return 0;
