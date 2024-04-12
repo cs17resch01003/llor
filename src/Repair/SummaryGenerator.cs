@@ -223,7 +223,8 @@ namespace LLOR.Repair
                     .Where(x => function.End == null || x.End <= function.End.Line);
                 int? max2 = races.Max(x => x.End);
 
-                if (max2 == null)
+                races = repairer.Races.Where(x => x.Start == null || x.End == null);
+                if (max2 == null && races.Any())
                 {
                     max2 = metadata.Barriers.Values
                         .Where(x => x.BarrierType == "ordered")
