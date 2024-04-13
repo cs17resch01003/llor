@@ -15,7 +15,7 @@ MAIN_OBJ = \
 MINIFE_INFO = 1
 MINIFE_KERNELS = 0
 
-vpath %.cpp ../utils
+vpath %.cpp ./utils
 
 all:common_files generate_info miniFE.x
 
