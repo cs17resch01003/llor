@@ -12,7 +12,13 @@ MINIFE_MATRIX_TYPE = -DMINIFE_CSR_MATRIX
 
 #-----------------------------------------------------------------------
 
-CFLAGS = -O3 -fopenmp
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
+CC   = mpicc
+LD   = mpicc
+CFLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
 CXXFLAGS = $(CFLAGS)
 
 CPPFLAGS = -I. -I./utils -I./fem $(MINIFE_TYPES) \
@@ -36,6 +42,6 @@ LIBS=
 #CC=icc
 
 CXX=mpicxx
-CC=mpicc
+#CC=mpicc
 
 include make_targets

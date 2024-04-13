@@ -22,6 +22,8 @@ all:common_files generate_info miniFE.x
 miniFE.x:common_files $(MAIN_OBJ) $(OBJS) $(UTIL_OBJS) $(OPTIONAL_OBJS) *.hpp generate_info
 	$(INSTRUMENT) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(MAIN_OBJ) $(OBJS) $(UTIL_OBJS) $(OPTIONAL_OBJS) -o miniFE.x $(LDFLAGS) $(OPTIONAL_LIBS) $(LIBS)
 
+llov:common_files generate_info $(MAIN_OBJ) $(OBJS) $(UTIL_OBJS) $(OPTIONAL_OBJS) *.hpp
+
 common_files:
 	./get_common_files
 
