@@ -37,11 +37,9 @@
                     CancellationToken ct = source.Token;
 
                     (StatusCode, List<string>) result = (StatusCode.Unsupported, new List<string>());
-                    bool completed = false;
-
                     Task task = Task.Run(() =>
                     {
-                        result = RepairFile(file, options, files.Count() == 1, ct, ref completed);
+                        result = RepairFile(file, options, files.Count() == 1, ct);
                     });
 
                     if (!task.Wait(options.Timeout * 1000))
@@ -62,8 +60,8 @@
             }
         }
 
-        private static (StatusCode, List<string>) RepairFile(FileInfo file, Options options, bool singleFile,
-            CancellationToken ct, ref bool completed)
+        private static (StatusCode, List<string>) RepairFile(
+            FileInfo file, Options options, bool singleFile, CancellationToken ct)
         {
             Instrumentor instrumentor = new Instrumentor(file, options);
             Verifier verifier = new Verifier(instrumentor.Metadata);

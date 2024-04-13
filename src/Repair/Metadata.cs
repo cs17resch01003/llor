@@ -32,14 +32,17 @@ namespace LLOR.Repair
             }
             else
             {
-                List<string> extensions = new List<string> { ".c", ".cpp", ".h" };
-                foreach (string extension in extensions)
+                foreach (string filePath in Directory.EnumerateFiles(BasePath, "*.*", SearchOption.AllDirectories))
                 {
-                    string source_path = BasePath + Path.DirectorySeparatorChar + BaseName + extension;
-                    if (File.Exists(source_path))
+                    FileInfo file = new FileInfo(filePath);
+                    List<string> extensions = new List<string> { ".c", ".cpp", ".h" };
+                    foreach (string extension in extensions)
                     {
-                        SourceFile = new FileInfo(source_path);
-                        return;
+                        if (file.Name == BaseName + extension)
+                        {
+                            SourceFile = file;
+                            return;
+                        }
                     }
                 }
             }

@@ -138,6 +138,9 @@ namespace LLOR.Repair
                         check = true;
                     else
                     {
+                        if (fileContent.Length < existing.Location.Line)
+                            continue;
+
                         string line = fileContent[existing.Location.Line-1];
                         line = Regex.Replace(line, @"\s+", " ").Trim();
 
