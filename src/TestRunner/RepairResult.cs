@@ -1,5 +1,6 @@
 namespace LLOR.TestRunner
 {
+    using System.Collections.Generic;
     using System.Runtime.Serialization;
     using CsvHelper.Configuration.Attributes;
     using LLOR.Common;
@@ -47,6 +48,8 @@ namespace LLOR.TestRunner
 
         [Name("changes")]
         public int Changes { get; set; }
+
+        public Dictionary<StatusCode, int> Statuses { get; set; } = new Dictionary<StatusCode, int>();
 
         [Ignore]
         public bool Assert { get; set; }

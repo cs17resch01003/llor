@@ -14,6 +14,8 @@ namespace LLOR.Common
 
         Timeout = 103,
 
+        PartialTimeout = 104,
+
         Error = 254,
     }
 }

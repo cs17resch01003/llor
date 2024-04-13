@@ -119,60 +119,38 @@ namespace LLOR.TestRunner
 
             Stopwatch watch = Stopwatch.StartNew();
             CommandOutput output = CommandRunner.RunCommand("llor", arguments);
+            value.TimeTaken = watch.ElapsedMilliseconds;
+
+            Output actual = PopulateActual(output, value);
+            Output? expected = PopulateExpected(path);
+
+            bool result = false;
+            if (actual.StatusCode == StatusCode.Pass)
+                result = expected != null ? expected.Equals(actual) : true;
+            else
+                result = expected != null ? expected.StatusCode == actual.StatusCode : true;
+
+            value.Assert = result;
+            value.Lines = GetLines(path);
+
+            return value;
+        }
+    
+        private static Output PopulateActual(CommandOutput output, RepairResult value)
+        {
             Output actual = new Output(
                 (StatusCode)output.ExitCode,
                 output.StandardOutput);
-            value.TimeTaken = watch.ElapsedMilliseconds;
-
-            Output expected = new Output(StatusCode.Pass);
-
-            List<string> lines = new List<string>();
-            string delimiter = "//;";
-
-            FileInfo? file = path as FileInfo;
-            if (file != null)
-            {
-                delimiter = file.Extension
-                    .Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "!;" : "//;";
-                lines = File.ReadLines(path.FullName)
-                    .Where(x => x.StartsWith(delimiter)).ToList();
-            }
-            else
-            {
-                string assert = Path.Combine(path.FullName, "assert.txt");
-                lines = File.ReadLines(assert)
-                    .Where(x => x.StartsWith(delimiter)).ToList();
-            }
-
-            bool result = false;
-            if (lines.Any())
-            {
-                expected.StatusCode = Enum.Parse<StatusCode>(
-                    lines[0].Replace(delimiter, string.Empty).Trim());
-
-                lines.RemoveAt(0);
-                expected.Result = lines.Where(x => x.StartsWith(delimiter))
-                    .Select(x => x.Replace(delimiter, string.Empty).Trim()).ToList();
-
-                if (actual.StatusCode == StatusCode.Pass)
-                    result = expected.Equals(actual);
-                else
-                    result = expected.StatusCode == actual.StatusCode;
-            }
-
-            value.StatusCode = actual.StatusCode.ToString().ToLower();
-            value.Assert = result;
-            value.Lines = GetLines(path);
 
             foreach (string line in actual.Result)
             {
                 if (line.StartsWith("Instructions"))
                     value.Instructions += int.Parse(line.Split(";")[1]);
-                if (line.StartsWith("Barriers"))
+                else if (line.StartsWith("Barriers"))
                     value.Barriers += int.Parse(line.Split(";")[1]);
-                if (line.StartsWith("Changes"))
+                else if (line.StartsWith("Changes"))
                     value.Changes = int.Parse(line.Split(";")[1]);
-                if (line.StartsWith("Watch"))
+                else if (line.StartsWith("Watch"))
                 {
                     string[] parts = line.Split(";");
 
@@ -196,11 +174,88 @@ namespace LLOR.TestRunner
                         value.TotalTime = int.Parse(parts[2]);
                     }
                 }
+                else if (line.StartsWith("StatusCode"))
+                {
+                    string[] parts = line.Split(";");
+
+                    StatusCode code = (StatusCode)Enum.Parse(typeof(StatusCode), parts[2]);
+                    if (!value.Statuses.ContainsKey(code))
+                        value.Statuses.Add(code, 0);
+
+                    value.Statuses[code]++;
+                }
             }
 
-            return value;
+            value.StatusCode = actual.StatusCode.ToString().ToLower();
+            int total = value.Statuses.Sum(x => x.Value);
+            if (total > 1)
+            {
+                if (value.Statuses.ContainsKey(StatusCode.Pass))
+                {
+                    if (value.Statuses[StatusCode.Pass] == total)
+                        actual.StatusCode = StatusCode.Pass;
+                }
+                else if (value.Statuses.ContainsKey(StatusCode.Timeout))
+                {
+                    if (value.Statuses[StatusCode.Timeout] == total)
+                        actual.StatusCode = StatusCode.Timeout;
+                    else
+                        actual.StatusCode = StatusCode.PartialTimeout;
+                }
+                else if (value.Statuses.Count == 1)
+                {
+                    actual.StatusCode = value.Statuses.Keys.First();
+                }
+                else
+                {
+                    if (value.Statuses.ContainsKey(StatusCode.RepairError))
+                        actual.StatusCode = StatusCode.RepairError;
+                    else if (value.Statuses.ContainsKey(StatusCode.Fail))
+                        actual.StatusCode = StatusCode.Fail;
+                    else
+                        actual.StatusCode = StatusCode.Error;
+                }
+            }
+
+            return actual;
         }
-    
+
+        private static Output? PopulateExpected(FileSystemInfo path)
+        {
+            List<string> lines = new List<string>();
+            string delimiter = "//;";
+
+            FileInfo? file = path as FileInfo;
+            if (file != null)
+            {
+                delimiter = file.Extension
+                    .Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "!;" : "//;";
+                lines = File.ReadLines(path.FullName)
+                    .Where(x => x.StartsWith(delimiter)).ToList();
+            }
+            else
+            {
+                string assert = Path.Combine(path.FullName, "assert.txt");
+                lines = File.ReadLines(assert)
+                    .Where(x => x.StartsWith(delimiter)).ToList();
+            }
+
+            if (lines.Any())
+            {
+                Output expected = new Output(StatusCode.Pass);
+                expected.StatusCode = Enum.Parse<StatusCode>(
+                    lines[0].Replace(delimiter, string.Empty).Trim());
+
+                lines.RemoveAt(0);
+                expected.Result = lines.Where(x => x.StartsWith(delimiter))
+                    .Select(x => x.Replace(delimiter, string.Empty).Trim()).ToList();
+
+                return expected;
+            }
+
+            return null;
+        }
+
         private static void Check(IEnumerable<FileSystemInfo> paths)
         {
             int total = paths.Count(), success = 0;

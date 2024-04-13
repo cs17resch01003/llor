@@ -36,12 +36,12 @@
                     CancellationTokenSource source = new CancellationTokenSource();
                     CancellationToken ct = source.Token;
 
-                    List<string> file_changes = new List<string>();
+                    (StatusCode, List<string>) result = (StatusCode.Unsupported, new List<string>());
                     bool completed = false;
 
                     Task task = Task.Run(() =>
                     {
-                        file_changes = RepairFile(file, options, files.Count() == 1, ct, ref completed);
+                        result = RepairFile(file, options, files.Count() == 1, ct, ref completed);
                     });
 
                     if (!task.Wait(options.Timeout * 1000))
@@ -50,7 +50,9 @@
                         while (!task.Wait(1000));
                     }
 
-                    changes.AddRange(file_changes);
+                    changes.AddRange(result.Item2);
+                    if (options.DetailedLogging)
+                        Logger.Log($"StatusCode;{file.FullName};{result.Item1}");
                 }
 
                 if (files.Count() != 1 && changes.Any())
@@ -60,7 +62,7 @@
             }
         }
 
-        private static List<string> RepairFile(FileInfo file, Options options, bool singleFile,
+        private static (StatusCode, List<string>) RepairFile(FileInfo file, Options options, bool singleFile,
             CancellationToken ct, ref bool completed)
         {
             Instrumentor instrumentor = new Instrumentor(file, options);
@@ -68,6 +70,8 @@
             Repairer repairer = new Repairer(verifier, instrumentor);
 
             List<string> changes = new List<string>();
+            StatusCode status = StatusCode.Error;
+
             try
             {
                 instrumentor.Instrument(options);
@@ -83,6 +87,7 @@
                     generator.WriteSummary(changes);
 
                 CleanFiles(file, options, changes.Count());
+                status = StatusCode.Pass;
             }
             catch (OperationCanceledException)
             {
@@ -90,11 +95,13 @@
                 string message = $"Repair of {sourceFile?.FullName} timed out.";
 
                 HandleException(file, options, message, changes);
+                status = StatusCode.Timeout;
             }
             catch (RepairException ex)
             {
+                status = StatusCode.RepairError;
                 if (singleFile)
-                    PrintException(file, options, ex.StatusCode, ex.Message);
+                    PrintException(file, options, status, ex.Message);
                 else
                 {
                     FileInfo? sourceFile = instrumentor.Metadata.SourceFile;
@@ -105,8 +112,9 @@
             }
             catch (VerificationException ex)
             {
+                status = StatusCode.Fail;
                 if (singleFile)
-                    PrintException(file, options, ex.StatusCode, ex.Message);
+                    PrintException(file, options, status, ex.Message);
                 else
                 {
                     FileInfo? sourceFile = instrumentor.Metadata.SourceFile;
@@ -117,14 +125,14 @@
             }
             catch (CommandLineException ex)
             {
-                PrintException(file, options, ex.StatusCode, ex.Message);
+                status = StatusCode.Error;
+                PrintException(file, options, status, ex.Message);
             }
 
             foreach (string change in changes)
                 Console.WriteLine(change);
-            
-            completed = true;
-            return changes;
+
+            return (status, changes);
         }
 
         private static void HandleException(
