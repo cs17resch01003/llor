@@ -15,23 +15,21 @@ MAIN_OBJ = \
 MINIFE_INFO = 1
 MINIFE_KERNELS = 0
 
-vpath %.cpp ./utils
+vpath %.cpp ../utils
 
 all:common_files generate_info miniFE.x
 
 miniFE.x:common_files $(MAIN_OBJ) $(OBJS) $(UTIL_OBJS) $(OPTIONAL_OBJS) *.hpp generate_info
 	$(INSTRUMENT) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(MAIN_OBJ) $(OBJS) $(UTIL_OBJS) $(OPTIONAL_OBJS) -o miniFE.x $(LDFLAGS) $(OPTIONAL_LIBS) $(LIBS)
 
-llov:common_files $(MAIN_OBJ) $(OBJS) $(UTIL_OBJS) $(OPTIONAL_OBJS) *.hpp generate_info
-
 common_files:
-	./src/get_common_files
+	./get_common_files
 
 generate_info:
-	./src/generate_info_header "$(CXX)" "$(CXXFLAGS)" "miniFE" "MINIFE"
+	./generate_info_header "$(CXX)" "$(CXXFLAGS)" "miniFE" "MINIFE"
 
 verify:all
-	./basic/run_tests
+	./run_tests
 
 %.o:%.cpp *.hpp
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -DMINIFE_INFO=$(MINIFE_INFO) -DMINIFE_KERNELS=$(MINIFE_KERNELS) -c $<
