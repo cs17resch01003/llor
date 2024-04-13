@@ -57,7 +57,7 @@ namespace LLOR.Repair
         private static IEnumerable<FileInfo> Transform(DirectoryInfo inputDirectory)
         {
             List<FileInfo> files = new List<FileInfo>();
-            foreach (FileInfo inputFile in inputDirectory.EnumerateFiles("*.ll"))
+            foreach (FileInfo inputFile in inputDirectory.EnumerateFiles("*.ll", SearchOption.AllDirectories))
             {
                 Transform(inputFile);
                 files.Add(inputFile);

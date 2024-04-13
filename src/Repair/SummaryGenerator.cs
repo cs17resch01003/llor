@@ -8,42 +8,28 @@ namespace LLOR.Repair
 
     public class SummaryGenerator
     {
-        private string basePath;
-
-        private string baseName;
+        private Repairer repairer;
 
         private Verifier verifier;
 
-        private Repairer repairer;
-
         private Metadata metadata;
-
-        private FileInfo? sourceFile;
 
         private string? language;
 
         private string[]? fileContent;
 
         public SummaryGenerator(
-            FileInfo inputFile, Verifier verifier, Repairer repairer,
-            Metadata metadata, Options options)
+            Verifier verifier, Repairer repairer, Metadata metadata)
         {
-            if (inputFile.Directory == null)
-                throw new ArgumentNullException(nameof(inputFile.Directory));
-                
-            basePath = inputFile.Directory.FullName;
-            baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
-
-            this.verifier = verifier;
             this.repairer = repairer;
+            this.verifier = verifier;
             this.metadata = metadata;
 
-            sourceFile = verifier.GetSource(options);
-            if (sourceFile != null)
+            if (metadata.SourceFile != null)
             {
-                string extension = sourceFile.Extension;
+                string extension = metadata.SourceFile .Extension;
                 language = extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "Fortran" : "C";
-                fileContent = File.ReadAllLines(sourceFile.FullName);
+                fileContent = File.ReadAllLines(metadata.SourceFile.FullName);
             }
         }
 
@@ -64,7 +50,8 @@ namespace LLOR.Repair
 
         public void WriteSummary(IEnumerable<string> lines)
         {
-            string summary_path = basePath + Path.DirectorySeparatorChar + baseName + ".summary";
+            string basePath = metadata.BasePath + Path.DirectorySeparatorChar + metadata.BaseName;
+            string summary_path = basePath + ".summary";
             if (lines.Any())
                 File.WriteAllLines(summary_path, lines.Distinct());
         }
@@ -95,7 +82,8 @@ namespace LLOR.Repair
                 add.Count == remove.Count ||
                 add.Count - remove.Count >= metadata.Existing.Count(x => x.BarrierType == "barrier"));
 
-            string fileDescription = includeFilename && sourceFile != null ? $" in {sourceFile.FullName}" : string.Empty;
+            string? sourceFile = metadata.SourceFile?.FullName;
+            string fileDescription = includeFilename && sourceFile != null ? $" in {sourceFile}" : string.Empty;
 
             List<string> lines = new List<string>();
             foreach (int line in add)
@@ -182,7 +170,8 @@ namespace LLOR.Repair
                 create.Count == remove.Count ||
                 create.Count - remove.Count >= metadata.Existing.Count(x => x.BarrierType == "ordered"));
 
-            string fileDescription = includeFilename && sourceFile != null ? $" in {sourceFile.FullName}" : string.Empty;
+            string? sourceFile = metadata.SourceFile?.FullName;
+            string fileDescription = includeFilename && sourceFile != null ? $" in {sourceFile}" : string.Empty;
 
             List<string> lines = new List<string>();
             foreach ((int, int) range in create)

@@ -2,6 +2,7 @@ namespace LLOR.Repair
 {
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using LLOR.Common;
     using LLOR.Repair.Exceptions;
     
@@ -19,16 +20,18 @@ namespace LLOR.Repair
             this.instrumentor = instrumentor;
         }
 
-        public Dictionary<string, bool> Repair(Options options)
+        public Dictionary<string, bool> Repair(Options options, CancellationToken ct)
         {
             Solver.SolverType solverType = options.SolverType;
             Dictionary<string, bool> assignments = new Dictionary<string, bool>();
 
             try
             {
-                verifier.ValidateSource(options);
+                verifier.ValidateSource();
                 while (true)
                 {
+                    ct.ThrowIfCancellationRequested();
+
                     IEnumerable<DataRace> current_races = verifier.Verify();
                     if (!current_races.Any())
                     {

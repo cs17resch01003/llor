@@ -1,62 +1,56 @@
 namespace LLOR.Repair
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
     using LLOR.Common;
+    using LLOR.Common.Exceptions;
     using LLOR.Repair.Diagnostics;
     using LLOR.Repair.Exceptions;
     
     public class Verifier
     {
+        private Metadata metadata;
+
         private string basePath;
 
-        private string baseName;
-
-        public Verifier(FileInfo inputFile)
+        public Verifier(Metadata metadata)
         {
-            if (inputFile.Directory == null)
-                throw new ArgumentNullException(nameof(inputFile.Directory));
-                
-            basePath = inputFile.Directory.FullName;
-            baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+            this.metadata = metadata;
+            basePath = metadata.BasePath + Path.DirectorySeparatorChar + metadata.BaseName;
         }
     
-        public List<DataRace> Verify()
+        public List<DataRace> Verify(string extension = "inst")
         {
-            using (Watch watch = new Watch(Measure.Verification))
+            try
             {
-                List<DataRace> races = new List<DataRace>();
+                using (Watch watch = new Watch(Measure.Verification))
+                {
+                    List<DataRace> races = new List<DataRace>();
 
-                // verify <input>.inst.ll
-                string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
-                string arguments = $"-load OpenMPVerify.so -disable-output -openmp-verify-mhp {inst_path}";
+                    // verify <input>.inst.ll
+                    string path = basePath + $".{extension}.ll";
+                    string arguments = $"-load OpenMPVerify.so -disable-output -openmp-verify-mhp {path}";
 
-                CommandOutput output = CommandRunner.RunCommand("opt", arguments);
-                return GetDataRaces(output);
+                    CommandOutput output = CommandRunner.RunCommand("opt", arguments);
+                    return GetDataRaces(output);
+                }
+            }
+            catch (CommandLineException ex)
+            {
+                throw new VerificationException(StatusCode.Fail, ex.Message);
             }
         }
 
         public List<DataRace> VerifySource()
         {
-            using (Watch watch = new Watch(Measure.Verification))
-            {
-                List<DataRace> races = new List<DataRace>();
-
-                // verify <input>.sb.ll
-                string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
-                string arguments = $"-load OpenMPVerify.so -disable-output -openmp-verify-mhp {sb_path}";
-
-                CommandOutput output = CommandRunner.RunCommand("opt", arguments);
-                return GetDataRaces(output);
-            }
+            return Verify("sb");
         }
 
-        public void ValidateSource(Options options)
+        public void ValidateSource()
         {
-            FileInfo? inputFile = GetSource(options);
+            FileInfo? inputFile = metadata.SourceFile;
             if (inputFile == null)
                 return;
 
@@ -77,31 +71,6 @@ namespace LLOR.Repair
                         throw new RepairException(StatusCode.Unsupported, "Data races inside a simd section cannot be repaired!");
                 }
             }
-        }
-
-        public FileInfo? GetSource(Options options)
-        {
-            FileInfo? inputFile = null;
-            if (File.Exists(options.Path))
-            {
-                inputFile = new FileInfo(options.Path);
-            }
-            else
-            {
-                string source_path = basePath + Path.DirectorySeparatorChar + baseName + ".c";
-                if (File.Exists(source_path))
-                    inputFile = new FileInfo(source_path);
-                
-                source_path = basePath + Path.DirectorySeparatorChar + baseName + ".cpp";
-                if (File.Exists(source_path))
-                    inputFile = new FileInfo(source_path);
-
-                source_path = basePath + Path.DirectorySeparatorChar + baseName + ".h";
-                if (File.Exists(source_path))
-                    inputFile = new FileInfo(source_path);
-            }
-
-            return inputFile;
         }
 
         private List<DataRace> GetDataRaces(CommandOutput output)

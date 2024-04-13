@@ -8,6 +8,9 @@ namespace LLOR.Repair
 
         [Option('p', "path", Required = true, HelpText = "The program to repair.")]
         public string Path { get; set; } = string.Empty;
+
+        [Option('p', "timeout", Required = false, HelpText = "The repair timeout.")]
+        public int Timeout { get; set; } = 300;
         
         [Option('d', "detailedlogging", Required = false, HelpText = "Enables detailed logging.")]
         public bool DetailedLogging { get; set; } = false;

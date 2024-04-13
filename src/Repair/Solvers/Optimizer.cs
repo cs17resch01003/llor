@@ -24,6 +24,10 @@ namespace LLOR.Repair.Solvers
                 Solver solver = context.MkSolver();
                 solver.Assert(clauses.ToArray());
 
+                Params parameters = context.MkParams();
+                parameters.Add("timeout", 10000);
+                solver.Parameters = parameters;
+
                 BoolExpr condition = context.MkPBLe(
                     variables.Values.Select(x => 1).ToArray(),
                     variables.Values.Select(x => x.Positive).ToArray(),

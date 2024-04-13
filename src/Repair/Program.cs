@@ -4,6 +4,8 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using CommandLine;
     using LLOR.Common;
     using LLOR.Common.Exceptions;
@@ -31,56 +33,113 @@
                 IEnumerable<FileInfo> files = Initializer.Initialize(options.Path);
                 foreach (FileInfo file in files)
                 {
-                    try
+                    CancellationTokenSource source = new CancellationTokenSource();
+                    CancellationToken ct = source.Token;
+
+                    List<string> file_changes = new List<string>();
+                    bool completed = false;
+
+                    Task task = Task.Run(() =>
                     {
-                        Instrumentor instrumentor = new Instrumentor(file);
-                        instrumentor.Instrument(options);
-                        Logger.Log($"Barriers;{instrumentor.Metadata.Barriers.Count()}");
+                        file_changes = RepairFile(file, options, files.Count() == 1, ct, ref completed);
+                    });
 
-                        Verifier verifier = new Verifier(file);
-
-                        Repairer repairer = new Repairer(verifier, instrumentor);
-                        Dictionary<string, bool> assignments = repairer.Repair(options);
-
-                        IEnumerable<string> temp = new List<string>();
-                        if (assignments.Any(x => x.Value) || instrumentor.Metadata.Existing.Any())
-                        {
-                            SummaryGenerator generator = new SummaryGenerator(
-                                file, verifier, repairer, instrumentor.Metadata, options);
-                            temp = generator.GenerateSummary(assignments, files.Count() > 1);
-                            changes.AddRange(temp);
-
-                            if (files.Count() == 1)
-                                generator.WriteSummary(changes);
-                        }
-
-                        CleanFiles(file, options, temp.Count());
-                    }
-                    catch (RepairException ex)
+                    if (!task.Wait(options.Timeout * 1000))
                     {
-                        HandleException(file, options, ex.StatusCode, ex.Message);
+                        source.Cancel();
+                        while (!task.Wait(1000));
                     }
-                    catch (CommandLineException ex)
-                    {
-                        HandleException(file, options, ex.StatusCode, ex.Message);
-                    }
+
+                    changes.AddRange(file_changes);
                 }
 
-                if (files.Count() != 1)
+                if (files.Count() != 1 && changes.Any())
                     SummaryGenerator.WriteSummary(new DirectoryInfo(options.Path).FullName, changes);
                     
                 Logger.Log($"Changes;{changes.Count()}");
-                foreach (string change in changes)
-                    Console.WriteLine(change);
             }
         }
 
+        private static List<string> RepairFile(FileInfo file, Options options, bool singleFile,
+            CancellationToken ct, ref bool completed)
+        {
+            Instrumentor instrumentor = new Instrumentor(file, options);
+            Verifier verifier = new Verifier(instrumentor.Metadata);
+            Repairer repairer = new Repairer(verifier, instrumentor);
+
+            List<string> changes = new List<string>();
+            try
+            {
+                instrumentor.Instrument(options);
+                Logger.Log($"Barriers;{instrumentor.Metadata.Barriers.Count()}");
+
+                Dictionary<string, bool> assignments = repairer.Repair(options, ct);
+
+                SummaryGenerator generator = new SummaryGenerator(verifier, repairer, instrumentor.Metadata);
+                if (assignments.Any(x => x.Value) || instrumentor.Metadata.Existing.Any())
+                    changes = generator.GenerateSummary(assignments, !singleFile).ToList();
+
+                if (singleFile && changes.Any())
+                    generator.WriteSummary(changes);
+
+                CleanFiles(file, options, changes.Count());
+            }
+            catch (OperationCanceledException)
+            {
+                FileInfo? sourceFile = instrumentor.Metadata.SourceFile;
+                string message = $"Repair of {sourceFile?.FullName} timed out.";
+
+                HandleException(file, options, message, changes);
+            }
+            catch (RepairException ex)
+            {
+                if (singleFile)
+                    PrintException(file, options, ex.StatusCode, ex.Message);
+                else
+                {
+                    FileInfo? sourceFile = instrumentor.Metadata.SourceFile;
+                    string message = $"Repair of {sourceFile?.FullName} failed.";
+
+                    HandleException(file, options, message, changes);
+                }
+            }
+            catch (VerificationException ex)
+            {
+                if (singleFile)
+                    PrintException(file, options, ex.StatusCode, ex.Message);
+                else
+                {
+                    FileInfo? sourceFile = instrumentor.Metadata.SourceFile;
+                    string message = $"Verification of {sourceFile?.FullName} failed.";
+
+                    HandleException(file, options, message, changes);
+                }
+            }
+            catch (CommandLineException ex)
+            {
+                PrintException(file, options, ex.StatusCode, ex.Message);
+            }
+
+            foreach (string change in changes)
+                Console.WriteLine(change);
+            
+            completed = true;
+            return changes;
+        }
+
         private static void HandleException(
+            FileInfo inputFile, Options options, string message, List<string> changes)
+        {
+            CleanFiles(inputFile, options);
+            changes.Add(message);
+        }
+
+        private static void PrintException(
             FileInfo inputFile, Options options, StatusCode statusCode, string message)
         {
             CleanFiles(inputFile, options);
-            Console.WriteLine(message);
 
+            Console.WriteLine(message);
             Environment.Exit((int)statusCode);
         }
 

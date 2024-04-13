@@ -11,18 +11,13 @@ namespace LLOR.Repair
     public class Instrumentor
     {
         public Metadata Metadata = new Metadata();
-        
+
         private string basePath;
 
-        private string baseName;
-
-        public Instrumentor(FileInfo inputFile)
+        public Instrumentor(FileInfo inputFile, Options options)
         {
-            if (inputFile.Directory == null)
-                throw new ArgumentNullException(nameof(inputFile.Directory));
-                
-            basePath = inputFile.Directory.FullName;
-            baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+            Metadata.PopulateData(inputFile, options);
+            basePath = Metadata.BasePath + Path.DirectorySeparatorChar + Metadata.BaseName;
         }
 
         public void Instrument(Options options)
@@ -34,8 +29,8 @@ namespace LLOR.Repair
             }
 
             // generate <input>.inst.ll
-            string sb_path = basePath + Path.DirectorySeparatorChar + baseName + ".sb.ll";
-            string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
+            string sb_path = basePath + ".sb.ll";
+            string inst_path = basePath + ".inst.ll";
 
             string arguments = $"-load OpenMPRepair.so -openmp-repair {sb_path} -S -o {inst_path} -initialize";
             if (extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase))
@@ -91,7 +86,7 @@ namespace LLOR.Repair
 
         public void Update(Dictionary<string, bool> assignments)
         {
-            string inst_path = basePath + Path.DirectorySeparatorChar + baseName + ".inst.ll";
+            string inst_path = basePath + ".inst.ll";
             ResetBarriers(inst_path);
             UpdateBarriers(inst_path, assignments);
 

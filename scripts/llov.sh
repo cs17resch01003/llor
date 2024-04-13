@@ -9,7 +9,7 @@ llov_compile $input
 if [[ $extension == $input ]]
 then
     cd $input
-    for file in *.ll; do
+    for file in `find . -name '*.ll' -type f`; do
         llov_transform $file
         filepath=${file%.*}
 

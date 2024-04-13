@@ -12,7 +12,7 @@ elif [[ $extension == $input ]]
 then
     cd $input
     make llov
-    for file in *.o; do
+    for file in `find . -name '*.o' -type f`; do
         mv -- "$file" "${file%.o}.ll"
     done
 else
