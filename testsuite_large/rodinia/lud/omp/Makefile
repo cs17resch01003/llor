@@ -1,3 +1,7 @@
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
 # Makefile for LU Decomposition
 #
 #
@@ -95,6 +99,13 @@ ifeq ($(strip $(CPP_SOURCES)),)
 else
 	$(CXX) $(ALL_LFLAGS) -o $(EXECUTABLE) $(OBJECTS) $(LOCAL_LIBSS) $(GLOBAL_LIBSS) $(SYS_LIBS)
 endif
+
+CC   = mpicc
+LD   = mpicc
+CC_FLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src -I../common
+
+llov:		$(C_SOURCES)
+				$(CC)  -c $(CC_FLAGS) $<
 
 # ------------  make the objects  ----------------------------------------------
 %.o:		%.c

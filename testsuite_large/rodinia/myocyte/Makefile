@@ -1,3 +1,11 @@
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
+CC   = mpicc
+LD   = mpicc
+CC_FLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+
 # Example
 # target: dependencies
 	# command 1
@@ -6,6 +14,19 @@
           # .
           # .
 	# command n
+
+llov: 	main.c \
+				define.c \
+				ecc.c \
+				cam.c \
+				fin.c \
+				master.c \
+				embedded_fehlberg_7_8.c \
+				solver.c \
+				file.c \
+				timer.c
+	$(CC) $(CC_FLAGS)	main.c \
+			-c -O3 -fopenmp
 
 # link objects(binaries) together
 myocyte.out:	main.o

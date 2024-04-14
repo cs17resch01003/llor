@@ -12,7 +12,7 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net6.0/Repair.dll",
             "args": [
-                "--path", "/datadrive/llor/testsuite/baseline/B01_simple_race.c",
+                "--path", "/datadrive/llor/testsuite_large/exascale/XSBench",
                 "--detailedlogging",
                 "--solvertype", "mhs"
             ],
