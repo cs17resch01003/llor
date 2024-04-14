@@ -1,4 +1,4 @@
 //; Pass
-//; Create an ordered region covering lines 88 to 101 in /datadrive/llor/testsuite/exascale/miniAMR/stencil.c.
-//; Create an ordered region covering lines 111 to 146 in /datadrive/llor/testsuite/exascale/miniAMR/stencil.c.
-//; Create an ordered region covering lines 87 to 137 in /datadrive/llor/testsuite/exascale/miniAMR/move.c.
+//; Create an ordered region covering lines 87 to 137 in /datadrive/llor/testsuite_large/exascale/miniAMR/move.c.
+//; Create an ordered region covering lines 88 to 101 in /datadrive/llor/testsuite_large/exascale/miniAMR/stencil.c.
+//; Create an ordered region covering lines 111 to 146 in /datadrive/llor/testsuite_large/exascale/miniAMR/stencil.c.
