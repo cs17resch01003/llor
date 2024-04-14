@@ -76,6 +76,14 @@ namespace LLOR.Repair
 
                 assignments.Clear();
             }
+            catch (UnsupportedException)
+            {
+                IEnumerable<DataRace> races = verifier.VerifySource();
+                if (races.Any())
+                    throw;
+
+                assignments.Clear();
+            }
 
             return assignments;
         }
