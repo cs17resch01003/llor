@@ -1,5 +1,12 @@
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
 
-CXX = CC
+CC   = mpicc
+LD   = mpicc
+CFLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+
+CXX = ${CC}
 
 USE_TAUPROF=0
 ifeq ($(USE_TAUPROF),1)
@@ -12,12 +19,14 @@ OPTFLAGS = -O3 -xHost -qopenmp -DPRINT_DIST_STATS #-DPRINT_EXTRA_NEDGES #-DUSE_M
 #-DUSE_MPI_COLLECTIVES
 # use export ASAN_OPTIONS=verbosity=1 to check ASAN output
 SNTFLAGS = -std=c++11 -fopenmp -fsanitize=address -O1 -fno-omit-frame-pointer
-CXXFLAGS = -std=c++11 -g $(OPTFLAGS)
+CXXFLAGS = -std=c++11 -g $(CFLAGS)
 
 OBJ = main.o
 TARGET = miniVite
 
 all: $(TARGET)
+
+llov: ${OBJ}
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
