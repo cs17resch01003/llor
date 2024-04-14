@@ -98,6 +98,11 @@ namespace LLOR.Repair
             }
             else
             {
+                if (result.StatusCode == StatusCode.Unsupported)
+                    throw new UnsupportedException(
+                        result.StatusCode,
+                        string.Join('\n', output.StandardError));
+
                 throw new RepairException(
                     result.StatusCode,
                     string.Join('\n', output.StandardError));
