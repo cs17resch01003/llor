@@ -75,8 +75,20 @@ namespace LLOR.Repair
             List<string> lines = new List<string>();
             foreach (Location location in add)
             {
-                string sourceFile = new FileInfo(location.File).FullName;
-                string fileDescription = includeFilename ? $" in {sourceFile}" : string.Empty;
+
+                FileInfo file;
+
+                string path = Path.Combine(metadata.BasePath, location.File);
+                if (File.Exists(path))
+                    file = new FileInfo(path);
+                else
+                {
+                    file = new FileInfo(location.File);
+                    if (!File.Exists(file.FullName))
+                        continue;
+                }
+
+                string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
                 int line = location.Line;
 
                 lines.Add($"Add a barrier at line number {line}{fileDescription}.");
@@ -84,8 +96,19 @@ namespace LLOR.Repair
 
             foreach (Location location in remove)
             {
-                string sourceFile = new FileInfo(location.File).FullName;
-                string fileDescription = includeFilename ? $" in {sourceFile}" : string.Empty;
+                FileInfo file;
+
+                string path = Path.Combine(metadata.BasePath, location.File);
+                if (File.Exists(path))
+                    file = new FileInfo(path);
+                else
+                {
+                    file = new FileInfo(location.File);
+                    if (!File.Exists(file.FullName))
+                        continue;
+                }
+
+                string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
                 int line = location.Line;
 
                 lines.Add($"Remove the barrier at line number {line}{fileDescription}.");
@@ -198,9 +221,19 @@ namespace LLOR.Repair
             List<string> lines = new List<string>();
             foreach ((string, int, int) range in create)
             {
-                string sourceFile = new FileInfo(range.Item1).FullName;
-                string fileDescription = includeFilename ? $" in {sourceFile}" : string.Empty;
+                FileInfo file;
 
+                string path = Path.Combine(metadata.BasePath, range.Item1);
+                if (File.Exists(path))
+                    file = new FileInfo(path);
+                else
+                {
+                    file = new FileInfo(range.Item1);
+                    if (!File.Exists(file.FullName))
+                        continue;
+                }
+
+                string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
                 if (range.Item2 == range.Item3)
                     lines.Add($"Create an ordered region covering line {range.Item2}{fileDescription}.");
                 else
@@ -209,9 +242,19 @@ namespace LLOR.Repair
 
             foreach (Location location in remove)
             {
-                string sourceFile = new FileInfo(location.File).FullName;
-                string fileDescription = includeFilename ? $" in {sourceFile}" : string.Empty;
+                FileInfo file;
 
+                string path = Path.Combine(metadata.BasePath, location.File);
+                if (File.Exists(path))
+                    file = new FileInfo(path);
+                else
+                {
+                    file = new FileInfo(location.File);
+                    if (!File.Exists(file.FullName))
+                        continue;
+                }
+
+                string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
                 lines.Add($"Remove the ordered region at line number {location.Line}{fileDescription}.");
             }
 
