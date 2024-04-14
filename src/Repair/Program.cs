@@ -110,6 +110,20 @@
                     HandleException(file, options, message, changes);
                 }
             }
+            catch (UnsupportedException ex)
+            {
+                status = StatusCode.Unsupported;
+                if (singleFile)
+                    PrintException(file, options, status, ex.Message);
+                else
+                {
+                    FileInfo? sourceFile = instrumentor.Metadata.SourceFile;
+                    string source = sourceFile == null ? file.FullName : sourceFile.FullName;
+                    string message = $"Repair of {source} is unsupported.";
+
+                    HandleException(file, options, message, changes);
+                }
+            }
             catch (VerificationException ex)
             {
                 status = StatusCode.Fail;

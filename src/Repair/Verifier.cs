@@ -73,9 +73,9 @@ namespace LLOR.Repair
                 if (language != "C" || !temp.StartsWith("//"))
                 {
                     if (temp.Contains(section))
-                        throw new RepairException(StatusCode.Unsupported, "Data races across sections cannot be repaired!");
+                        throw new UnsupportedException(StatusCode.Unsupported, "Data races across sections cannot be repaired!");
                     else if (temp.Contains(simd))
-                        throw new RepairException(StatusCode.Unsupported, "Data races inside a simd section cannot be repaired!");
+                        throw new UnsupportedException(StatusCode.Unsupported, "Data races inside a simd section cannot be repaired!");
                 }
             }
         }
