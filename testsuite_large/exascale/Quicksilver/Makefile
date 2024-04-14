@@ -100,6 +100,25 @@ SHELL = /bin/bash
 # The interpretation of each of these four variables is described above.
 # A number of examples for machines we regularly run on are given below.
 
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
+CC   = mpicc
+LD   = mpicc
+CXX  = mpic++
+
+CFLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+OPENMP_FLAGS = -DHAVE_OPENMP -fopenmp
+
+CUDA_PATH = /usr/local/cuda
+CUDA_FLAGS = -I${CUDA_PATH}/include/
+CUDA_LDFLAGS = -L${CUDA_PATH}/lib64/ -lcuda -lcudart
+
+CPPFLAGS = ${OPENMP_FLAGS} ${CFLAGS}
+CXXFLAGS = -std=c++11 ${CFLAGS}
+LDFLAGS  = -Wl,-rpath,. -fopenmp
+
 #AMD with openMP
 #ROCM_ROOT = /opt/rocm-5.6.0
 #CXX = /usr/tce/packages/cray-mpich/cray-mpich-8.1.26-rocmcc-5.6.0-cce-16.0.0a-magic/bin/mpicxx
@@ -108,11 +127,11 @@ SHELL = /bin/bash
 #LDFLAGS = -L$(ROCM_ROOT)/lib -lamdhip64
 
 #AMD with HIP
-ROCM_ROOT = /opt/rocm-5.6.0
-CXX = /usr/tce/packages/cray-mpich/cray-mpich-8.1.26-rocmcc-5.6.0-cce-16.0.0a-magic/bin/mpicxx
-CXXFLAGS = -g 
-CPPFLAGS = -DHAVE_MPI -DHAVE_HIP -x hip --offload-arch=gfx90a -fgpu-rdc -Wno-unused-result
-LDFLAGS = -fgpu-rdc --hip-link --offload-arch=gfx90a
+#ROCM_ROOT = /opt/rocm-5.6.0
+#CXX = /usr/tce/packages/cray-mpich/cray-mpich-8.1.26-rocmcc-5.6.0-cce-16.0.0a-magic/bin/mpicxx
+#CXXFLAGS = -g 
+#CPPFLAGS = -DHAVE_MPI -DHAVE_HIP -x hip --offload-arch=gfx90a -fgpu-rdc -Wno-unused-result
+#LDFLAGS = -fgpu-rdc --hip-link --offload-arch=gfx90a
 
 
 
@@ -348,6 +367,8 @@ git_vers.hh:
 
 ${Quicksilver_EXE}: git_hash.hh git_vers.hh ${CC_OBJECTS}  
 	${CXX} ${CXXFLAGS} ${LDFLAGS} -o ${Quicksilver_EXE} ${CC_OBJECTS}
+
+llov: git_hash.hh git_vers.hh ${CC_OBJECTS}
 
 clean:
 	rm -f *.o git_hash.hh git_vers.hh .depend load.map *.core *.optrpt
