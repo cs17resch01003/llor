@@ -308,10 +308,10 @@ namespace LLOR.Repair
         private FileInfo? GetFile(Location location)
         {
             FileInfo? file;
-            if (inputFile.Directory == null)
-                throw new ArgumentNullException(nameof(inputFile.Directory));
+            if (inputFile == null || inputFile.Directory == null)
+                throw new ArgumentNullException(nameof(inputFile));
 
-            string path = Path.Combine(inputFile.Directory.FullName, location.File);
+            string path = Path.Combine(inputFile.Directory.FullName, new FileInfo(location.File).Name);
             if (File.Exists(path))
                 file = new FileInfo(path);
             else
