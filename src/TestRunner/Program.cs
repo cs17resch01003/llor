@@ -113,12 +113,19 @@ namespace LLOR.TestRunner
             RepairResult value = new RepairResult();
             value.Path = path.FullName;
 
+            int timeout = 5*60*1000;
+
             string arguments = $"--path {path.FullName} --testonly";
             if (solverType != null)
                 arguments += " --solvertype " + solverType;
+            if (path is DirectoryInfo)
+            {
+                timeout = 24*60*60*1000;
+                arguments += " --timeout 60";
+            }
 
             Stopwatch watch = Stopwatch.StartNew();
-            CommandOutput output = CommandRunner.RunCommand("llor", arguments);
+            CommandOutput output = CommandRunner.RunCommand("llor", arguments, timeout);
             value.TimeTaken = watch.ElapsedMilliseconds;
 
             Output actual = PopulateActual(output, value);
