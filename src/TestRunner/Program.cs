@@ -197,10 +197,9 @@ namespace LLOR.TestRunner
             int total = value.Statuses.Sum(x => x.Value);
             if (total > 1)
             {
-                if (value.Statuses.ContainsKey(StatusCode.Pass))
+                if (value.Statuses.Count == 1)
                 {
-                    if (value.Statuses[StatusCode.Pass] == total)
-                        actual.StatusCode = StatusCode.Pass;
+                    actual.StatusCode = value.Statuses.Keys.First();
                 }
                 else if (value.Statuses.ContainsKey(StatusCode.Timeout))
                 {
@@ -209,18 +208,25 @@ namespace LLOR.TestRunner
                     else
                         actual.StatusCode = StatusCode.PartialTimeout;
                 }
-                else if (value.Statuses.Count == 1)
-                {
-                    actual.StatusCode = value.Statuses.Keys.First();
-                }
                 else
                 {
-                    if (value.Statuses.ContainsKey(StatusCode.RepairError))
-                        actual.StatusCode = StatusCode.RepairError;
-                    else if (value.Statuses.ContainsKey(StatusCode.Fail))
-                        actual.StatusCode = StatusCode.Fail;
+                    value.Statuses.Remove(StatusCode.Unsupported);
+                    total = value.Statuses.Sum(x => x.Value);
+
+                    if (value.Statuses.ContainsKey(StatusCode.Pass))
+                    {
+                        if (value.Statuses[StatusCode.Pass] == total)
+                            actual.StatusCode = StatusCode.Pass;
+                    }
                     else
-                        actual.StatusCode = StatusCode.Error;
+                    {
+                        if (value.Statuses.ContainsKey(StatusCode.RepairError))
+                            actual.StatusCode = StatusCode.RepairError;
+                        else if (value.Statuses.ContainsKey(StatusCode.Fail))
+                            actual.StatusCode = StatusCode.Fail;
+                        else
+                            actual.StatusCode = StatusCode.Error;
+                    }
                 }
             }
 
