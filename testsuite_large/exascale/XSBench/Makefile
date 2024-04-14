@@ -97,6 +97,14 @@ ifeq ($(AML),yes)
   CFLAGS += -DAML $(shell pkg-config --cflags aml)
 endif
 
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
+CC   = mpicc
+LD   = mpicc
+CFLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+
 #===============================================================================
 # Targets to Build
 #===============================================================================
@@ -106,6 +114,8 @@ $(program): $(obj) XSbench_header.h Makefile
 
 %.o: %.c XSbench_header.h Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
+
+llov: $(obj) XSbench_header.h Makefile
 
 clean:
 	rm -rf $(program) $(obj)
