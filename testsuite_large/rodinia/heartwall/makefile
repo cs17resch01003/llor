@@ -1,7 +1,17 @@
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
+CC   = mpicc
+LD   = mpicc
+CC_FLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
 
 ifdef OUTPUT
 override OUTPUT = -DOUTPUT
 endif
+
+llov: main.c define.c kernel.c
+	${CC} ${CC_FLAGS} $(OUTPUT) main.c -I./AVI -c -O3 -fopenmp
 
 # link objects(binaries) together
 heartwall: main.o ./AVI/avilib.o ./AVI/avimod.o

@@ -1,7 +1,10 @@
+llov:
+	cd OpenMP; make llov
+
 all: OpenMP/leukocyte
 
 OpenMP/leukocyte:
-	cd OpenMP; make
+	cd OpenMP; make llov
 
 clean:
 	cd OpenMP; make clean
