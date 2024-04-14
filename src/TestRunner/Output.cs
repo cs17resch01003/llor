@@ -39,6 +39,7 @@ namespace LLOR.TestRunner
                 if (!line.StartsWith("Instructions") &&
                     !line.StartsWith("Barriers") &&
                     !line.StartsWith("Changes") &&
+                    !line.StartsWith("StatusCode") &&
                     !line.StartsWith("Watch"))
                 {
                     filtered.Add(line);
