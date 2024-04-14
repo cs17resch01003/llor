@@ -8,6 +8,17 @@
 # use mvapich2-intel-2.1
 #
 
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
+CC   = mpicc
+LD   = mpicc
+CXX  = mpic++
+
+LLOV_FLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+OPENMP_FLAGS = -DHAVE_OPENMP -fopenmp
+
 ifneq ($(ckernel),yes)
    ckernel := "no"
 endif
@@ -130,7 +141,6 @@ else ifeq ($(findstring lassen,$(HOSTNAME)),lassen)
   computername := lassen
 else
   FC  = mpif90
-  CXX = mpic++
   OMPOPT = -fopenmp
   EXTRA_LINK_FLAGS = -lgfortran -lblas -llapack
   openmp = no
@@ -243,6 +253,8 @@ endif
 FOBJ = $(addprefix $(builddir)/,$(OBJ))
 PMODS  = $(addprefix $(builddir)/,$(FMODS))
 
+CXXFLAGS += ${LLOV_FLAGS}
+
 sw4lite: $(PMODS) $(FOBJ)
 	@echo "********* User configuration variables **************"
 	@echo "ckernel=" $(ckernel) " debug=" $(debug) " proj=" $(proj) " etree=" $(etree) " SW4ROOT"= $(SW4ROOT) 
@@ -253,6 +265,8 @@ sw4lite: $(PMODS) $(FOBJ)
 	cd $(builddir); $(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(linklibs)
 	@cat wave.txt
 	@echo "*** Build directory: " $(builddir) " ***"
+
+llov: $(PMODS) $(FOBJ)
 
 OBJ2 =  testil.o rhs4sg.o rhs4sg_rev.o gettimec.o rhs4th3fort.o boundaryOp.o
 FOBJ2 = $(addprefix $(builddir)/,$(OBJ2))
