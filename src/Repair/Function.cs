@@ -12,13 +12,14 @@ namespace LLOR.Repair
 
         public Function(
             string functionName,
+            string file,
             int start,
             int? end)
         {
             FunctionName = functionName;
-            Start = new Location(start, 0);
+            Start = new Location(file, start, 0);
             if (end != null)
-                End = new Location(end.Value, 0);
+                End = new Location(file, end.Value, 0);
         }
     }
 }

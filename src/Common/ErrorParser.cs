@@ -36,6 +36,7 @@ namespace LLOR.Common
 
                     string[] parts = line.Split(":");
                     Location location = new Location(
+                        string.Empty,
                         int.Parse(parts[2]),
                         int.Parse(parts[3]));
 

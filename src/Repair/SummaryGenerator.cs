@@ -5,6 +5,7 @@ namespace LLOR.Repair
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using LLOR.Common;
 
     public class SummaryGenerator
     {
@@ -14,23 +15,12 @@ namespace LLOR.Repair
 
         private Metadata metadata;
 
-        private string? language;
-
-        private string[]? fileContent;
-
         public SummaryGenerator(
             Verifier verifier, Repairer repairer, Metadata metadata)
         {
             this.repairer = repairer;
             this.verifier = verifier;
             this.metadata = metadata;
-
-            if (metadata.SourceFile != null)
-            {
-                string extension = metadata.SourceFile .Extension;
-                language = extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "Fortran" : "C";
-                fileContent = File.ReadAllLines(metadata.SourceFile.FullName);
-            }
         }
 
         public static void WriteSummary(string basePath, IEnumerable<string> lines)
@@ -74,31 +64,40 @@ namespace LLOR.Repair
 
         private (bool, List<string>) GenerateBarrierSummary(Dictionary<string, bool> assignments, bool includeFilename)
         {
-            (List<int>, List<int>) barriers = GenerateBarrierSummary(assignments);
-            List<int> add = barriers.Item1;
-            List<int> remove = barriers.Item2;
+            (List<Location>, List<Location>) barriers = GenerateBarrierSummary(assignments);
+            List<Location> add = barriers.Item1;
+            List<Location> remove = barriers.Item2;
 
             bool barriers_check = (add.Any() || remove.Any()) && (
                 add.Count == remove.Count ||
                 add.Count - remove.Count >= metadata.Existing.Count(x => x.BarrierType == "barrier"));
 
-            string? sourceFile = metadata.SourceFile?.FullName;
-            string fileDescription = includeFilename && sourceFile != null ? $" in {sourceFile}" : string.Empty;
-
             List<string> lines = new List<string>();
-            foreach (int line in add)
-                lines.Add($"Add a barrier at line number {line}{fileDescription}.");
+            foreach (Location location in add)
+            {
+                string sourceFile = new FileInfo(location.File).FullName;
+                string fileDescription = includeFilename ? $" in {sourceFile}" : string.Empty;
+                int line = location.Line;
 
-            foreach (int line in remove)
+                lines.Add($"Add a barrier at line number {line}{fileDescription}.");
+            }
+
+            foreach (Location location in remove)
+            {
+                string sourceFile = new FileInfo(location.File).FullName;
+                string fileDescription = includeFilename ? $" in {sourceFile}" : string.Empty;
+                int line = location.Line;
+
                 lines.Add($"Remove the barrier at line number {line}{fileDescription}.");
+            }
 
             return (barriers_check, lines);
         }
 
-        private (List<int>, List<int>) GenerateBarrierSummary(Dictionary<string, bool> assignments)
+        private (List<Location>, List<Location>) GenerateBarrierSummary(Dictionary<string, bool> assignments)
         {
-            List<int> add = new List<int>();
-            List<int> remove = new List<int>();
+            List<Location> add = new List<Location>();
+            List<Location> remove = new List<Location>();
 
             IEnumerable<Barrier> barriers = assignments.Where(x => x.Value)
                 .Select(x => metadata.Barriers[x.Key])
@@ -106,12 +105,12 @@ namespace LLOR.Repair
             foreach(Barrier barrier in barriers)
             {
                 // an existing barrier at the right place will be at line-1
-                int line = barrier.Location.Line;
                 bool check = !metadata.Existing.Where(x => x.BarrierType == "barrier")
-                    .Any(x => x.Location.Line == line-1);
+                    .Any(x => x.Location.File == barrier.Location.File &&
+                              x.Location.Line == barrier.Location.Line - 1);
 
                 if (check)
-                    add.Add(line);
+                    add.Add(barrier.Location);
             }
 
             foreach (Barrier existing in metadata.Existing.Where(x => x.BarrierType == "barrier"))
@@ -123,8 +122,8 @@ namespace LLOR.Repair
                 foreach(Barrier barrier in barriers)
                 {
                     // an existing barrier at the right place will be at line-1
-                    int line = barrier.Location.Line;
-                    if (existing.Location.Line == line-1)
+                    if (existing.Location.File == barrier.Location.File &&
+                        existing.Location.Line == barrier.Location.Line - 1)
                     {
                         keepExisting = true;
                         break;
@@ -134,74 +133,103 @@ namespace LLOR.Repair
                 if (!keepExisting)
                 {
                     bool check = false;
-                    if (fileContent == null)
-                        check = true;
+                    FileInfo file;
+
+                    string path = Path.Combine(metadata.BasePath, existing.Location.File);
+                    if (File.Exists(path))
+                        file = new FileInfo(path);
                     else
                     {
-                        if (fileContent.Length < existing.Location.Line)
+                        file = new FileInfo(existing.Location.File);
+                        if (!File.Exists(file.FullName))
                             continue;
+                    }
 
-                        string line = fileContent[existing.Location.Line-1];
-                        line = Regex.Replace(line, @"\s+", " ").Trim();
+                    string[] content = File.ReadAllLines(file.FullName);
 
-                        // avoid removing implicit barriers
-                        if ((language == "C" && line.Contains("pragma omp barrier")) ||
-                            (language == "Fortran" && line.Contains("!$omp barrier")))
-                        {
-                            check = true;
-                        }
+                    string line = content[existing.Location.Line-1];
+                    line = Regex.Replace(line, @"\s+", " ").Trim();
+
+                    string extension = file.Extension;
+                    string language = extension.Equals(".f95", StringComparison.InvariantCultureIgnoreCase) ? "Fortran" : "C";
+
+                    // avoid removing implicit barriers
+                    if ((language == "C" && line.Contains("pragma omp barrier")) ||
+                        (language == "Fortran" && line.Contains("!$omp barrier")))
+                    {
+                        check = true;
                     }
 
                     if (check)
-                        remove.Add(existing.Location.Line);
+                        remove.Add(existing.Location);
                 }
             }
-
-            add = add.Distinct().OrderBy(x => x).ToList();
-            remove = remove.Distinct().OrderBy(x => x).ToList();
 
             return (add, remove);
         }
 
         private (bool, List<string>) GenerateOrderedSummary(Dictionary<string, bool> assignments, bool includeFilename)
         {
-            (List<(int, int)>, List<int>) ordered = GenerateOrderedSummary(assignments);
-            List<(int, int)> create = ordered.Item1;
-            List<int> remove = ordered.Item2;
+            (List<(string, int, int)>, List<Location>) ordered = GenerateOrderedSummary(assignments);
+            List<(string, int, int)> create = new List<(string, int, int)>();
+            List<Location> remove = new List<Location>();
+
+            foreach ((string, int, int) tuple in ordered.Item1)
+            {
+                bool exists = create.Any(x => x.Item1 == tuple.Item1 && x.Item2 == tuple.Item2 && x.Item3 == tuple.Item3);
+                if (!exists)
+                    create.Add(tuple);
+            }
+
+            foreach (Location location in ordered.Item2)
+            {
+                bool exists = remove.Any(x => x.File == location.File && x.Line == location.Line);
+                if (!exists)
+                    remove.Add(location);
+            }
+
+            create = create.OrderBy(x => x.Item1).ThenBy(x => x.Item2).ToList();
+            remove = remove.OrderBy(x => x.File).ThenBy(x => x.Line).ToList();
 
             bool ordered_check = (create.Any() || remove.Any()) && (
                 create.Count == remove.Count ||
                 create.Count - remove.Count >= metadata.Existing.Count(x => x.BarrierType == "ordered"));
 
-            string? sourceFile = metadata.SourceFile?.FullName;
-            string fileDescription = includeFilename && sourceFile != null ? $" in {sourceFile}" : string.Empty;
-
             List<string> lines = new List<string>();
-            foreach ((int, int) range in create)
+            foreach ((string, int, int) range in create)
             {
-                if (range.Item1 == range.Item2)
-                    lines.Add($"Create an ordered region covering line {range.Item1}{fileDescription}.");
+                string sourceFile = new FileInfo(range.Item1).FullName;
+                string fileDescription = includeFilename ? $" in {sourceFile}" : string.Empty;
+
+                if (range.Item2 == range.Item3)
+                    lines.Add($"Create an ordered region covering line {range.Item2}{fileDescription}.");
                 else
-                    lines.Add($"Create an ordered region covering lines {range.Item1} to {range.Item2}{fileDescription}.");
+                    lines.Add($"Create an ordered region covering lines {range.Item2} to {range.Item3}{fileDescription}.");
             }
 
-            foreach (int line in remove)
-                lines.Add($"Remove the ordered region at line number {line}{fileDescription}.");
+            foreach (Location location in remove)
+            {
+                string sourceFile = new FileInfo(location.File).FullName;
+                string fileDescription = includeFilename ? $" in {sourceFile}" : string.Empty;
+
+                lines.Add($"Remove the ordered region at line number {location.Line}{fileDescription}.");
+            }
 
             return (ordered_check, lines);
         }
 
-        private (List<(int, int)>, List<int>) GenerateOrderedSummary(Dictionary<string, bool> assignments)
+        private (List<(string, int, int)>, List<Location>) GenerateOrderedSummary(Dictionary<string, bool> assignments)
         {
-            List<(int, int)> create = new List<(int, int)>();
-            List<int> remove = new List<int>();
+            List<(string, int, int)> create = new List<(string, int, int)>();
+            List<Location> remove = new List<Location>();
 
             foreach (Function function in metadata.Functions)
             {
                 IEnumerable<Barrier> barriers = assignments.Where(x => x.Value)
                     .Select(x => metadata.Barriers[x.Key])
                     .Where(x => x.BarrierType == "ordered")
-                    .Where(x => function.FunctionName == x.Function);
+                    .Where(x => x.Function == function.FunctionName)
+                    .Where(x => x.Location.File == function.Start.File);
 
                 if (!barriers.Any())
                     continue;
@@ -220,7 +248,8 @@ namespace LLOR.Repair
                 {
                     max2 = metadata.Barriers.Values
                         .Where(x => x.BarrierType == "ordered")
-                        .Where(x => function.FunctionName == x.Function)
+                        .Where(x => x.Function == function.FunctionName)
+                        .Where(x => x.Location.File == function.Start.File)
                         .Max(x => x.Location.Line);
                 }
 
@@ -229,12 +258,13 @@ namespace LLOR.Repair
                 {
                     // an existing ordered region at the right place will be at line-1
                     bool check = metadata.Existing.Where(x => x.BarrierType == "ordered")
+                        .Where(x => x.Location.File == function.Start.File)
                         .Any(x => x.Location.Line == max-1);
                     if (check)
                         continue;
                 }
 
-                create.Add((min, max));
+                create.Add((function.Start.File, min, max));
             }
 
             foreach (Barrier existing in metadata.Existing.Where(x => x.BarrierType == "ordered"))
@@ -243,19 +273,21 @@ namespace LLOR.Repair
                 if (!assignments.Any())
                     keepExisting = false;
                     
-                foreach ((int, int) range in create)
-                    if (existing.Location.Line >= range.Item1 && existing.Location.Line <= range.Item2)
+                foreach ((string, int, int) range in create)
+                {
+                    bool check = existing.Location.File == range.Item1 &&
+                        existing.Location.Line >= range.Item2 && existing.Location.Line <= range.Item3;
+                    if (check)
                     {
                         keepExisting = false;
                         continue;
                     }
+                }
 
                 if (!keepExisting)
-                    remove.Add(existing.Location.Line);
+                    remove.Add(existing.Location);
             }
 
-            create = create.OrderBy(x => x.Item1).ToList();
-            remove = remove.Distinct().OrderBy(x => x).ToList();
             return (create, remove);
         }
     }

@@ -60,25 +60,28 @@ namespace LLOR.Repair
                 {
                     Metadata.Existing.Add(new Barrier(
                         parts[1],
-                        int.Parse(parts[2]),
-                        int.Parse(parts[3])
+                        parts[2],
+                        int.Parse(parts[3]),
+                        int.Parse(parts[4])
                     ));
                 }
                 else if (parts[0] == "function")
                 {
                     Metadata.Functions.Add(new Function(
                         parts[1],
-                        int.Parse(parts[2]),
-                        parts.Length == 4 ? int.Parse(parts[3]) : null));
+                        parts[2],
+                        int.Parse(parts[3]),
+                        parts.Length == 5 ? int.Parse(parts[4]) : null));
                 }
                 else
                 {
                     Metadata.Barriers.Add(parts[0], new Barrier(
                         parts[0],
                         parts[1],
-                        int.Parse(parts[2]),
+                        parts[2],
                         int.Parse(parts[3]),
-                        parts[4]
+                        int.Parse(parts[4]),
+                        parts[5]
                     ));
                 }
             }

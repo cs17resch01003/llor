@@ -16,16 +16,18 @@ namespace LLOR.Repair
 
         public Barrier(
             string barrierType,
+            string file,
             int line,
             int column)
         {
             BarrierType = barrierType;
-            Location = new Location(line, column);
+            Location = new Location(file, line, column);
         }
 
         public Barrier(
             string name,
             string barrierType,
+            string file,
             int line,
             int column,
             string function)
@@ -33,7 +35,7 @@ namespace LLOR.Repair
             Name = name;
             BarrierType = barrierType;
             Function = function;
-            Location = new Location(line, column);
+            Location = new Location(file, line, column);
         }
     }
 }
