@@ -6,14 +6,17 @@ namespace LLOR.TestRunner
     {
         [Option('f', "folder", Required = true, HelpText = "The folder containing the tests.")]
         public string FolderPath { get; set; } = string.Empty;
+
+        [Option('t', "type", Required = false, HelpText = "Type of the testcases.")]
+        public string Type { get; set; } = "file";
         
-        [Option('o', "verify", Required = false, HelpText = "Run only the verifier.")]
+        [Option('v', "verify", Required = false, HelpText = "Run only the verifier.")]
         public bool Verify { get; set; } = false;
 
-        [Option('o', "repair", Required = false, HelpText = "Run only the repairer.")]
+        [Option('r', "repair", Required = false, HelpText = "Run only the repairer.")]
         public bool Repair { get; set; } = false;
 
-        [Option('o', "check", Required = false, HelpText = "Run the complete check")]
+        [Option('c', "check", Required = false, HelpText = "Run the complete check")]
         public bool Check { get; set; } = false;
     }
 }

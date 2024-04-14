@@ -25,18 +25,7 @@ namespace LLOR.TestRunner
 
             if (options == null) return;
 
-            List<FileSystemInfo> paths = new List<FileSystemInfo>();
-            foreach(string directory in Directory.EnumerateDirectories(options.FolderPath))
-            {
-                IEnumerable<string> files = Directory.EnumerateFiles(directory);
-                if (files.Any())
-                    foreach (string file in files.OrderBy(x => x))
-                        paths.Add(new FileInfo(file));
-                else
-                    foreach (string folder in Directory.EnumerateDirectories(directory).OrderBy(x => x))
-                        paths.Add(new DirectoryInfo(folder));
-            }
-
+            IEnumerable<FileSystemInfo> paths = GetPaths(options);
             if (options.Verify)
                 Verify(paths);
             else if (options.Repair)
@@ -45,6 +34,35 @@ namespace LLOR.TestRunner
                 Check(paths);
             else
                 GenerateReport(paths, options.FolderPath);
+        }
+
+        private static IEnumerable<FileSystemInfo> GetPaths(Options options)
+        {
+            if (options.Type == "file")
+            {
+                IEnumerable<FileInfo> files = Directory.EnumerateFiles(options.FolderPath, "*.*", SearchOption.AllDirectories)
+                    .Where(x => x.EndsWith(".c") || x.EndsWith(".cpp") || x.EndsWith(".f95"))
+                    .OrderBy(x => x).Select(x => new FileInfo(x));
+                return files.Where(x => !x.FullName.Contains("fixed")).ToList();
+            }
+            else
+            {
+                Stack<string> stack = new Stack<string>();
+                stack.Push(options.FolderPath);
+
+                List<DirectoryInfo> directories = new List<DirectoryInfo>();
+                while (stack.Any())
+                {
+                    string directory = stack.Pop();
+                    if (File.Exists(Path.Combine(directory, "Makefile")))
+                        directories.Add(new DirectoryInfo(directory));
+                    else
+                        foreach (string temp in Directory.GetDirectories(directory))
+                            stack.Push(temp);
+                }
+                
+                return directories;
+            }
         }
 
         private static void Verify(IEnumerable<FileSystemInfo> paths)
@@ -349,7 +367,7 @@ namespace LLOR.TestRunner
                 });
 
                 string mhs_assert = mhs.Assert ? "PASS" : "FAIL";
-                string statement = $"{mhs_assert}: {mhs.Path}";
+                string statement = $"{DateTime.Now:HHmmss} {mhs_assert}: {mhs.Path}";
                 Console.WriteLine(statement);
 
                 if (mhs.Assert == true)

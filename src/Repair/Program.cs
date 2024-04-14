@@ -49,7 +49,7 @@
                     }
 
                     changes.AddRange(result.Item2);
-                    if (options.DetailedLogging)
+                    if (options.DetailedLogging || files.Count() != 1)
                         Logger.Log($"StatusCode;{file.FullName};{result.Item1}");
                 }
 
