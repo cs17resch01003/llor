@@ -1,5 +1,6 @@
 namespace LLOR.Repair
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -15,10 +16,16 @@ namespace LLOR.Repair
 
         private string basePath;
 
-        public Verifier(Metadata metadata)
+        public Verifier(Metadata metadata, FileInfo inputFile)
         {
             this.metadata = metadata;
-            basePath = metadata.BasePath + Path.DirectorySeparatorChar + metadata.BaseName;
+
+            if (inputFile.Directory == null)
+                throw new ArgumentNullException(nameof(inputFile.Directory));
+
+            basePath = inputFile.Directory.FullName;
+            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+            basePath = basePath + Path.DirectorySeparatorChar + baseName;
         }
     
         public List<DataRace> Verify(string extension = "inst")

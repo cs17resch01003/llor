@@ -17,7 +17,13 @@ namespace LLOR.Repair
         public Instrumentor(FileInfo inputFile, Options options)
         {
             Metadata.PopulateData(inputFile, options);
-            basePath = Metadata.BasePath + Path.DirectorySeparatorChar + Metadata.BaseName;
+
+            if (inputFile.Directory == null)
+                throw new ArgumentNullException(nameof(inputFile.Directory));
+
+            basePath = inputFile.Directory.FullName;
+            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+            basePath = basePath + Path.DirectorySeparatorChar + baseName;
         }
 
         public void Instrument(Options options)

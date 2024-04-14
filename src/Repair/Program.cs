@@ -64,7 +64,7 @@
             FileInfo file, Options options, bool singleFile, CancellationToken ct)
         {
             Instrumentor instrumentor = new Instrumentor(file, options);
-            Verifier verifier = new Verifier(instrumentor.Metadata);
+            Verifier verifier = new Verifier(instrumentor.Metadata, file);
             Repairer repairer = new Repairer(verifier, instrumentor);
 
             List<string> changes = new List<string>();
@@ -77,7 +77,7 @@
 
                 Dictionary<string, bool> assignments = repairer.Repair(options, ct);
 
-                SummaryGenerator generator = new SummaryGenerator(verifier, repairer, instrumentor.Metadata);
+                SummaryGenerator generator = new SummaryGenerator(verifier, repairer, instrumentor.Metadata, file);
                 if (assignments.Any(x => x.Value) || instrumentor.Metadata.Existing.Any())
                     changes = generator.GenerateSummary(assignments, !singleFile).ToList();
 
@@ -90,7 +90,8 @@
             catch (OperationCanceledException)
             {
                 FileInfo? sourceFile = instrumentor.Metadata.SourceFile;
-                string message = $"Repair of {sourceFile?.FullName} timed out.";
+                string source = sourceFile == null ? file.FullName : sourceFile.FullName;
+                string message = $"Repair of {source} timed out.";
 
                 HandleException(file, options, message, changes);
                 status = StatusCode.Timeout;
@@ -103,7 +104,8 @@
                 else
                 {
                     FileInfo? sourceFile = instrumentor.Metadata.SourceFile;
-                    string message = $"Repair of {sourceFile?.FullName} failed.";
+                    string source = sourceFile == null ? file.FullName : sourceFile.FullName;
+                    string message = $"Repair of {source} failed.";
 
                     HandleException(file, options, message, changes);
                 }
@@ -116,7 +118,8 @@
                 else
                 {
                     FileInfo? sourceFile = instrumentor.Metadata.SourceFile;
-                    string message = $"Verification of {sourceFile?.FullName} failed.";
+                    string source = sourceFile == null ? file.FullName : sourceFile.FullName;
+                    string message = $"Verification of {source} failed.";
 
                     HandleException(file, options, message, changes);
                 }

@@ -15,12 +15,24 @@ namespace LLOR.Repair
 
         private Metadata metadata;
 
+        private FileInfo inputFile;
+
+        private string basePath;
+
         public SummaryGenerator(
-            Verifier verifier, Repairer repairer, Metadata metadata)
+            Verifier verifier, Repairer repairer, Metadata metadata, FileInfo inputFile)
         {
             this.repairer = repairer;
             this.verifier = verifier;
             this.metadata = metadata;
+            this.inputFile = inputFile;
+
+            if (inputFile.Directory == null)
+                throw new ArgumentNullException(nameof(inputFile.Directory));
+
+            basePath = inputFile.Directory.FullName;
+            string baseName = Path.GetFileNameWithoutExtension(inputFile.Name);
+            basePath = basePath + Path.DirectorySeparatorChar + baseName;
         }
 
         public static void WriteSummary(string basePath, IEnumerable<string> lines)
@@ -40,7 +52,6 @@ namespace LLOR.Repair
 
         public void WriteSummary(IEnumerable<string> lines)
         {
-            string basePath = metadata.BasePath + Path.DirectorySeparatorChar + metadata.BaseName;
             string summary_path = basePath + ".summary";
             if (lines.Any())
                 File.WriteAllLines(summary_path, lines.Distinct());
@@ -75,18 +86,9 @@ namespace LLOR.Repair
             List<string> lines = new List<string>();
             foreach (Location location in add)
             {
-
-                FileInfo file;
-
-                string path = Path.Combine(metadata.BasePath, location.File);
-                if (File.Exists(path))
-                    file = new FileInfo(path);
-                else
-                {
-                    file = new FileInfo(location.File);
-                    if (!File.Exists(file.FullName))
-                        continue;
-                }
+                FileInfo? file = GetFile(location);
+                if (file == null)
+                    continue;
 
                 string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
                 int line = location.Line;
@@ -96,17 +98,9 @@ namespace LLOR.Repair
 
             foreach (Location location in remove)
             {
-                FileInfo file;
-
-                string path = Path.Combine(metadata.BasePath, location.File);
-                if (File.Exists(path))
-                    file = new FileInfo(path);
-                else
-                {
-                    file = new FileInfo(location.File);
-                    if (!File.Exists(file.FullName))
-                        continue;
-                }
+                FileInfo? file = GetFile(location);
+                if (file == null)
+                    continue;
 
                 string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
                 int line = location.Line;
@@ -156,17 +150,10 @@ namespace LLOR.Repair
                 if (!keepExisting)
                 {
                     bool check = false;
-                    FileInfo file;
 
-                    string path = Path.Combine(metadata.BasePath, existing.Location.File);
-                    if (File.Exists(path))
-                        file = new FileInfo(path);
-                    else
-                    {
-                        file = new FileInfo(existing.Location.File);
-                        if (!File.Exists(file.FullName))
-                            continue;
-                    }
+                    FileInfo? file = GetFile(existing.Location);
+                    if (file == null)
+                        continue;
 
                     string[] content = File.ReadAllLines(file.FullName);
 
@@ -221,17 +208,9 @@ namespace LLOR.Repair
             List<string> lines = new List<string>();
             foreach ((string, int, int) range in create)
             {
-                FileInfo file;
-
-                string path = Path.Combine(metadata.BasePath, range.Item1);
-                if (File.Exists(path))
-                    file = new FileInfo(path);
-                else
-                {
-                    file = new FileInfo(range.Item1);
-                    if (!File.Exists(file.FullName))
-                        continue;
-                }
+                FileInfo? file = GetFile(new Location(range.Item1, 0 , 0));
+                if (file == null)
+                    continue;
 
                 string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
                 if (range.Item2 == range.Item3)
@@ -242,17 +221,9 @@ namespace LLOR.Repair
 
             foreach (Location location in remove)
             {
-                FileInfo file;
-
-                string path = Path.Combine(metadata.BasePath, location.File);
-                if (File.Exists(path))
-                    file = new FileInfo(path);
-                else
-                {
-                    file = new FileInfo(location.File);
-                    if (!File.Exists(file.FullName))
-                        continue;
-                }
+                FileInfo? file = GetFile(location);
+                if (file == null)
+                    continue;
 
                 string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
                 lines.Add($"Remove the ordered region at line number {location.Line}{fileDescription}.");
@@ -332,6 +303,25 @@ namespace LLOR.Repair
             }
 
             return (create, remove);
+        }
+
+        private FileInfo? GetFile(Location location)
+        {
+            FileInfo? file;
+            if (inputFile.Directory == null)
+                throw new ArgumentNullException(nameof(inputFile.Directory));
+
+            string path = Path.Combine(inputFile.Directory.FullName, location.File);
+            if (File.Exists(path))
+                file = new FileInfo(path);
+            else
+            {
+                file = new FileInfo(location.File);
+                if (!File.Exists(file.FullName))
+                    file = null;
+            }
+
+            return file;
         }
     }
 }
