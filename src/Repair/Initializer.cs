@@ -59,8 +59,18 @@ namespace LLOR.Repair
             List<FileInfo> files = new List<FileInfo>();
             foreach (FileInfo inputFile in inputDirectory.EnumerateFiles("*.ll", SearchOption.AllDirectories))
             {
-                Transform(inputFile);
-                files.Add(inputFile);
+                try
+                {
+                    Transform(inputFile);
+                    files.Add(inputFile);
+                }
+                catch (RepairException)
+                {
+                    string message = $"Initialization of {inputFile.FullName} failed.";
+                    Console.WriteLine(message);
+
+                    File.Delete(inputFile.FullName);
+                }
             }
 
             return files;
