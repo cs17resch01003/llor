@@ -53,10 +53,11 @@
                         Logger.Log($"StatusCode;{file.FullName};{result.Item1}");
                 }
 
+                changes = changes.Distinct().ToList();
                 if (files.Count() != 1 && changes.Any())
                     SummaryGenerator.WriteSummary(new DirectoryInfo(options.Path).FullName, changes);
                     
-                Logger.Log($"Changes;{changes.Count()}");
+                Logger.Log($"Changes;{changes.Distinct().Count()}");
             }
         }
 
@@ -81,6 +82,7 @@
                 if (assignments.Any(x => x.Value) || instrumentor.Metadata.Existing.Any())
                     changes = generator.GenerateSummary(assignments, !singleFile).ToList();
 
+                changes = changes.Distinct().ToList();
                 if (singleFile && changes.Any())
                     generator.WriteSummary(changes);
 
