@@ -1,0 +1,2 @@
+//; Pass
+//; Create an ordered region covering lines 240 to 280 in /datadrive/llor/testsuite_large/others/Smith-Waterman/omp_smithW.c.
