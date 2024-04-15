@@ -61,7 +61,7 @@ namespace LLOR.TestRunner
                             stack.Push(temp);
                 }
                 
-                return directories;
+                return directories.OrderBy(x => x.FullName).ToList();
             }
         }
 
@@ -138,7 +138,7 @@ namespace LLOR.TestRunner
                 arguments += " --solvertype " + solverType;
             if (path is DirectoryInfo)
             {
-                timeout = 24*60*60*1000;
+                timeout = 30*60*1000;
                 arguments += " --timeout 60";
             }
 
@@ -267,8 +267,11 @@ namespace LLOR.TestRunner
             else
             {
                 string assert = Path.Combine(path.FullName, "assert.txt");
-                lines = File.ReadLines(assert)
-                    .Where(x => x.StartsWith(delimiter)).ToList();
+                if (File.Exists(assert))
+                {
+                    lines = File.ReadLines(assert)
+                        .Where(x => x.StartsWith(delimiter)).ToList();
+                }
             }
 
             if (lines.Any())
@@ -419,12 +422,14 @@ namespace LLOR.TestRunner
             else
             {
                 int lines = 0;
-                foreach (string fileName in Directory.EnumerateFiles(path.FullName))
+                foreach (string fileName in Directory.EnumerateFiles(path.FullName, "*.*", SearchOption.AllDirectories))
                 {
                     file = new FileInfo(fileName);
                     bool check = file.Extension.Equals("c", StringComparison.InvariantCultureIgnoreCase)
+                        || file.Extension.Equals("cc", StringComparison.InvariantCultureIgnoreCase)
                         || file.Extension.Equals("cpp", StringComparison.InvariantCultureIgnoreCase)
-                        || file.Extension.Equals("h", StringComparison.InvariantCultureIgnoreCase);
+                        || file.Extension.Equals("h", StringComparison.InvariantCultureIgnoreCase)
+                        || file.Extension.Equals("hh", StringComparison.InvariantCultureIgnoreCase);
 
                     if (check)
                         lines += GetLines(file);
