@@ -39,7 +39,7 @@
                     (StatusCode, List<string>) result = (StatusCode.Unsupported, new List<string>());
                     Task task = Task.Run(() =>
                     {
-                        result = RepairFile(file, options, files.Count() == 1, ct);
+                        result = RepairFile(file, options, Initializer.Input is FileInfo, ct);
                     });
 
                     if (!task.Wait(options.Timeout * 1000))

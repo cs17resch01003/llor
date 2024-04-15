@@ -8,22 +8,23 @@ namespace LLOR.Repair
     
     public static class Initializer
     {
+        public static FileSystemInfo? Input { get; set; }
+
         public static IEnumerable<FileInfo> Initialize(string path)
         {
-            FileSystemInfo input;
             if (Directory.Exists(path))
-                input = new DirectoryInfo(path);
+                Input = new DirectoryInfo(path);
             else if (File.Exists(path))
-                input = new FileInfo(path);
+                Input = new FileInfo(path);
             else
                 throw new InvalidDataException(nameof(path));
 
-            string arguments = input.FullName;
+            string arguments = Input.FullName;
             RunCommand("llov_compile", arguments);
 
-            if (input is FileInfo)
+            if (Input is FileInfo)
             {
-                FileInfo? inputFile = input as FileInfo;
+                FileInfo? inputFile = Input as FileInfo;
                 if (inputFile == null)
                     throw new ArgumentNullException(nameof(inputFile));
 
@@ -40,7 +41,7 @@ namespace LLOR.Repair
             }
             else
             {
-                DirectoryInfo? inputDirectory = input as DirectoryInfo;
+                DirectoryInfo? inputDirectory = Input as DirectoryInfo;
                 if (inputDirectory == null)
                     throw new ArgumentNullException(nameof(inputDirectory));
 

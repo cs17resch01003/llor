@@ -1,1 +1,3 @@
 //; Pass
+//; Add a barrier at line number 300 in /datadrive/llor/testsuite_large/temp/myocyte/main.c.
+//; Create an ordered region covering lines 303 to 435 in /datadrive/llor/testsuite_large/temp/myocyte/main.c.
