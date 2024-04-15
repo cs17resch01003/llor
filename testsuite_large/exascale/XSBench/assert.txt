@@ -1,2 +1,2 @@
 //; Pass
-//; Repair of /datadrive/llor/testsuite_large/temp/XSBench/Simulation.c is unsupported.
+//; Repair of /datadrive/llor/testsuite_large/exascale/XSBench/Simulation.c is unsupported.
