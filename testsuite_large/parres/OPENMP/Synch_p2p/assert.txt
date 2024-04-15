@@ -4,4 +4,3 @@
 //; Remove the barrier at line number 229 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_p2p/p2p.c.
 //; Remove the barrier at line number 307 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_p2p/p2p.c.
 //; Create an ordered region covering lines 207 to 301 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_p2p/p2p.c.
-//; Remove the barrier at line number 27 in /datadrive/llor/testsuite_large/parres/common/OPENMP_bail_out.c.

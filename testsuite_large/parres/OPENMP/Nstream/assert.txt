@@ -4,4 +4,3 @@
 //; Remove the barrier at line number 243 in /datadrive/llor/testsuite_large/parres/OPENMP/Nstream/nstream.c.
 //; Remove the barrier at line number 255 in /datadrive/llor/testsuite_large/parres/OPENMP/Nstream/nstream.c.
 //; Create an ordered region covering lines 231 to 251 in /datadrive/llor/testsuite_large/parres/OPENMP/Nstream/nstream.c.
-//; Remove the barrier at line number 27 in /datadrive/llor/testsuite_large/parres/common/OPENMP_bail_out.c.

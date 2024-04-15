@@ -1,5 +1,4 @@
 //; Pass
-//; Remove the barrier at line number 27 in /datadrive/llor/testsuite_large/parres/common/OPENMP_bail_out.c.
 //; Add a barrier at line number 374 in /datadrive/llor/testsuite_large/parres/OPENMP/Random/random.c.
 //; Add a barrier at line number 365 in /datadrive/llor/testsuite_large/parres/OPENMP/Random/random.c.
 //; Add a barrier at line number 357 in /datadrive/llor/testsuite_large/parres/OPENMP/Random/random.c.

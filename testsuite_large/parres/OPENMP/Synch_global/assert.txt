@@ -1,5 +1,4 @@
 //; Pass
-//; Remove the barrier at line number 27 in /datadrive/llor/testsuite_large/parres/common/OPENMP_bail_out.c.
 //; Add a barrier at line number 171 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
 //; Add a barrier at line number 187 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
 //; Add a barrier at line number 186 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
