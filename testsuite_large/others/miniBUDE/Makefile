@@ -1,3 +1,7 @@
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 # .ONESHELL: # This doesn't work on all systems. Disabling for now.
@@ -56,12 +60,18 @@ CFLAGS = $(CFLAGS_$(COMPILER)) -DWGSIZE=$(WGSIZE)
 
 LDFLAGS = -lm
 
+CC   = mpicc
+LD   = mpicc
+CFLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
 
 # -------
 
 EXE = bude
 
 .PHONY: all $(EXE) clean
+
+llov: bude.c bude.h vec-pose-inner.c
+	$(CC) $(CFLAGS) bude.c vec-pose-inner.c
 
 all: $(EXE)
 
