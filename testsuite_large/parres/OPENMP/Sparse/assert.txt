@@ -1,0 +1,4 @@
+//; Pass
+//; Remove the barrier at line number 270 in /datadrive/llor/testsuite_large/parres/OPENMP/Sparse/sparse.c.
+//; Remove the barrier at line number 294 in /datadrive/llor/testsuite_large/parres/OPENMP/Sparse/sparse.c.
+//; Remove the barrier at line number 27 in /datadrive/llor/testsuite_large/parres/common/OPENMP_bail_out.c.

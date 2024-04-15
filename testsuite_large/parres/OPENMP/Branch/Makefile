@@ -1,3 +1,7 @@
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
 ifndef NUMBER_OF_FUNCTIONS
   NUMBER_OF_FUNCTIONS=40
 endif
@@ -58,6 +62,13 @@ OBJS        = $(PROGRAM).o $(COMOBJS) func.o
 #	@echo "            \"make veryclean\" to remove custom built files as well"
 
 include ../../common/make.common
+
+CC   = mpicc
+LD   = mpicc
+CC_FLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+CFLAGS += $(CC_FLAGS)
+
+llov: $(OBJS)
 
 func.c:
 	@echo "############################################################"

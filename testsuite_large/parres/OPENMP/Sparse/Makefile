@@ -1,3 +1,7 @@
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
 include ../../common/OPENMP.defs
 
 ##### User configurable options #####
@@ -56,3 +60,10 @@ PROGRAM     = sparse
 OBJS        = $(PROGRAM).o $(COMOBJS)
 
 include ../../common/make.common
+
+CC   = mpicc
+LD   = mpicc
+CC_FLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+CFLAGS += $(CC_FLAGS)
+
+llov: $(OBJS)
