@@ -1,2 +1,2 @@
 //; Pass
-//; Create an ordered region covering line 164 in /datadrive/llor/testsuite_large/temp/bfs/bfs.cpp.
+//; Create an ordered region covering line 164 in /datadrive/llor/testsuite_large/rodinia/bfs/bfs.cpp.

@@ -1,2 +1,2 @@
 //; Pass
-//; Remove the barrier at line number 123 in /datadrive/llor/testsuite_large/temp/nn/nn_openmp.c.
+//; Remove the barrier at line number 123 in /datadrive/llor/testsuite_large/rodinia/nn/nn_openmp.c.
