@@ -27,6 +27,7 @@ sudo apt install build-essential
 sudo apt install cmake
 sudo apt install ninja-build
 sudo apt install dotnet-sdk-6.0
+sudo apt install libopenmpi-dev
 ```
 
 3. Download the source code of LLOV from the [cs17resch01003/llov](https://github.com/cs17resch01003/llov) repository and compile it
@@ -119,7 +120,9 @@ dotnet build --configuration Release ./src/TestRunner/TestRunner.csproj
 sudo ln -s ${BUILD_ROOT}/llor/src/Repair/bin/Release/net6.0/Repair /usr/bin/llor
 sudo ln -s ${BUILD_ROOT}/llor/src/Transform/bin/Release/net6.0/Transform /usr/bin/llor_transform
 sudo ln -s ${BUILD_ROOT}/llor/src/TestRunner/bin/Release/net6.0/TestRunner /usr/bin/llor_testrunner
-sudo ln -s ${BUILD_ROOT}/llor/scripts/run_llov.sh /usr/bin/llov
+sudo ln -s ${BUILD_ROOT}/llor/scripts/llov.sh /usr/bin/llov
+sudo ln -s ${BUILD_ROOT}/llor/scripts/llov_transform.sh /usr/bin/llov_transform
+sudo ln -s ${BUILD_ROOT}/llor/scripts/llov_compile.sh /usr/bin/llov_compile
 
 # test the build
 llor_testrunner --folder ${BUILD_ROOT}/llor/testsuite
