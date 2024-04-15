@@ -1,3 +1,7 @@
+export LLOV_BUILD = /datadrive/llov/build
+export OMPI_CC = ${LLOV_BUILD}/bin/clang
+export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
+
 #default build suggestion of MPI + OPENMP with gcc on Livermore machines you might have to change the compiler name
 
 SHELL = /bin/sh
@@ -41,6 +45,12 @@ LDFLAGS = -g -O3 -fopenmp
 #below is and example of how to make with silo, hdf5 to get vizulization by default all this is turned off.  All paths are Livermore specific.
 #CXXFLAGS = -g -DVIZ_MESH -I${SILO_INCDIR} -Wall -Wno-pragmas
 #LDFLAGS = -g -L${SILO_LIBDIR} -Wl,-rpath -Wl,${SILO_LIBDIR} -lsiloh5 -lhdf5
+
+CXX   = mpicc
+LD   = mpicc
+CXXFLAGS = -DUSE_MPI=1 -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+
+llov: $(OBJECTS2.0)
 
 .cc.o: lulesh.h
 	@echo "Building $<"
