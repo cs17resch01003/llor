@@ -1,0 +1,2 @@
+//; Pass
+//; Create an ordered region covering lines 206 to 208 in /datadrive/llor/testsuite_large/rodinia/kmeans/kmeans_openmp/kmeans_clustering.c.
