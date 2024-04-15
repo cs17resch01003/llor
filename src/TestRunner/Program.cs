@@ -146,7 +146,7 @@ namespace LLOR.TestRunner
             CommandOutput output = CommandRunner.RunCommand("llor", arguments, timeout);
             value.TimeTaken = watch.ElapsedMilliseconds;
 
-            Output actual = PopulateActual(output, value);
+            Output actual = PopulateActual(output, value, path is DirectoryInfo);
             Output? expected = PopulateExpected(path);
 
             bool result = false;
@@ -161,7 +161,7 @@ namespace LLOR.TestRunner
             return value;
         }
     
-        private static Output PopulateActual(CommandOutput output, RepairResult value)
+        private static Output PopulateActual(CommandOutput output, RepairResult value, bool folder)
         {
             Output actual = new Output(
                 (StatusCode)output.ExitCode,
@@ -211,10 +211,9 @@ namespace LLOR.TestRunner
                 }
             }
 
-            value.StatusCode = actual.StatusCode.ToString().ToLower();
-            int total = value.Statuses.Sum(x => x.Value);
-            if (total > 1)
+            if (folder == true)
             {
+                int total = value.Statuses.Sum(x => x.Value);
                 if (value.Statuses.Count == 1)
                 {
                     actual.StatusCode = value.Statuses.Keys.First();
@@ -246,6 +245,10 @@ namespace LLOR.TestRunner
                             actual.StatusCode = StatusCode.Error;
                     }
                 }
+            }
+            else
+            {
+                value.StatusCode = actual.StatusCode.ToString().ToLower();
             }
 
             return actual;
