@@ -1,2 +1,1 @@
 //; Pass
-//; Create an ordered region covering line 761 in /datadrive/llor/testsuite_large/others/Pennant/src/Mesh.cc.

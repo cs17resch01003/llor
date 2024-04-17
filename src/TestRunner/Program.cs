@@ -218,6 +218,10 @@ namespace LLOR.TestRunner
                 {
                     actual.StatusCode = value.Statuses.Keys.First();
                 }
+                else if (value.Statuses.ContainsKey(StatusCode.Unsupported))
+                {
+                    actual.StatusCode = StatusCode.Unsupported;
+                }
                 else if (value.Statuses.ContainsKey(StatusCode.Timeout))
                 {
                     if (value.Statuses[StatusCode.Timeout] == total)
@@ -227,9 +231,6 @@ namespace LLOR.TestRunner
                 }
                 else
                 {
-                    value.Statuses.Remove(StatusCode.Unsupported);
-                    total = value.Statuses.Sum(x => x.Value);
-
                     if (value.Statuses.ContainsKey(StatusCode.Pass))
                     {
                         if (value.Statuses[StatusCode.Pass] == total)
@@ -246,11 +247,8 @@ namespace LLOR.TestRunner
                     }
                 }
             }
-            else
-            {
-                value.StatusCode = actual.StatusCode.ToString().ToLower();
-            }
 
+            value.StatusCode = actual.StatusCode.ToString().ToLower();
             return actual;
         }
 
@@ -428,11 +426,11 @@ namespace LLOR.TestRunner
                 foreach (string fileName in Directory.EnumerateFiles(path.FullName, "*.*", SearchOption.AllDirectories))
                 {
                     file = new FileInfo(fileName);
-                    bool check = file.Extension.Equals("c", StringComparison.InvariantCultureIgnoreCase)
-                        || file.Extension.Equals("cc", StringComparison.InvariantCultureIgnoreCase)
-                        || file.Extension.Equals("cpp", StringComparison.InvariantCultureIgnoreCase)
-                        || file.Extension.Equals("h", StringComparison.InvariantCultureIgnoreCase)
-                        || file.Extension.Equals("hh", StringComparison.InvariantCultureIgnoreCase);
+                    bool check = file.Extension.Equals(".c", StringComparison.InvariantCultureIgnoreCase)
+                        || file.Extension.Equals(".cc", StringComparison.InvariantCultureIgnoreCase)
+                        || file.Extension.Equals(".cpp", StringComparison.InvariantCultureIgnoreCase)
+                        || file.Extension.Equals(".h", StringComparison.InvariantCultureIgnoreCase)
+                        || file.Extension.Equals(".hh", StringComparison.InvariantCultureIgnoreCase);
 
                     if (check)
                         lines += GetLines(file);
