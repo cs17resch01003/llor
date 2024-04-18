@@ -82,6 +82,17 @@ namespace LLOR.Repair
 
         private List<DataRace> GetDataRaces(CommandOutput output)
         {
+            if ((StatusCode)output.ExitCode != StatusCode.Pass)
+            {
+                StatusCode code = (StatusCode)output.ExitCode;
+                string message = string.Join('\n', 
+                    string.Join('\n', output.StandardOutput.ToArray()),
+                    string.Join('\n', output.StandardError.ToArray()));
+                    
+                throw new VerificationException(code, message);
+            }
+
+
             List<DataRace> races = new List<DataRace>();
             ParsedOutput result = ErrorParser.ParseErrorOutput(output.StandardError);
 

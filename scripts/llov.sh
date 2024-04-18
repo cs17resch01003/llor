@@ -16,8 +16,17 @@ then
         if [[ $2 == "debug" ]]
         then
             opt -load OpenMPVerify.so -openmp-verify-mhp $filepath.sb.ll -S -o $filepath.debug.ll --strip-debug
+            exitCode=`echo $?`
+            if [[ $exitCode != 0 ]]; then
+                exit $exitCode
+            fi
         else
             opt -load OpenMPVerify.so -disable-output -openmp-verify-mhp $filepath.sb.ll
+            exitCode=`echo $?`
+            if [[ $exitCode != 0 ]]; then
+                exit $exitCode
+            fi
+
             rm $filepath.sb.ll
         fi
     done
@@ -26,8 +35,17 @@ else
     if [[ $2 == "debug" ]]
     then
         opt -load OpenMPVerify.so -openmp-verify-mhp $filepath.sb.ll -S -o $filepath.debug.ll --strip-debug
+        exitCode=`echo $?`
+        if [[ $exitCode != 0 ]]; then
+            exit $exitCode
+        fi
     else
         opt -load OpenMPVerify.so -disable-output -openmp-verify-mhp $filepath.sb.ll
+        exitCode=`echo $?`
+        if [[ $exitCode != 0 ]]; then
+            exit $exitCode
+        fi
+
         rm $filepath.sb.ll
     fi
 fi
