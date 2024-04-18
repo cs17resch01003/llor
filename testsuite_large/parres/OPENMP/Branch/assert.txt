@@ -1,3 +1,1 @@
-//; Pass
-//; Remove the barrier at line number 247 in /datadrive/llor/testsuite_large/parres/OPENMP/Branch/branch.c.
-//; Remove the barrier at line number 325 in /datadrive/llor/testsuite_large/parres/OPENMP/Branch/branch.c.
+//; Fail

@@ -231,20 +231,17 @@ namespace LLOR.TestRunner
                 }
                 else
                 {
-                    if (value.Statuses.ContainsKey(StatusCode.Pass))
+                    if (value.Statuses.ContainsKey(StatusCode.RepairError))
+                        actual.StatusCode = StatusCode.RepairError;
+                    else if (value.Statuses.ContainsKey(StatusCode.Fail))
+                        actual.StatusCode = StatusCode.Fail;
+                    else if (value.Statuses.ContainsKey(StatusCode.Pass))
                     {
                         if (value.Statuses[StatusCode.Pass] == total)
                             actual.StatusCode = StatusCode.Pass;
                     }
                     else
-                    {
-                        if (value.Statuses.ContainsKey(StatusCode.RepairError))
-                            actual.StatusCode = StatusCode.RepairError;
-                        else if (value.Statuses.ContainsKey(StatusCode.Fail))
-                            actual.StatusCode = StatusCode.Fail;
-                        else
-                            actual.StatusCode = StatusCode.Error;
-                    }
+                        actual.StatusCode = StatusCode.Error;
                 }
             }
 
