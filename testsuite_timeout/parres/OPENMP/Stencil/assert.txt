@@ -1,4 +1,0 @@
-//; Pass
-//; Add a barrier at line number 235 in /datadrive/llor/testsuite_large/parres/OPENMP/Stencil/stencil.c.
-//; Remove the barrier at line number 262 in /datadrive/llor/testsuite_large/parres/OPENMP/Stencil/stencil.c.
-//; Remove the barrier at line number 307 in /datadrive/llor/testsuite_large/parres/OPENMP/Stencil/stencil.c.
