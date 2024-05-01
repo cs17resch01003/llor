@@ -25,7 +25,7 @@
                         options = o;
                     });
 
-                if (options == null) return;
+                if (options == null || string.IsNullOrWhiteSpace(options.Path)) return;
                 Logger.DetailedLogging = options.DetailedLogging;
 
                 List<string> changes  = new List<string>();

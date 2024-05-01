@@ -23,62 +23,40 @@ namespace LLOR.TestRunner
                     options = o;
                 });
 
-            if (options == null) return;
+            if (options == null || string.IsNullOrWhiteSpace(options.FolderPath)) return;
 
-            IEnumerable<FileSystemInfo> paths = GetPaths(options);
-            if (options.Verify)
-                Verify(paths);
-            else if (options.Repair)
-                Repair(paths);
-            else if (options.Check)
-                Check(paths);
-            else
-                GenerateReport(paths, options.FolderPath);
+            IEnumerable<FileSystemInfo> benchmarks = GetBenchmarks(options);
+            GenerateReport(benchmarks, options);
         }
 
-        private static IEnumerable<FileSystemInfo> GetPaths(Options options)
+        private static IEnumerable<FileSystemInfo> GetBenchmarks(Options options)
         {
-            if (options.Type == "file")
-            {
-                IEnumerable<FileInfo> files = Directory.EnumerateFiles(options.FolderPath, "*.*", SearchOption.AllDirectories)
-                    .Where(x => x.EndsWith(".c") || x.EndsWith(".cpp") || x.EndsWith(".f95"))
-                    .OrderBy(x => x).Select(x => new FileInfo(x));
-                return files.Where(x => !x.FullName.Contains("fixed")).ToList();
-            }
-            else
-            {
-                Stack<string> stack = new Stack<string>();
-                stack.Push(options.FolderPath);
+            Stack<string> stack = new Stack<string>();
+            stack.Push(options.FolderPath);
 
-                List<DirectoryInfo> directories = new List<DirectoryInfo>();
-                while (stack.Any())
+            List<FileSystemInfo> benchmarks = new List<FileSystemInfo>();
+            while (stack.Any())
+            {
+                string directory = stack.Pop();
+                if (File.Exists(Path.Combine(directory, "Makefile")))
+                    benchmarks.Add(new DirectoryInfo(directory));
+                else if (File.Exists(Path.Combine(directory, "make.common")))
+                    continue;
+                else
                 {
-                    string directory = stack.Pop();
-                    if (File.Exists(Path.Combine(directory, "Makefile")))
-                        directories.Add(new DirectoryInfo(directory));
+                    IEnumerable<FileInfo> files = Directory.EnumerateFiles(directory, "*.*")
+                        .Where(x => x.EndsWith(".c") || x.EndsWith(".cpp") || x.EndsWith(".f95"))
+                        .OrderBy(x => x).Select(x => new FileInfo(x));
+
+                    if (files.Any())
+                        benchmarks.AddRange(files);
                     else
                         foreach (string temp in Directory.GetDirectories(directory))
                             stack.Push(temp);
                 }
-                
-                return directories.OrderBy(x => x.FullName).ToList();
-            }
-        }
-
-        private static void Verify(IEnumerable<FileSystemInfo> paths)
-        {
-            foreach (FileSystemInfo path in paths)
-            {
-                VerificationResult verify = Verify(path);
-
-                string code = verify.StatusCode.ToString().ToLower();
-                string sourcePath = path.FullName;
-
-                string statement = $"{code}: {sourcePath}";
-                Console.WriteLine(statement);
             }
 
-            Console.WriteLine($"\n\nTotal: {paths.Count()}.");
+            return benchmarks;
         }
 
         private static VerificationResult Verify(FileSystemInfo path)
@@ -104,50 +82,26 @@ namespace LLOR.TestRunner
             };
         }
 
-        private static void Repair(IEnumerable<FileSystemInfo> paths)
-        {
-            int total = paths.Count(), success = 0;
-            foreach (FileSystemInfo path in paths)
-            {
-                RepairResult repair = Repair(path);
-
-                string assert = repair.Assert.ToString().ToLower();
-                string code = repair.StatusCode == null ? string.Empty :
-                    repair.StatusCode.ToString().ToLower();
-                string filename = path.FullName;
-
-                string statement = $"{assert}_{code}: {filename}";
-                Console.WriteLine(statement);
-
-                if (repair.Assert == true)
-                    success++;
-            }
-
-            Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
-        }
-
-        private static RepairResult Repair(FileSystemInfo path, string? solverType = null)
+        private static RepairResult Repair(FileSystemInfo benchmark, Options options, string? solverType = null)
         {
             RepairResult value = new RepairResult();
-            value.Path = path.FullName;
+            value.Path = benchmark.FullName;
 
-            int timeout = 5*60*1000;
+            int timeout = options.SingleFileTimeout;
 
-            string arguments = $"--path {path.FullName} --testonly";
+            string arguments = $"--path {benchmark.FullName} --testonly";
             if (solverType != null)
                 arguments += " --solvertype " + solverType;
-            if (path is DirectoryInfo)
+            if (benchmark is DirectoryInfo)
             {
-                timeout = 30*60*1000;
-                arguments += " --timeout 60";
+                timeout = options.MultiFileTimeout * 30;
+                arguments += " --timeout " + (options.MultiFileTimeout / 1000);
             }
 
-            Stopwatch watch = Stopwatch.StartNew();
             CommandOutput output = CommandRunner.RunCommand("llor", arguments, timeout);
-            value.TimeTaken = watch.ElapsedMilliseconds;
 
-            Output actual = PopulateActual(output, value, path is DirectoryInfo);
-            Output? expected = PopulateExpected(path);
+            Output actual = PopulateActual(output, value, benchmark is DirectoryInfo);
+            Output? expected = PopulateExpected(benchmark);
 
             bool result = false;
             if (actual.StatusCode == StatusCode.Pass)
@@ -156,7 +110,7 @@ namespace LLOR.TestRunner
                 result = expected != null ? expected.StatusCode == actual.StatusCode : true;
 
             value.Assert = result;
-            value.Lines = GetLines(path);
+            value.Lines = GetLines(benchmark);
 
             return value;
         }
@@ -288,97 +242,9 @@ namespace LLOR.TestRunner
             return null;
         }
 
-        private static void Check(IEnumerable<FileSystemInfo> paths)
+        private static void GenerateReport(IEnumerable<FileSystemInfo> benchmarks, Options options)
         {
-            int total = paths.Count(), success = 0;
-            foreach (FileSystemInfo path in paths)
-            {
-                FileSystemInfo fixedPath = GetFixedPath(path);
-
-                VerificationResult verify = Verify(path);
-                RepairResult repair = Repair(path);
-                VerificationResult? repaired = Verify(fixedPath);
-
-                string assert = repair.Assert.ToString().ToLower();
-                string verifyCode = verify.StatusCode.ToString().ToLower();
-                string repairCode = repair.StatusCode == null ? string.Empty :
-                    repair.StatusCode.ToString().ToLower();
-                string repairedCode = repaired == null ? "na" : repaired.StatusCode.ToString().ToLower();
-
-                string statement = $"{assert}_{verifyCode}_{repairCode}_{repairedCode}: {path.FullName}";
-                Console.WriteLine(statement);
-
-                if (repair.Assert == true)
-                    success++;
-            }
-
-            Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
-        }
-
-        private static FileSystemInfo GetFixedPath(FileSystemInfo path)
-        {
-            FileInfo? file = path as FileInfo;
-            if (file != null)
-            {
-                if (file.DirectoryName == null)
-                    throw new ArgumentNullException(nameof(file.DirectoryName));
-                string fixedPath = Path.Combine(file.DirectoryName, "fixed", file.Name);
-                return new FileInfo(fixedPath);
-            }
-            else
-            {
-                string fixedPath = Path.Combine(path.FullName, "fixed");
-                return new DirectoryInfo(fixedPath);
-            }
-        }
-
-        private static void GenerateReport(IEnumerable<FileSystemInfo> paths, string directory)
-        {
-            List<SourceCode> sourceCodes = new List<SourceCode>();
-            List<Summary> summaries = new List<Summary>();
-
-            List<RepairResult> mhs_results = new List<RepairResult>();
-            List<RepairResult> maxsat_results = new List<RepairResult>();
-
-            int total = paths.Count(), success = 0;
-            foreach (FileSystemInfo path in paths)
-            {
-                VerificationResult verify = Verify(path);
-                RepairResult mhs = Repair(path);
-                RepairResult maxsat = Repair(path, "MaxSAT");
-
-                sourceCodes.Add(new SourceCode
-                {
-                    Path = mhs.Path,
-                    Lines = mhs.Lines,
-                    Instructions = mhs.Instructions,
-                    Barriers = mhs.Barriers,
-                });
-
-                summaries.Add(new Summary
-                {
-                    Path = mhs.Path,
-                    VerificationResult = verify.StatusCode.ToString().ToLower(),
-                    MhsResult = mhs.StatusCode,
-                    MhsChanges = mhs.Changes,
-                    MhsTimeTaken = mhs.TimeTaken,
-                    MaxResult = maxsat.StatusCode,
-                    MaxChanges = maxsat.Changes,
-                    MaxTimeTaken = maxsat.TimeTaken,
-                });
-
-                string mhs_assert = mhs.Assert ? "PASS" : "FAIL";
-                string statement = $"{DateTime.Now:HHmmss} {mhs_assert}: {mhs.Path}";
-                Console.WriteLine(statement);
-
-                if (mhs.Assert == true)
-                    success++;
-
-                mhs_results.Add(mhs);
-                maxsat_results.Add(maxsat);
-            }
-
-            Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
+            List<Summary> summaries = RunExperiments(benchmarks, options);
 
             CsvConfiguration config = new CsvConfiguration(CultureInfo.CurrentCulture)
             {
@@ -387,29 +253,58 @@ namespace LLOR.TestRunner
                 Encoding = Encoding.UTF8,
             };
 
-            using (var writer = new StreamWriter(Path.Combine(directory, "summary.csv")))
+            using (var writer = new StreamWriter(Path.Combine(options.FolderPath, "summary.csv")))
             using (var csvWriter = new CsvWriter(writer, config))
             {
                 csvWriter.WriteRecords(summaries);
             }
+        }
 
-            using (var writer = new StreamWriter(Path.Combine(directory, "sourcecode.csv")))
-            using (var csvWriter = new CsvWriter(writer, config))
+        private static List<Summary> RunExperiments(IEnumerable<FileSystemInfo> benchmarks, Options options)
+        {
+            List<Summary> summaries = new List<Summary>();
+            Stopwatch watch = Stopwatch.StartNew();
+
+            int total = benchmarks.Count(), success = 0;
+            foreach (FileSystemInfo benchmark in benchmarks)
             {
-                csvWriter.WriteRecords(sourceCodes);
+                VerificationResult verify = Verify(benchmark);
+                RepairResult mhs = Repair(benchmark, options);
+                RepairResult maxsat = Repair(benchmark, options, "MaxSAT");
+
+                if (verify.StatusCode == StatusCode.Pass && mhs.Changes != 0)
+                    mhs.StatusCode = "passchange";
+                if (verify.StatusCode == StatusCode.Pass && maxsat.Changes != 0)
+                    maxsat.StatusCode = "passchange";
+
+                summaries.Add(new Summary
+                {
+                    Path = mhs.Path,
+                    Lines = mhs.Lines,
+                    Instructions = mhs.Instructions,
+                    Barriers = mhs.Barriers,
+                    VerificationResult = verify.StatusCode.ToString().ToLower(),
+                    MhsResult = mhs.StatusCode,
+                    MhsTimeTaken = mhs.TotalTime,
+                    MhsCount = mhs.MhsCount,
+                    MhsSolverCount = mhs.SolverCount,
+                    MaxResult = maxsat.StatusCode,
+                    MaxTimeTaken = maxsat.TotalTime,
+                    MaxSolverCount = maxsat.SolverCount,
+                });
+
+                string mhs_assert = mhs.Assert ? "PASS" : "FAIL";
+                string statement = $"{mhs_assert}: {mhs.Path}";
+                Console.WriteLine(statement);
+
+                if (mhs.Assert == true)
+                    success++;
             }
 
-            using (var writer = new StreamWriter(Path.Combine(directory, "mhs.csv")))
-            using (var csvWriter = new CsvWriter(writer, config))
-            {
-                csvWriter.WriteRecords(mhs_results);
-            }
+            Console.WriteLine($"\n\nTotal: {total}. Success: {success}. Fail: {total-success}.");
+            Console.WriteLine($"Time Taken: {watch.ElapsedMilliseconds / 1000} seconds.");
 
-            using (var writer = new StreamWriter(Path.Combine(directory, "maxsat.csv")))
-            using (var csvWriter = new CsvWriter(writer, config))
-            {
-                csvWriter.WriteRecords(maxsat_results);
-            }
+            return summaries;
         }
     
         private static int GetLines(FileSystemInfo path)
