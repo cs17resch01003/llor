@@ -1,8 +1,3 @@
-export LLOV_BUILD = /datadrive/llov/build
-export OPENMP_INCLUDE_PATH = ${LLOV_BUILD}/projects/openmp/runtime/src
-export OMPI_CC = ${LLOV_BUILD}/bin/clang
-export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
-
 # Matrix library path
 MATRIX_DIR = ../meschach_lib
 

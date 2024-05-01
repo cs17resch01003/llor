@@ -16,11 +16,6 @@ DO_MPI = ON
 ### own.  If you need any -L or -l switches to get C standard libraries
 ### (such as -lm for the math library) put them in C_LIB.
 
-export LLOV_BUILD = /datadrive/llov/build
-export OPENMP_INCLUDE_PATH = ${LLOV_BUILD}/projects/openmp/runtime/src
-export OMPI_CC = ${LLOV_BUILD}/bin/clang
-export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
-
 CC   = mpicc
 LD   = mpicc
 CFLAGS = -std=c99 -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${OPENMP_INCLUDE_PATH}

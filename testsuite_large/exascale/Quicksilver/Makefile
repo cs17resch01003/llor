@@ -100,11 +100,6 @@ SHELL = /bin/bash
 # The interpretation of each of these four variables is described above.
 # A number of examples for machines we regularly run on are given below.
 
-export LLOV_BUILD = /datadrive/llov/build
-export OPENMP_INCLUDE_PATH = ${LLOV_BUILD}/projects/openmp/runtime/src
-export OMPI_CC = ${LLOV_BUILD}/bin/clang
-export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
-
 CC   = mpicc
 LD   = mpicc
 CXX  = mpic++
