@@ -27,12 +27,13 @@
 #CC = mpixlc_r
 
 export LLOV_BUILD = /datadrive/llov/build
+export OPENMP_INCLUDE_PATH = ${LLOV_BUILD}/projects/openmp/runtime/src
 export OMPI_CC = ${LLOV_BUILD}/bin/clang
 export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
 
 CC   = mpicc
 LD   = mpicc
-LLOV_FLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+LLOV_FLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${OPENMP_INCLUDE_PATH}
 
 # set compile flags here
 # MPI only:
@@ -54,7 +55,7 @@ LLOV_FLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUIL
 #INCLUDE_CFLAGS = -O2 -DTIMER_USE_MPI -DHYPRE_USING_OPENMP -fopenmp -DHYPRE_HOPSCOTCH -DHYPRE_USING_PERSISTENT_COMM -DHYPRE_BIGINT
 #INCLUDE_CFLAGS = -O2 -DTIMER_USE_MPI -DHYPRE_USING_OPENMP -qsmp=omp -qmaxmem=-1 -DHYPRE_HOPSCOTCH -DHYPRE_USING_PERSISTENT_COMM -DHYPRE_BIGINT
 
-INCLUDE_CFLAGS = -DTIMER_USE_MPI -DHYPRE_USING_OPENMP -fopenmp -I${LLOV_BUILD}/projects/openmp/runtime/src -DHYPRE_HOPSCOTCH -DHYPRE_USING_PERSISTENT_COMM -DHYPRE_BIGINT ${LLOV_FLAGS}
+INCLUDE_CFLAGS = -DTIMER_USE_MPI -DHYPRE_USING_OPENMP -fopenmp -DHYPRE_HOPSCOTCH -DHYPRE_USING_PERSISTENT_COMM -DHYPRE_BIGINT ${LLOV_FLAGS}
 
 # set link flags here
 #INCLUDE_LFLAGS = -lm -qsmp=omp

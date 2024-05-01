@@ -1,4 +1,5 @@
 export LLOV_BUILD = /datadrive/llov/build
+export OPENMP_INCLUDE_PATH = ${LLOV_BUILD}/projects/openmp/runtime/src
 export OMPI_CC = ${LLOV_BUILD}/bin/clang
 export OMPI_CXX = ${LLOV_BUILD}/bin/clang++
 
@@ -83,7 +84,7 @@ endif
 
 CC   = mpicc
 LD   = mpicc
-CFLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${LLOV_BUILD}/projects/openmp/runtime/src
+CFLAGS = -fopenmp -S -emit-llvm -g -Xclang -disable-O0-optnone -I${OPENMP_INCLUDE_PATH}
 
 llov: $(obj) rsbench.h Makefile
 
