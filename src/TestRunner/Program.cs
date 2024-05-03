@@ -244,8 +244,11 @@ namespace LLOR.TestRunner
 
         private static void GenerateReport(IEnumerable<FileSystemInfo> benchmarks, Options options)
         {
-            List<Summary> summaries = RunExperiments(benchmarks, options);
+            List<Summary>[] array = new List<Summary>[options.Runs];
+            for(int i = 0; i < options.Runs; i++)
+                array[i] = RunExperiments(benchmarks, options);
 
+            List<Summary> summaries = ConsolidateSummaries(array);
             CsvConfiguration config = new CsvConfiguration(CultureInfo.CurrentCulture)
             {
                 HasHeaderRecord = true,
@@ -307,6 +310,66 @@ namespace LLOR.TestRunner
             return summaries;
         }
     
+        private static List<Summary> ConsolidateSummaries(List<Summary>[] array)
+        {
+            List<Summary> result = new List<Summary>();
+            foreach (Summary first in array[0])
+            {
+                Summary summary = new Summary();
+
+                List<Summary> summaries = new List<Summary>();
+                foreach (List<Summary> temp in array)
+                    summaries.Add(temp.First(x => x.Path == first.Path));
+
+                summary.Path = first.Path;
+                summary.Lines = summaries.Average(x => x.Lines);
+                summary.Instructions = summaries.Average(x => x.Instructions);
+                summary.Barriers = summaries.Average(x => x.Barriers);
+
+                if (summaries.Select(x => x.VerificationResult).Distinct().Count() == 1)
+                    summary.VerificationResult = summaries.Select(x => x.VerificationResult).Distinct().First();
+                else
+                {
+                    Console.WriteLine($"Verification result mismatch: {summary.Path}");
+                    summary.VerificationResult = first.VerificationResult;
+                }
+
+                if (summaries.Select(x => x.MhsResult).Distinct().Count() == 1)
+                {
+                    summary.MhsResult = summaries.Select(x => x.MhsResult).Distinct().First();
+                    summary.MhsTimeTaken = summaries.Average(x => x.MhsTimeTaken);
+                    summary.MhsCount = summaries.Average(x => x.MhsCount);
+                    summary.MhsSolverCount = summaries.Average(x => x.MhsSolverCount);
+                }
+                else
+                {
+                    Console.WriteLine($"MhsRepair result mismatch: {summary.Path}");
+                    summary.MhsResult = first.MhsResult;
+                    summary.MhsTimeTaken = first.MhsTimeTaken;
+                    summary.MhsCount = first.MhsCount;
+                    summary.MhsSolverCount = first.MhsSolverCount;
+                }
+
+                if (summaries.Select(x => x.MaxResult).Distinct().Count() == 1)
+                {
+                    summary.MaxResult = summaries.Select(x => x.MaxResult).Distinct().First();
+                    summary.MaxTimeTaken = summaries.Average(x => x.MaxTimeTaken);
+                    summary.MaxSolverCount = summaries.Average(x => x.MaxSolverCount);
+                }
+                else
+                {
+                    Console.WriteLine($"MaxRepair result mismatch: {summary.Path}");
+                    summary.MaxResult = first.MaxResult;
+                    summary.MaxTimeTaken = first.MaxTimeTaken;
+                    summary.MaxSolverCount = first.MaxSolverCount;
+                }
+
+                result.Add(summary);
+            }
+
+            return result;
+        }
+
         private static int GetLines(FileSystemInfo path)
         {
             FileInfo? file = path as FileInfo;

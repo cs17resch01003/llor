@@ -8,13 +8,13 @@ namespace LLOR.TestRunner
         public string? Path { get; set; }
 
         [Name("lines")]
-        public int Lines { get; set; }
+        public double Lines { get; set; }
 
         [Name("insts")]
-        public int Instructions { get; set; }
+        public double Instructions { get; set; }
 
         [Name("barrs")]
-        public int Barriers { get; set; }
+        public double Barriers { get; set; }
 
         [Name("vresult")]
         public string? VerificationResult { get; set; }
@@ -23,21 +23,21 @@ namespace LLOR.TestRunner
         public string? MhsResult { get; set; }
 
         [Name("mhs_time")]
-        public long MhsTimeTaken { get; set; }
+        public double MhsTimeTaken { get; set; }
 
         [Name("mhs_c")]
-        public int MhsCount { get; set; }
+        public double MhsCount { get; set; }
 
         [Name("mhs_sc")]
-        public int MhsSolverCount { get; set; }
+        public double MhsSolverCount { get; set; }
 
         [Name("max_res")]
         public string? MaxResult { get; set; }
 
         [Name("max_time")]
-        public long MaxTimeTaken { get; set; }
+        public double MaxTimeTaken { get; set; }
 
         [Name("max_sc")]
-        public int MaxSolverCount { get; set; }
+        public double MaxSolverCount { get; set; }
     }
 }
