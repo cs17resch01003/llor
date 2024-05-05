@@ -97,7 +97,7 @@ cmake --build . -jN
 cmake --build . --target install
 ```
 
-8. Add the install directory of flang to the PATH environment variable. Set the other environment variables for building the large benchmarks. To make this permanent, include these lines in ~/.profile
+8. Add the install directory of flang to the PATH environment variable. Set the other environment variables for building the large benchmarks. To make this permanent, include these lines in ~/.bashrc
 
 ```bash
 export PATH="$PATH:/datadrive/flang/install/bin"
