@@ -32,14 +32,20 @@ namespace LLOR.Common
                 {
                     process.OutputDataReceived += (sender, e) => {
                         if (e.Data == null)
-                            outputWaitHandle.Set();
+                        {
+                            try { outputWaitHandle.Set(); }
+                            catch (ObjectDisposedException) {}
+                        }
                         else
                             stdout.Add(e.Data);
                     };
 
                     process.ErrorDataReceived += (sender, e) => {
                         if (e.Data == null)
-                            errorWaitHandle.Set();
+                        {
+                            try { errorWaitHandle.Set(); }
+                            catch (ObjectDisposedException) {}
+                        }
                         else
                             stderr.Add(e.Data);
                     };
