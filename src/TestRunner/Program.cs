@@ -249,6 +249,8 @@ namespace LLOR.TestRunner
                 array[i] = RunExperiments(benchmarks, options);
 
             List<Summary> summaries = ConsolidateSummaries(array);
+            TexGenerator.Generate(summaries, options);
+
             CsvConfiguration config = new CsvConfiguration(CultureInfo.CurrentCulture)
             {
                 HasHeaderRecord = true,
@@ -282,6 +284,7 @@ namespace LLOR.TestRunner
 
                 summaries.Add(new Summary
                 {
+                    Source = benchmark,
                     Path = mhs.Path,
                     Lines = mhs.Lines,
                     Instructions = mhs.Instructions,
@@ -321,6 +324,7 @@ namespace LLOR.TestRunner
                 foreach (List<Summary> temp in array)
                     summaries.Add(temp.First(x => x.Path == first.Path));
 
+                summary.Source = first.Source;
                 summary.Path = first.Path;
                 summary.Lines = summaries.Average(x => x.Lines);
                 summary.Instructions = summaries.Average(x => x.Instructions);

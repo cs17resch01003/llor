@@ -1,9 +1,13 @@
 namespace LLOR.TestRunner
 {
+    using System.IO;
     using CsvHelper.Configuration.Attributes;
     
     public class Summary
     {
+        [Ignore]
+        public FileSystemInfo? Source { get; set; }
+
         [Name("path")]
         public string? Path { get; set; }
 
