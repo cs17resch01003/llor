@@ -1,0 +1,32 @@
+\begin{table}[htp]
+\caption{Count of programs grouped by category}
+\label{Ta:results}
+\begin{center}
+
+\def\arraystretch{1.1}
+\setlength\tabcolsep{7pt}
+
+\begin{tabular}{|l|r|r|}
+\hline
+
+\multicolumn{1}{|c|}{\textbf{Source}} & \multicolumn{1}{|c|}{\textbf{C/C++}} & \multicolumn{1}{|c|}{\textbf{Fortran}} \\ \hline
+\multicolumn{1}{|c|}{Total Benchmarks} & $235$ & $180$ \hypertarget{racefree} \\ \hline  \hline
+I. No data races identified by \verifiername & $75$ & $129$ \\ \hline
+\quad No changes made by \toolname & $71$ & $122$ \hypertarget{racefree_changes} \\
+\quad Changes recommended by \toolname & $4$ & $7$ \hypertarget{racedetected} \\ \hline \hline
+II. Data races identified by \verifiername & $117$ & $30$ \hypertarget{repaired} \\ \hline
+\quad Repaired by \toolname & $92$ & $15$ \hypertarget{repairerror} \\
+\quad Could not be repaired by \toolname & $5$ & $11$ \hypertarget{timedout} \\
+\quad Timeouts & $9$ & $0$ \hypertarget{unsupported} \\ 
+\quad Unsupported & $11$ & $4$ \hypertarget{llovunsupported} \\ 
+\hline \hline
+III. Unsupported by \verifiername & $43$ & $21$ \hypertarget{llorunsupported} \\ \hline
+\quad Unsupported by \toolname & $37$ & $11$ \hypertarget{compileerror} \\ 
+\quad Compilation errors & $0$ & $10$ \hypertarget{verifyerror} \\
+\quad Verification errors & $6$ & $0$ \\\hline
+
+\end{tabular}
+\vspace{-20pt}
+
+\end{center}
+\end{table}

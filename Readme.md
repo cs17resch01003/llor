@@ -100,10 +100,10 @@ cmake --build . --target install
 8. Add the install directory of flang to the PATH environment variable. Set the other environment variables for building the large benchmarks. To make this permanent, include these lines in ~/.bashrc
 
 ```bash
-export PATH="$PATH:/datadrive/flang/install/bin"
-export OPENMP_INCLUDE_PATH=/datadrive/llov/build/projects/openmp/runtime/src
-export OMPI_CC=/datadrive/llov/build/bin/clang
-export OMPI_CXX=/datadrive/llov/build/bin/clang++
+export PATH=$PATH:${BUILD_ROOT}/flang/install/bin
+export OPENMP_INCLUDE_PATH=${BUILD_ROOT}/llov/build/projects/openmp/runtime/src
+export OMPI_CC=${BUILD_ROOT}/llov/build/bin/clang
+export OMPI_CXX=${BUILD_ROOT}/llov/build/bin/clang++
 ```
 
 9. Download the source code of LLOR from the [llor](https://github.com/cs17resch01003/llor) repository and compile it

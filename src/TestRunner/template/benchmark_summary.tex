@@ -1,0 +1,6 @@
+\section{Benchmark Summary}
+A total of $415$ programs were considered for these experiments. This benchmark set consists of $235$ C/C++ and $180$ Fortran programs. Some of these benchmarks have one source file per benchmark, and the remaining have multiple source files per benchmark. \tableref{benchmark_summary} summarizes the categorization of the kernels. For benchmarks that have a single source file, the experiments were performed with a timeout of $300$ seconds for each benchmark. For benchmarks that have multiple source files, the experiments were performed with a timeout of $60$ seconds for each source file and an overall timeout of $1800$ seconds for the benchmark. Each benchmark has been executed $3$ times, and the average time of these $3$ runs is taken into consideration. The source data used to generate this report is available in the \TT{summary.csv} file.
+
+This benchmark set provided with the artifacts consists of programs from the DataRaceBench~\cite{liao2017dataracebench} test suite, Exascale~\cite{exascale} project, Rodinia~\cite{che2009rodinia} test suite, and Parallel Research Kernels~\cite{parres}, along with additional benchmarks introduced while developing \tool.
+
+\input{tables/benchmark_summary}

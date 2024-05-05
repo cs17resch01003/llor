@@ -1,0 +1,42 @@
+\begin{figure}[htp]
+\centering
+
+\begin{tikzpicture}[scale=0.7]
+    
+\pgfplotstableread{figures/data/time_mhs_maxsat.dat}{\data}
+\selectcolormodel{gray}
+
+\begin{axis}[
+    xlabel={mhs},
+    ylabel={MaxSAT},
+    scaled ticks = false,
+    tick label style={
+        /pgf/number format/fixed,
+        /pgf/number format/precision=3
+    },
+    xmin=300,
+    xmax=600,
+    ymin=300,
+    ymax=600
+]
+
+\addplot[
+    scatter=true,
+    only marks,
+    mark=*,
+    scatter src=explicit symbolic,
+    scatter/classes={
+        a={mark=*}
+    }
+]
+table[x=mhs,y=maxsat,meta=label]{\data};
+\addplot [black,samples at={0,1}] {x};
+\draw [black,solid] (rel axis cs:0,0) -- (rel axis cs:1,1);
+
+\end{axis}
+\end{tikzpicture}
+\caption[mhs vs. MaxSAT; Runtime in milliseconds]
+    {\tabular[t]{@{}l@{}}mhs vs. MaxSAT \\ Runtime in milliseconds\endtabular}
+\label{Fi:solver_time}
+
+\end{figure}

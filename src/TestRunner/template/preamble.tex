@@ -1,0 +1,63 @@
+\usepackage{xspace}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{graphicx}
+\usepackage{listings,chngcntr}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{wrapfig}
+\usepackage{amssymb}
+\usepackage[normalem]{ulem}
+
+\usepackage[caption=false]{subfig}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\pgfplotsset{compat=1.6}
+\usetikzlibrary{patterns,positioning,shapes.geometric}
+
+\lstset
+{
+    language=C++,
+    basicstyle=\small\ttfamily,
+    numbers=left,
+    stepnumber=1,
+    tabsize=4,
+    breaklines=true
+}
+
+\input{refs}
+
+\newcommand{\highlightcode}[1]{\makebox[0pt][l]{\color{lightgray}\rule[-3pt]{#1\linewidth}{12pt}}}
+
+\newcommand{\True}{\ensuremath{\mathit{true}}\xspace}
+\newcommand{\False}{\ensuremath{\mathit{false}}\xspace}
+
+\newcommand{\inangleb}[1]{ \ensuremath{\langle #1 \rangle}}
+\newcommand{\inroundb}[1]{\ensuremath{ \left( #1 \right)}}
+
+\newcommand{\app}[1]{\textsf{#1}\xspace}
+
+\newcommand{\emp}[1]{\textsf{#1}}
+\newcommand{\TT}[1]{{\tt #1}}
+\newcommand{\EM}[1]{{\em #1}}
+
+\newcommand{\tool}{\textsl{LLOR}\xspace}
+\newcommand{\verifier}{\textsl{LLOV}\xspace}
+\newcommand{\llvm}{\textsl{LLVM}\xspace}
+\newcommand{\zth}{\textsf{Z3}\xspace}
+
+\newcommand{\toolname}{LLOR\xspace}
+\newcommand{\verifiername}{LLOV\xspace}
+
+\newcommand{\urk}[1]{\textcolor{red}{\textbf{URK:$\bigstar$}#1}}
+\newcommand{\urkfixme}[1]{\textcolor{red}{\textbf{URK FIXME $\bigstar$}#1}}
+\newcommand{\ubcomment}[1]{\textcolor{magenta}{UB: #1\xspace}}
+\newcommand{\gmchange}[1]{\textcolor{blue}{#1}}
+
+\newcommand{\gmorcidlogo}{\href{https://orcid.org/0000-0002-3632-7801}{\protect\includegraphics[scale=0.4]{images/orcid.pdf}}}
+\newcommand{\uborcidlogo}{\href{https://orcid.org/0000-0002-0076-1059}{\protect\includegraphics[scale=0.4]{images/orcid.pdf}}}
+\newcommand{\sjorcidlogo}{\href{https://orcid.org/0000-0001-8070-1525}{\protect\includegraphics[scale=0.4]{images/orcid.pdf}}}
+\newcommand{\ruorcidlogo}{\href{https://orcid.org/0000-0002-5290-3266}{\protect\includegraphics[scale=0.4]{images/orcid.pdf}}}

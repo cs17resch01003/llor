@@ -1,0 +1,10 @@
+\section{Source Code Information}
+\figref{code_lines} shows the size of the programs in terms of lines of code. The average number of lines of code for the test suite is $694.92$, and the median is $44$. $58$ programs have more than $100$ lines of code, and $184$ programs have more than $50$ lines of code.
+
+\input{figures/lines_insts}
+
+The instrumentation component of \tool works with LLVM IR and not on the source code. A line of source code could result in zero (e.g., code comments) or more LLVM IR instructions. LLVM IR was generated for $405$ programs. $10$ programs did not reach the instrumentation stage of \tool since the compiler could not generate LLVM IR for them. \figref{llvm_insts} shows the size of the programs in terms of LLVM IR instructions. The average number of LLVM IR instructions for the test suite is $1995.34$, and the median is $115$.
+
+\input{figures/barriers}
+
+The repair step of \tool depends on the number of barrier variables that have been introduced during instrumentation. \figref{barrier_variables} shows the number of barrier variables introduced in the instrumentation stage of \tool. The average number of barrier variables for the test suite is $71.01$, and the median is $2$. More than 50\% of the programs had less than 3 barrier variables.
