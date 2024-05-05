@@ -12,13 +12,13 @@ namespace LLOR.TestRunner
         public string? Path { get; set; }
 
         [Name("lines")]
-        public double Lines { get; set; }
+        public double? Lines { get; set; }
 
         [Name("insts")]
-        public double Instructions { get; set; }
+        public double? Instructions { get; set; }
 
         [Name("barrs")]
-        public double Barriers { get; set; }
+        public double? Barriers { get; set; }
 
         [Name("vresult")]
         public string? VerificationResult { get; set; }

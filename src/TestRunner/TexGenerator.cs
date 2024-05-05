@@ -18,6 +18,7 @@ namespace LLOR.TestRunner
 
             PrepareBenchmarkSummary(summaries, options);
             PrepareExperimentalResults(summaries, options);
+            PrepareSourceInformation(summaries, options);
         }
 
         private static void CopyFile(string source, string destination)
@@ -122,7 +123,7 @@ namespace LLOR.TestRunner
         {
             string file = options.FolderPath + Path.DirectorySeparatorChar + "report" +
                 Path.DirectorySeparatorChar + "tables" +
-                Path.DirectorySeparatorChar + "experimental_results.tex";
+                Path.DirectorySeparatorChar + "results.tex";
 
             string content = File.ReadAllText(file);
             IEnumerable<Summary> benchmarks_c = summaries.Where(x => x.Path != null && !x.Path.EndsWith(".f95"));
@@ -185,18 +186,122 @@ namespace LLOR.TestRunner
 
             IEnumerable<Summary> usedsolver = summaries.Where(x => x.MhsCount > 0 || x.MhsSolverCount > 0 || x.MaxSolverCount > 0)
                 .Where(x => x.MhsResult != "timeout" && x.MhsResult != "partialtimeout");
+            int min = ((int)(Math.Floor(usedsolver.Min(x => x.MhsTimeTaken)) * 0.9)) / 100 * 100;
+            int max = ((int)(Math.Floor(usedsolver.Min(x => x.MhsTimeTaken)) * 2.2)) / 100 * 100;
 
             string content = File.ReadAllText(file);
-
             IEnumerable<string> data = usedsolver.Select(x => string.Join("\t", new string[]
                 {
-                    (x.MhsTimeTaken > 600 ? 600 : (int)x.MhsTimeTaken).ToString(),
-                    (x.MaxTimeTaken > 600 ? 600 : (int)x.MaxTimeTaken).ToString(),
+                    (x.MhsTimeTaken > max ? max : (int)x.MhsTimeTaken).ToString(),
+                    (x.MaxTimeTaken > max ? max : (int)x.MaxTimeTaken).ToString(),
                     "a"
                 }));
             content = content.Replace("@@data@@", string.Join(Environment.NewLine, data));
 
             File.WriteAllText(file, content);
+
+            file = options.FolderPath + Path.DirectorySeparatorChar + "report" +
+                Path.DirectorySeparatorChar + "figures" +
+                Path.DirectorySeparatorChar + "solvertime.tex";
+            content = File.ReadAllText(file);
+
+            content = content.Replace("@@min@@", min, false);
+            content = content.Replace("@@max@@", max, false);
+
+            File.WriteAllText(file, content);
+        }
+
+        private static void PrepareSourceInformation(List<Summary> summaries, Options options)
+        {
+            string file = options.FolderPath + Path.DirectorySeparatorChar + "report" +
+                Path.DirectorySeparatorChar + "source_information.tex";
+            string content = File.ReadAllText(file);
+
+            IEnumerable<double> lines = summaries.Where(x => x.Lines.HasValue)
+                .Select(x => x.Lines.HasValue ? x.Lines.Value : 0);
+            content = content.Replace("@@lines_avg@@", lines.Average(), 2);
+            content = content.Replace("@@lines_med@@", Median(lines));
+            content = content.Replace("@@lines_100@@", lines.Where(x => x > 100),
+                "program has", "programs have");
+            content = content.Replace("@@lines_50@@", lines.Where(x => x > 50),
+                "program has", "programs have");
+
+            IEnumerable<double> insts = summaries.Where(x => x.Instructions.HasValue)
+                .Select(x => x.Instructions.HasValue ? x.Instructions.Value : 0);
+            content = content.Replace("@@insts_cnt@@", insts.Count(),
+                "program", "programs");
+            content = content.Replace("@@insts_fail@@", summaries.Count() - insts.Count(),
+                "program", "programs");
+            content = content.Replace("@@insts_avg@@", insts.Average(), 2);
+            content = content.Replace("@@inst_med@@", Median(insts));
+
+            IEnumerable<double> barriers = summaries.Where(x => x.Barriers.HasValue)
+                .Select(x => x.Barriers.HasValue ? x.Barriers.Value : 0);
+            content = content.Replace("@@bars_avg@@", barriers.Average(), 2);
+            content = content.Replace("@@bars_med@@", Median(barriers));
+
+            File.WriteAllText(file, content);
+
+            PrepareSourceGraphs(summaries, options);
+        }
+
+        private static void PrepareSourceGraphs(List<Summary> summaries, Options options)
+        {
+            string file = options.FolderPath + Path.DirectorySeparatorChar + "report" +
+                Path.DirectorySeparatorChar + "figures" +
+                Path.DirectorySeparatorChar + "lines_insts.tex";
+            string content = File.ReadAllText(file);
+
+            IEnumerable<double> lines = summaries.Where(x => x.Lines.HasValue)
+                .Select(x => x.Lines.HasValue ? x.Lines.Value : 0);
+            content = content.Replace("@@lines_100@@", lines.Count(x => x > 100), false);
+            content = content.Replace("@@lines_80@@", lines.Count(x => x >= 81 && x <= 100), false);
+            content = content.Replace("@@lines_60@@", lines.Count(x => x >= 61 && x <= 80), false);
+            content = content.Replace("@@lines_40@@", lines.Count(x => x >= 41 && x <= 60), false);
+            content = content.Replace("@@lines_20@@", lines.Count(x => x >= 21 && x <= 40), false);
+            content = content.Replace("@@lines_0@@", lines.Count(x => x <= 20), false);
+
+            IEnumerable<double> insts = summaries.Where(x => x.Instructions.HasValue)
+                .Select(x => x.Instructions.HasValue ? x.Instructions.Value : 0);
+            content = content.Replace("@@insts_400@@", insts.Count(x => x > 400), false);
+            content = content.Replace("@@insts_300@@", insts.Count(x => x >= 301 && x <= 400), false);
+            content = content.Replace("@@insts_200@@", insts.Count(x => x >= 201 && x <= 300), false);
+            content = content.Replace("@@insts_100@@", insts.Count(x => x >= 101 && x <= 200), false);
+            content = content.Replace("@@insts_50@@", insts.Count(x => x >= 51 && x <= 100), false);
+            content = content.Replace("@@insts_0@@", insts.Count(x => x <= 50), false);
+
+            File.WriteAllText(file, content);
+
+            file = options.FolderPath + Path.DirectorySeparatorChar + "report" +
+                Path.DirectorySeparatorChar + "figures" +
+                Path.DirectorySeparatorChar + "barriers.tex";
+            content = File.ReadAllText(file);
+
+            IEnumerable<double> barriers = summaries.Where(x => x.Barriers.HasValue)
+                .Select(x => x.Barriers.HasValue ? x.Barriers.Value : 0);
+            content = content.Replace("@@barrs_30@@", barriers.Count(x => x > 30), false);
+            content = content.Replace("@@barrs_10@@", barriers.Count(x => x >= 11 && x <= 30), false);
+            content = content.Replace("@@barrs_5@@", barriers.Count(x => x >= 6 && x <= 10), false);
+            content = content.Replace("@@barrs_4@@", barriers.Count(x => x >= 4 && x <= 5), false);
+            content = content.Replace("@@barrs_1@@", barriers.Count(x => x >= 1 && x <= 3), false);
+            content = content.Replace("@@barrs_0@@", barriers.Count(x => x <= 0), false);
+
+            File.WriteAllText(file, content);
+        }
+
+        private static double Median(IEnumerable<double> values)
+        {
+            int count = values.Count();
+            int index = count / 2;
+
+            if (count == 0)
+                return 0;
+
+            IEnumerable<double> sorted = values.OrderBy(n => n);
+            double median = count % 2 != 0 ? sorted.ElementAt(index) :
+                (sorted.ElementAt(index) + sorted.ElementAt(index - 1)) / 2;
+
+            return median;
         }
     }
 }

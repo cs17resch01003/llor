@@ -3,7 +3,7 @@
 
 The \hyperlink{racedetected}{second category} includes the programs for which \verifier had identified data races. Out of the @@xfail@@ in this category, \tool was able to fix \hyperlink{repaired}{@@repaired@@} correctly. \tool was unable to repair \hyperlink{repairerror}{@@repairerror@@}. \hyperlink{unsupported}{@@unsupported@@} were using OpenMP constructs like \EM{sections} and \EM{simd}. These programs are beyond the scope of \tool since barriers and ordered regions cannot fix data races in these programs. \tool clearly states that these programs are unsupported when provided as input. \hyperlink{timedout}{@@timedout@@} timed out.
 
-The \hyperlink{llovunsupported}{final category} includes the programs that are either unsupported by \verifier or failed compilation. There are @@llovunsupported@@ in this category. \verifier does not support the verification of OpenMP programs that use task-based parallelism. Since \tool depends on \verifier in the repair process, it could not generate any repair candidates for \hyperlink{llorunsupported}{@@llorunsupported@@}. \verifier either timed out or threw an error for \hyperlink{verifyerror}{@@lloverrors@@}.
+The \hyperlink{llovunsupported}{final category} includes the programs that are either unsupported by \verifier or failed compilation. There are @@llovunsupported@@ in this category. \verifier does not support the verification of OpenMP programs that use task-based parallelism. Since \tool depends on \verifier in the repair process, it could not generate any repair candidates for \hyperlink{llorunsupported}{@@llorunsupported@@}. \verifier either timed out or threw an error for \hyperlink{lloverrors}{@@lloverrors@@}.
  
 \input{tables/results}
 

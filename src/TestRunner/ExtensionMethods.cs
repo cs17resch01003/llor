@@ -6,9 +6,9 @@ namespace LLOR.TestRunner
 
     public static class ExtensionMethods
     {
-        public static string Replace(this string input, string oldValue, int newValue)
+        public static string Replace(this string input, string oldValue, int newValue, bool format = true)
         {
-            return input.Replace(oldValue, $"${newValue}$");
+            return input.Replace(oldValue, format ? $"${newValue}$" : $"{newValue}");
         }
 
         public static string Replace(this string input, string oldValue, int newValue, string singular, string plural)
