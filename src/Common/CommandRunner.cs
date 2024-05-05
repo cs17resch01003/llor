@@ -68,7 +68,7 @@ namespace LLOR.Common
                     }
                     else
                     {
-                        process.Kill();
+                        process.Kill(true);
                         output.ExitCode = (int)StatusCode.Timeout;
                     }
 
