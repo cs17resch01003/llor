@@ -111,6 +111,92 @@ namespace LLOR.TestRunner
             content = content.Replace("@@mhsbetter@@",
                 usedsolver.Where(x => x.MhsTimeTaken <= x.MaxTimeTaken),
                 "benchmark", "benchmarks");
+
+            File.WriteAllText(file, content);
+
+            PrepareResults(summaries, options);
+            PrepareTimeData(summaries, options);
+        }
+
+        private static void PrepareResults(List<Summary> summaries, Options options)
+        {
+            string file = options.FolderPath + Path.DirectorySeparatorChar + "report" +
+                Path.DirectorySeparatorChar + "tables" +
+                Path.DirectorySeparatorChar + "experimental_results.tex";
+
+            string content = File.ReadAllText(file);
+            IEnumerable<Summary> benchmarks_c = summaries.Where(x => x.Path != null && !x.Path.EndsWith(".f95"));
+            IEnumerable<Summary> benchmarks_f = summaries.Where(x => x.Path != null && x.Path.EndsWith(".f95"));
+
+            content = content.Replace("@@total_c@@", benchmarks_c);
+            content = content.Replace("@@total_f@@", benchmarks_f);
+
+            IEnumerable<Summary> pass_c = benchmarks_c.Where(x => x.VerificationResult == "pass");
+            IEnumerable<Summary> pass_f = benchmarks_f.Where(x => x.VerificationResult == "pass");
+
+            content = content.Replace("@@pass_c@@", pass_c);
+            content = content.Replace("@@pass_f@@", pass_f);
+
+            content = content.Replace("@@nochange_c@@", pass_c.Where(x => x.MhsResult == "pass"));
+            content = content.Replace("@@nochange_f@@", pass_f.Where(x => x.MhsResult == "pass"));
+
+            content = content.Replace("@@passchange_c@@", pass_c.Where(x => x.MhsResult == "passchange"));
+            content = content.Replace("@@passchange_f@@", pass_f.Where(x => x.MhsResult == "passchange"));
+
+            IEnumerable<Summary> race_c = benchmarks_c.Where(x => x.VerificationResult == "xfail");
+            IEnumerable<Summary> race_f = benchmarks_f.Where(x => x.VerificationResult == "xfail");
+
+            content = content.Replace("@@race_c@@", race_c);
+            content = content.Replace("@@race_f@@", race_f);
+
+            content = content.Replace("@@repaired_c@@", race_c.Where(x => x.MhsResult == "pass"));
+            content = content.Replace("@@repaired_f@@", race_f.Where(x => x.MhsResult == "pass"));
+
+            content = content.Replace("@@repairerror_c@@", race_c.Where(x => x.MhsResult == "repairerror"));
+            content = content.Replace("@@repairerror_f@@", race_f.Where(x => x.MhsResult == "repairerror"));
+
+            content = content.Replace("@@timeout_c@@", race_c.Where(x => x.MhsResult == "timeout" || x.MhsResult == "partialtimeout"));
+            content = content.Replace("@@timeout_f@@", race_f.Where(x => x.MhsResult == "timeout" || x.MhsResult == "partialtimeout"));
+
+            content = content.Replace("@@llorunsupported_c@@", race_c.Where(x => x.MhsResult == "unsupported"));
+            content = content.Replace("@@llorunsupported_f@@", race_f.Where(x => x.MhsResult == "unsupported"));
+
+            IEnumerable<Summary> unsupported_c = benchmarks_c.Where(x => x.VerificationResult != "pass" && x.VerificationResult != "xfail");
+            IEnumerable<Summary> unsupported_f = benchmarks_f.Where(x => x.VerificationResult != "pass" && x.VerificationResult != "xfail");
+
+            content = content.Replace("@@unsupported_c@@", unsupported_c);
+            content = content.Replace("@@unsupported_f@@", unsupported_f);
+
+            content = content.Replace("@@llovunsupported_c@@", unsupported_c.Where(x => x.VerificationResult == "unsupported" && x.MhsResult == "unsupported"));
+            content = content.Replace("@@llovunsupported_f@@", unsupported_f.Where(x => x.VerificationResult == "unsupported" && x.MhsResult == "unsupported"));
+
+            content = content.Replace("@@errors_c@@", unsupported_c.Where(x => x.VerificationResult != "unsupported"));
+            content = content.Replace("@@errors_f@@", unsupported_f.Where(x => x.VerificationResult != "unsupported"));
+
+            File.WriteAllText(file, content);
+        }
+
+        private static void PrepareTimeData(List<Summary> summaries, Options options)
+        {
+            string file = options.FolderPath + Path.DirectorySeparatorChar + "report" +
+                Path.DirectorySeparatorChar + "figures" +
+                Path.DirectorySeparatorChar + "data" +
+                Path.DirectorySeparatorChar + "time_mhs_maxsat.dat";
+
+            IEnumerable<Summary> usedsolver = summaries.Where(x => x.MhsCount > 0 || x.MhsSolverCount > 0 || x.MaxSolverCount > 0)
+                .Where(x => x.MhsResult != "timeout" && x.MhsResult != "partialtimeout");
+
+            string content = File.ReadAllText(file);
+
+            IEnumerable<string> data = usedsolver.Select(x => string.Join("\t", new string[]
+                {
+                    (x.MhsTimeTaken > 600 ? 600 : (int)x.MhsTimeTaken).ToString(),
+                    (x.MaxTimeTaken > 600 ? 600 : (int)x.MaxTimeTaken).ToString(),
+                    "a"
+                }));
+            content = content.Replace("@@data@@", string.Join(Environment.NewLine, data));
+
+            File.WriteAllText(file, content);
         }
     }
 }
