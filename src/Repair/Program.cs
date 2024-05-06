@@ -16,48 +16,65 @@
     {
         public static void Main(string[] args)
         {
-            using (Watch watch = new Watch(Measure.Total))
-            {
-                Options options = new Options();
-                Parser.Default.ParseArguments<Options>(args)
-                    .WithParsed(o =>
-                    {
-                        options = o;
-                    });
-
-                if (options == null || string.IsNullOrWhiteSpace(options.Path)) return;
-                Logger.DetailedLogging = options.DetailedLogging;
-
-                List<string> changes  = new List<string>();
-
-                IEnumerable<FileInfo> files = Initializer.Initialize(options.Path);
-                foreach (FileInfo file in files)
+            Options options = new Options();
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed(o =>
                 {
-                    CancellationTokenSource source = new CancellationTokenSource();
-                    CancellationToken ct = source.Token;
+                    options = o;
+                });
 
-                    (StatusCode, List<string>) result = (StatusCode.Unsupported, new List<string>());
-                    Task task = Task.Run(() =>
-                    {
-                        result = RepairFile(file, options, Initializer.Input is FileInfo, ct);
-                    });
+            if (options == null || string.IsNullOrWhiteSpace(options.Path)) return;
+            Logger.DetailedLogging = options.DetailedLogging;
 
-                    if (!task.Wait(options.Timeout * 1000))
+            try
+            {
+                using (Watch watch = new Watch(Measure.Total))
+                {
+                    List<string> changes  = new List<string>();
+
+                    IEnumerable<FileInfo> files = Initializer.Initialize(options.Path);
+                    foreach (FileInfo file in files)
                     {
-                        source.Cancel();
-                        while (!task.Wait(1000));
+                        CancellationTokenSource source = new CancellationTokenSource();
+                        CancellationToken ct = source.Token;
+                        bool singleFile = Initializer.Input is FileInfo;
+
+                        (StatusCode, List<string>) result = (StatusCode.Unsupported, new List<string>());
+                        Task task = Task.Run(() =>
+                        {
+                            result = RepairFile(file, options, singleFile, ct);
+                        });
+
+                        if (!task.Wait(options.Timeout * 1000))
+                        {
+                            source.Cancel();
+                            while (!task.Wait(1000));
+                        }
+
+                        if (singleFile)
+                        {
+                            if (result.Item1 == StatusCode.RepairError || result.Item1 == StatusCode.Unsupported ||
+                                result.Item1 == StatusCode.Fail || result.Item1 == StatusCode.Error)
+                            {
+                                throw new CommandLineException(result.Item1, string.Empty);
+                            }
+                        }
+
+                        changes.AddRange(result.Item2);
+                        if (options.DetailedLogging)
+                            Logger.Log($"StatusCode;{file.FullName};{result.Item1}");
                     }
 
-                    changes.AddRange(result.Item2);
-                    if (options.DetailedLogging)
-                        Logger.Log($"StatusCode;{file.FullName};{result.Item1}");
+                    changes = changes.Distinct().ToList();
+                    if (files.Count() != 1 && changes.Any())
+                        SummaryGenerator.WriteSummary(new DirectoryInfo(options.Path).FullName, changes);
+                        
+                    Logger.Log($"Changes;{changes.Distinct().Count()}");
                 }
-
-                changes = changes.Distinct().ToList();
-                if (files.Count() != 1 && changes.Any())
-                    SummaryGenerator.WriteSummary(new DirectoryInfo(options.Path).FullName, changes);
-                    
-                Logger.Log($"Changes;{changes.Distinct().Count()}");
+            }
+            catch (CommandLineException ex)
+            {
+                Environment.Exit((int)ex.StatusCode);
             }
         }
 
@@ -163,9 +180,7 @@
             FileInfo inputFile, Options options, StatusCode statusCode, string message)
         {
             CleanFiles(inputFile, options);
-
             Console.WriteLine(message);
-            Environment.Exit((int)statusCode);
         }
 
         private static void CleanFiles(FileInfo inputFile, Options options, int? changes = null)
