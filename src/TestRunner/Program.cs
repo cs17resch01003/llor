@@ -56,7 +56,7 @@ namespace LLOR.TestRunner
                 }
             }
 
-            return benchmarks;
+            return benchmarks.OrderBy(x => x.FullName);
         }
 
         private static VerificationResult Verify(FileSystemInfo path)

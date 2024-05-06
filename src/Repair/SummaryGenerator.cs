@@ -90,7 +90,7 @@ namespace LLOR.Repair
                 if (file == null)
                     continue;
 
-                string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
+                string fileDescription = includeFilename ? $" in {file.Name}" : string.Empty;
                 int line = location.Line;
 
                 lines.Add($"Add a barrier at line number {line}{fileDescription}.");
@@ -102,7 +102,7 @@ namespace LLOR.Repair
                 if (file == null)
                     continue;
 
-                string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
+                string fileDescription = includeFilename ? $" in {file.Name}" : string.Empty;
                 int line = location.Line;
 
                 lines.Add($"Remove the barrier at line number {line}{fileDescription}.");
@@ -212,7 +212,7 @@ namespace LLOR.Repair
                 if (file == null)
                     continue;
 
-                string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
+                string fileDescription = includeFilename ? $" in {file.Name}" : string.Empty;
                 if (range.Item2 == range.Item3)
                     lines.Add($"Create an ordered region covering line {range.Item2}{fileDescription}.");
                 else
@@ -225,7 +225,7 @@ namespace LLOR.Repair
                 if (file == null)
                     continue;
 
-                string fileDescription = includeFilename ? $" in {file.FullName}" : string.Empty;
+                string fileDescription = includeFilename ? $" in {file.Name}" : string.Empty;
                 lines.Add($"Remove the ordered region at line number {location.Line}{fileDescription}.");
             }
 
