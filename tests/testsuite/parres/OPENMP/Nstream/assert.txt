@@ -1,6 +1,6 @@
 //; Pass
-//; Add a barrier at line number 258 in /datadrive/llor/testsuite_large/parres/OPENMP/Nstream/nstream.c.
-//; Add a barrier at line number 227 in /datadrive/llor/testsuite_large/parres/OPENMP/Nstream/nstream.c.
-//; Remove the barrier at line number 243 in /datadrive/llor/testsuite_large/parres/OPENMP/Nstream/nstream.c.
-//; Remove the barrier at line number 255 in /datadrive/llor/testsuite_large/parres/OPENMP/Nstream/nstream.c.
-//; Create an ordered region covering lines 231 to 251 in /datadrive/llor/testsuite_large/parres/OPENMP/Nstream/nstream.c.
+//; Add a barrier at line number 258 in nstream.c.
+//; Add a barrier at line number 227 in nstream.c.
+//; Remove the barrier at line number 243 in nstream.c.
+//; Remove the barrier at line number 255 in nstream.c.
+//; Create an ordered region covering lines 231 to 251 in nstream.c.

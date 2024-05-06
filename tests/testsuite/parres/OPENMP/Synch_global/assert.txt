@@ -1,12 +1,12 @@
 //; Pass
-//; Add a barrier at line number 171 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
-//; Add a barrier at line number 187 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
-//; Add a barrier at line number 186 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
-//; Add a barrier at line number 181 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
-//; Add a barrier at line number 185 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
-//; Add a barrier at line number 182 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
-//; Add a barrier at line number 190 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
-//; Add a barrier at line number 173 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
-//; Remove the barrier at line number 200 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
-//; Remove the barrier at line number 205 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
-//; Create an ordered region covering lines 197 to 207 in /datadrive/llor/testsuite_large/parres/OPENMP/Synch_global/global.c.
+//; Add a barrier at line number 171 in global.c.
+//; Add a barrier at line number 187 in global.c.
+//; Add a barrier at line number 186 in global.c.
+//; Add a barrier at line number 181 in global.c.
+//; Add a barrier at line number 185 in global.c.
+//; Add a barrier at line number 182 in global.c.
+//; Add a barrier at line number 190 in global.c.
+//; Add a barrier at line number 173 in global.c.
+//; Remove the barrier at line number 200 in global.c.
+//; Remove the barrier at line number 205 in global.c.
+//; Create an ordered region covering lines 197 to 207 in global.c.

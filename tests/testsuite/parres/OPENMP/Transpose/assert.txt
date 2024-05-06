@@ -1,6 +1,6 @@
 //; Pass
-//; Add a barrier at line number 182 in /datadrive/llor/testsuite_large/parres/OPENMP/Transpose/transpose.c.
-//; Remove the barrier at line number 213 in /datadrive/llor/testsuite_large/parres/OPENMP/Transpose/transpose.c.
-//; Remove the barrier at line number 246 in /datadrive/llor/testsuite_large/parres/OPENMP/Transpose/transpose.c.
-//; Create an ordered region covering lines 239 to 240 in /datadrive/llor/testsuite_large/parres/OPENMP/Transpose/transpose.c.
-//; Create an ordered region covering lines 293 to 294 in /datadrive/llor/testsuite_large/parres/OPENMP/Transpose/transpose.c.
+//; Add a barrier at line number 182 in transpose.c.
+//; Remove the barrier at line number 213 in transpose.c.
+//; Remove the barrier at line number 246 in transpose.c.
+//; Create an ordered region covering lines 239 to 240 in transpose.c.
+//; Create an ordered region covering lines 293 to 294 in transpose.c.

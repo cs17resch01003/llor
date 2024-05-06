@@ -1,6 +1,6 @@
 //; Pass
-//; Add a barrier at line number 374 in /datadrive/llor/testsuite_large/parres/OPENMP/Random/random.c.
-//; Add a barrier at line number 365 in /datadrive/llor/testsuite_large/parres/OPENMP/Random/random.c.
-//; Add a barrier at line number 357 in /datadrive/llor/testsuite_large/parres/OPENMP/Random/random.c.
-//; Remove the barrier at line number 380 in /datadrive/llor/testsuite_large/parres/OPENMP/Random/random.c.
-//; Create an ordered region covering lines 378 to 411 in /datadrive/llor/testsuite_large/parres/OPENMP/Random/random.c.
+//; Add a barrier at line number 374 in random.c.
+//; Add a barrier at line number 365 in random.c.
+//; Add a barrier at line number 357 in random.c.
+//; Remove the barrier at line number 380 in random.c.
+//; Create an ordered region covering lines 378 to 411 in random.c.

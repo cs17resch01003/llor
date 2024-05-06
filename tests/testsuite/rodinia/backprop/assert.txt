@@ -1,2 +1,2 @@
 //; Pass
-//; Create an ordered region covering line 324 in /datadrive/llor/testsuite_large/rodinia/backprop/backprop.c.
+//; Create an ordered region covering line 324 in backprop.c.
