@@ -15,5 +15,8 @@ namespace LLOR.TestRunner
 
         [Option('m', "mftimeout", Required = false, HelpText = "Timeout for a multi-file benchmark.")]
         public int MultiFileTimeout { get; set; } = 60*1000;
+
+        [Option('g', "gentex", Required = false, HelpText = "Generates the Latex report.")]
+        public bool GenerateTex { get; set; } = false;
     }
 }

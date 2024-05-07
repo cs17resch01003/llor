@@ -61,24 +61,33 @@ namespace LLOR.TestRunner
 
         private static VerificationResult Verify(FileSystemInfo path)
         {
-            CommandOutput output = CommandRunner.RunCommand("llov", path.FullName);
-            Output actual = new Output(
-                (StatusCode)output.ExitCode,
-                output.StandardError);
+            StatusCode derived = StatusCode.Fail;
+            int? raceCount = null;
 
-            ParsedOutput parsed = ErrorParser.ParseErrorOutput(actual.Result);
-            StatusCode derived = parsed.StatusCode;
+            try
+            {
+                CommandOutput output = CommandRunner.RunCommand("llov", path.FullName);
+                Output actual = new Output(
+                    (StatusCode)output.ExitCode,
+                    output.StandardError);
 
-            if (derived == StatusCode.Pass)
-                derived = actual.StatusCode;
+                ParsedOutput parsed = ErrorParser.ParseErrorOutput(actual.Result);
+                derived = parsed.StatusCode;
 
-            if (derived == StatusCode.Pass && parsed.Races.Any())
-                derived = StatusCode.XFail;
+                if (derived == StatusCode.Pass)
+                    derived = actual.StatusCode;
+
+                if (derived == StatusCode.Pass && parsed.Races.Any())
+                    derived = StatusCode.XFail;
+
+                raceCount = derived == StatusCode.XFail ? parsed.Races.Count : null;
+            }
+            catch (Exception) { }
 
             return new VerificationResult
             {
                 StatusCode = derived,
-                RaceCount = derived == StatusCode.XFail ? parsed.Races.Count : null,
+                RaceCount = raceCount,
             };
         }
 
@@ -249,7 +258,8 @@ namespace LLOR.TestRunner
                 array[i] = RunExperiments(benchmarks, options);
 
             List<Summary> summaries = ConsolidateSummaries(array);
-            TexGenerator.Generate(summaries, options);
+            if (options.GenerateTex)
+                TexGenerator.Generate(summaries, options);
 
             CsvConfiguration config = new CsvConfiguration(CultureInfo.CurrentCulture)
             {

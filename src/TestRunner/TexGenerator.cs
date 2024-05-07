@@ -187,7 +187,7 @@ namespace LLOR.TestRunner
             IEnumerable<Summary> usedsolver = summaries.Where(x => x.MhsCount > 0 || x.MhsSolverCount > 0 || x.MaxSolverCount > 0)
                 .Where(x => x.MhsResult != "timeout" && x.MhsResult != "partialtimeout");
             int min = ((int)(Math.Floor(usedsolver.Min(x => x.MhsTimeTaken)) * 0.9)) / 100 * 100;
-            int max = ((int)(Math.Floor(usedsolver.Min(x => x.MhsTimeTaken)) * 2.2)) / 100 * 100;
+            int max = ((int)(Median(usedsolver.Select(x => x.MhsTimeTaken)) * 2.2)) / 100 * 100;
 
             string content = File.ReadAllText(file);
             IEnumerable<string> data = usedsolver.Select(x => string.Join("\t", new string[]
